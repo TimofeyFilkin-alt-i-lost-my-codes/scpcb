@@ -158,6 +158,8 @@ Global CurrFrameLimit# = (Framelimit%-19)/100.0
 Global ScreenGamma# = GetINIFloat(OptionFile, "options", "screengamma")
 ;If Fullscreen Then UpdateScreenGamma()
 
+Global FOV% = GetINIInt(OptionFile, "options", "fov")
+
 Const HIT_MAP% = 1, HIT_PLAYER% = 2, HIT_ITEM% = 3, HIT_APACHE% = 4, HIT_178% = 5, HIT_DEAD% = 6
 SeedRnd MilliSecs()
 
@@ -552,6 +554,7 @@ Function UpdateConsole()
 							CreateConsoleMsg("- asd")
 							CreateConsoleMsg("- status")
 							CreateConsoleMsg("- camerapick")
+							CreateConsoleMsg("- fov")
 							CreateConsoleMsg("- ending")
 							CreateConsoleMsg("- noclipspeed")
 							CreateConsoleMsg("- noclip")
@@ -685,6 +688,12 @@ Function UpdateConsole()
 							CreateConsoleMsg("Prints the texture name and coordinates of")
 							CreateConsoleMsg("the model the camera is pointing at.")
 							CreateConsoleMsg("******************************")
+						Case "fov"
+							CreateConsoleMsg("HELP - fov")
+							CreateConsoleMsg("******************************")
+							CreateConsoleMsg("Field of view (FOV) is the amount of game view")
+							CreateConsoleMsg("that is on display during a game.")
+							CreateConsoleMsg("******************************")
 						Case "status"
 							CreateConsoleMsg("HELP - status")
 							CreateConsoleMsg("******************************")
@@ -767,6 +776,12 @@ Function UpdateConsole()
 						CreateConsoleMsg("Coordinates: "+EntityX(c)+", "+EntityY(c)+", "+EntityZ(c))
 						CreateConsoleMsg("******************************")							
 					EndIf
+					;[End Block]
+				Case "fov"
+					;[Block]
+					StrTemp$ = Lower(Right(ConsoleInput, Len(ConsoleInput) - Instr(ConsoleInput, " ")))
+					
+					FOV = Int(StrTemp)
 					;[End Block]
 				Case "hidedistance"
 					;[Block]
@@ -1475,6 +1490,7 @@ CreateConsoleMsg("  - disable173/enable173")
 CreateConsoleMsg("  - disable106/enable106")
 CreateConsoleMsg("  - 173state/106state/096state")
 CreateConsoleMsg("  - spawn [npc type]")
+CreateConsoleMsg("  - fov [x] (default = 74)")
 
 ;---------------------------------------------------------------------------------------------------
 
@@ -4324,7 +4340,7 @@ Function MouseLook()
 	CameraShake = Max(CameraShake - (FPSfactor / 10), 0)
 	
 	;CameraZoomTemp = CurveValue(CurrCameraZoom,CameraZoomTemp, 5.0)
-	CameraZoom(Camera, Min(1.0+(CurrCameraZoom/400.0),1.1))
+	CameraZoom(Camera, Min(1.0+(CurrCameraZoom/400.0),1.1) / Tan((ATan(Tan(FOV/2.0)*RealGraphicWidth/RealGraphicHeight))))
 	CurrCameraZoom = Max(CurrCameraZoom - FPSfactor, 0)
 	
 	If KillTimer >= 0 And FallTimer >=0 Then
@@ -7277,7 +7293,20 @@ Function DrawMenu()
 					If MouseOn(x + 270 * MenuScale, y + MenuScale, 20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"vram")
 					EndIf
-					
+
+					y=y+50*MenuScale
+
+					Local SlideBarFOV# = FOV-40
+					SlideBarFOV = SlideBar(x + 270*MenuScale, y+6*MenuScale,100*MenuScale, SlideBarFOV*2.0)/2.0
+					FOV = Int(SlideBarFOV+40)
+					Color 255,255,255
+					Text(x, y, "Field of view:")
+					Color 255,255,0
+					Text(x + 5 * MenuScale, y + 25 * MenuScale, FOV+" FOV")
+					If MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20)
+						DrawOptionsTooltip(tx,ty,tw,th,"fov")
+					EndIf
+					CameraZoom(Camera, Min(1.0+(CurrCameraZoom/400.0),1.1) / Tan((ATan(Tan(FOV/2.0)*RealGraphicWidth/RealGraphicHeight))))
 					;[End Block]
 				Case 2 ;Audio
 					SetFont Font1
@@ -11098,6 +11127,7 @@ Function SaveOptionsINI()
 	PutINIValue(OptionFile, "options", "particle amount", ParticleAmount)
 	PutINIValue(OptionFile, "options", "enable vram", EnableVRam)
 	PutINIValue(OptionFile, "options", "mouse smoothing", MouseSmooth)
+	PutINIValue(OptionFile, "options", "fov", FOV)
 	
 	PutINIValue(OptionFile, "audio", "music volume", MusicVolume)
 	PutINIValue(OptionFile, "audio", "sound volume", PrevSFXVolume)

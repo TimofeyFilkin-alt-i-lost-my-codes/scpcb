@@ -1,5 +1,6 @@
 ﻿v1.3.12
 
+- Added a FOV slider.
 - Fixed crashing when loading a save done while wearing SCP-1499.
 - Fixed crashing when loading a save done in SCP-205's containment chamber.
 - Fixed interacting with SCP-1162 sometimes injuring the player when their inventory isn't empty.
