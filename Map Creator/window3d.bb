@@ -1459,6 +1459,22 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 					
 					;Stop
 				EndIf
+
+			Case "item"
+				ReadFloat(f) : ReadFloat(f) : ReadFloat(f)
+				ReadString(f) : ReadString(f)
+				ReadByte(f) : ReadFloat(f) : ReadFloat(f) : ReadFloat(f)
+				ReadFloat(f) : ReadFloat(f)
+				ReadFloat(f)
+
+			Case "door"
+				ReadFloat(f) : ReadFloat(f) : ReadFloat(f)
+				ReadInt(f)
+				ReadInt(f)
+				ReadString(f)
+				ReadFloat(f)
+				ReadByte(f)
+				ReadByte(f)
 		End Select
 	Next
 	

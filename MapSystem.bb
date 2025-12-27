@@ -537,6 +537,26 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 
 				rt\TempItem[rt\TempItemAmount] = it
 				rt\TempItemAmount = rt\TempItemAmount + 1
+			Case "door"
+				If rt\TempDoorAmount = MaxRoomDoors Then
+					RuntimeError("Too many doors in room "+Chr(34)+file+Chr(34)+".")
+				EndIf
+
+				d.TempDoors = New TempDoors
+
+				d\X = ReadFloat(f) * RoomScale
+				d\Y = ReadFloat(f) * RoomScale
+				d\Z = ReadFloat(f) * RoomScale
+
+				d\Dir = ReadInt(f)
+				d\KeyCard = ReadInt(f)
+				d\Code = ReadString(f)
+				d\Angle = ReadFloat(f)
+				d\SpawnOpen = ReadByte(f)
+				d\AllowRemoteControl = ReadByte(f)
+
+				rt\TempDoor[rt\TempDoorAmount] = d
+				rt\TempDoorAmount = rt\TempDoorAmount + 1
 		End Select
 	Next
 	
@@ -584,6 +604,7 @@ Function ResetAllRMeshes()
 	Delete Each TempItems
 	For rt.RoomTemplates = Each RoomTemplates
 		rt\TempItemAmount = 0
+		rt\TempDoorAmount = 0
 		If rt\obj <> 0 Then FreeEntity(rt\obj) : rt\obj = 0
 	Next
 End Function
@@ -1442,6 +1463,7 @@ Const MaxRoomLights% = 32
 Const MaxRoomEmitters% = 8
 Const MaxRoomObjects% = 30
 COnst MaxRoomItems% = 32
+Const MaxRoomDoors% = 32
 
 
 Const ROOM1% = 1, ROOM2% = 2, ROOM2C% = 3, ROOM3% = 4, ROOM4% = 5
@@ -1469,6 +1491,9 @@ Type RoomTemplates
 
 	Field TempItemAmount
 	Field TempItem.TempItems[MaxRoomItems]
+
+	Field TempDoorAmount
+	Field TempDoor.TempDoors[MaxRoomDoors]
 	
 	Field UseLightCones%
 	
@@ -1484,6 +1509,16 @@ Type TempItems
 	Field HasCustomAngle%, AngleX#, AngleY#, AngleZ#
 	Field State#, State2#
 	Field Chance#
+End Type
+
+Type TempDoors
+	Field Dir%
+	Field KeyCard%
+	Field Code$
+	Field X#, Y#, Z#
+	Field Angle#
+	Field SpawnOpen%
+	Field AllowRemoteControl%
 End Type
 
 Function CreateRoomTemplate.RoomTemplates(meshpath$)
@@ -5409,6 +5444,14 @@ Function FillRoom(r.Rooms)
 			it\state2 = tempIt\State2
 			EntityType(it\collider, HIT_ITEM)
 			EntityParent(it\collider, r\obj)
+		EndIf
+	Next
+
+	For i = 0 To r\RoomTemplate\TempDoorAmount-1
+		Local dt.TempDoors = r\RoomTemplate\TempDoor[i]
+		Local door.Doors = CreateDoor(r\zone, r\x + dt\X, r\y + dt\Y, r\z + dt\Z, dt\Angle, r, dt\SpawnOpen, dt\Dir, dt\KeyCard, dt\Code)
+		If Not dt\AllowRemoteControl Then
+			door\AutoClose = False
 		EndIf
 	Next
 	
