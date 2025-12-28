@@ -7,15 +7,46 @@
 ;safe loads for mav trapping media issues
 
 
+Const ImageExtensionCount = 2
+Global ImageExtensions$[ImageExtensionCount]
+ImageExtensions[0] = "png"
+ImageExtensions[1] = "jpg"
 
+Const ModelExtensionCount = 2
+Global ModelExtensions$[ModelExtensionCount]
+ModelExtensions[0] = "b3d"
+ModelExtensions[1] = "x"
 
 ;basic wrapper functions that check to make sure that the file exists before attempting to load it, raises an RTE if it doesn't
 ;more informative alternative to MAVs outside of debug mode, makes it immiediately obvious whether or not someone is loading resources
 ;likely to cause more crashes than 'clean' CB, as this prevents anyone from loading any assets that don't exist, regardless if they are ever used
 ;added zero checks since blitz load functions return zero sometimes even if the filetype exists
 Function LoadImage_Strict(file$)
-	file = DetermineModdedPath(file)
-	If FileType(file$)<>1 Then RuntimeError "Image " + Chr(34) + file$ + Chr(34) + " missing. "
+	Local ext$ = File_GetExtension(file)
+	Local fileNoExt$ = Left(file, Len(file) - Len(ext))
+	Local tmp%
+
+	For m.Mods = Each Mods
+		For i = 0 To ImageExtensionCount
+			Local usedExtension$
+			If i = ImageExtensionCount Then
+				usedExtension = ext
+			Else
+				usedExtension = ImageExtensions[i]
+			EndIf
+			Local modPath$ = m\Path + fileNoExt + usedExtension
+			If FileType(modPath) = 1 Then
+				tmp = LoadImage(modPath)
+				If tmp <> 0 Then
+					Return tmp
+				Else If DebugResourcePacks Then
+					RuntimeError("Failed to load image " + Chr(34) + modPath + Chr(34) + ".")
+				EndIf
+			EndIf
+		Next
+	Next
+
+	If FileType(file$)<>1 Then RuntimeError "Image " + Chr(34) + file$ + Chr(34) + " missing."
 	tmp = LoadImage(file$)
 	Return tmp
 	;attempt to load the image again
@@ -289,7 +320,30 @@ Function UpdateStreamSoundOrigin(streamHandle%,cam%,entity%,range#=10,volume#=1.
 End Function
 
 Function LoadMesh_Strict(File$,parent=0)
-	File = DetermineModdedPath(File)
+	Local ext$ = File_GetExtension(File)
+	Local fileNoExt$ = Left(File, Len(File) - Len(ext))
+	Local tmp%
+
+	For m.Mods = Each Mods
+		For i = 0 To ModelExtensionCount
+			Local usedExtension$
+			If i = ModelExtensionCount Then
+				usedExtension = ext
+			Else
+				usedExtension = ModelExtensions[i]
+			EndIf
+			Local modPath$ = m\Path + fileNoExt + usedExtension
+			If FileType(modPath) = 1 Then
+				tmp = LoadMesh(modPath, parent)
+				If tmp <> 0 Then
+					Return tmp
+				Else If DebugResourcePacks Then
+					RuntimeError("Failed to load 3D Mesh " + Chr(34) + modPath + Chr(34) + ".")
+				EndIf
+			EndIf
+		Next
+	Next
+
 	If FileType(File$) <> 1 Then RuntimeError "3D Mesh " + File$ + " not found."
 	tmp = LoadMesh(File$, parent)
 	If tmp = 0 Then RuntimeError "Failed to load 3D Mesh: " + File$ 
@@ -297,8 +351,30 @@ Function LoadMesh_Strict(File$,parent=0)
 End Function
 
 Function LoadAnimMesh_Strict(File$,parent=0)
-	File = DetermineModdedPath(File)
-	DebugLog File
+	Local ext$ = File_GetExtension(File)
+	Local fileNoExt$ = Left(File, Len(File) - Len(ext))
+	Local tmp%
+
+	For m.Mods = Each Mods
+		For i = 0 To ModelExtensionCount
+			Local usedExtension$
+			If i = ModelExtensionCount Then
+				usedExtension = ext
+			Else
+				usedExtension = ModelExtensions[i]
+			EndIf
+			Local modPath$ = m\Path + fileNoExt + usedExtension
+			If FileType(modPath) = 1 Then
+				tmp = LoadAnimMesh(modPath, parent)
+				If tmp <> 0 Then
+					Return tmp
+				Else If DebugResourcePacks Then
+					RuntimeError("Failed to load 3D Animated Mesh " + Chr(34) + modPath + Chr(34) + ".")
+				EndIf
+			EndIf
+		Next
+	Next
+
 	If FileType(File$) <> 1 Then RuntimeError "3D Animated Mesh " + File$ + " not found."
 	tmp = LoadAnimMesh(File$, parent)
 	If tmp = 0 Then RuntimeError "Failed to load 3D Animated Mesh: " + File$ 
@@ -307,7 +383,9 @@ End Function
 
 ;don't use in LoadRMesh, as Reg does this manually there. If you wanna fuck around with the logic in that function, be my guest 
 Function LoadTexture_Strict(File$,flags=1)
-	File = DetermineModdedPath(File)
+	Local tmp% = LoadModdedTextureNonStrict(File, flags)
+	If tmp <> 0 Then Return tmp
+
 	If FileType(File$) <> 1 Then RuntimeError "Texture " + File$ + " not found."
 	tmp = LoadTexture(File$, flags+(256*(EnableVRam=True)))
 	If tmp = 0 Then RuntimeError "Failed to load Texture: " + File$

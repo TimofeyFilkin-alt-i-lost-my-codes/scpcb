@@ -947,6 +947,15 @@ Function UpdateMainMenu()
 					If MouseOn(x+310*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale)
 						DrawOptionsTooltip(tx,ty,tw,th,"consoleerror")
 					EndIf
+
+					y = y + 30*MenuScale
+
+					Color 255,255,255
+					Text(x + 20 * MenuScale, y, "Debug resource packs:")
+					DebugResourcePacks = DrawTick(x + 310 * MenuScale, y + MenuScale, DebugResourcePacks)
+					If MouseOn(x+310*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale)
+						DrawOptionsTooltip(tx,ty,tw,th,"resourcepackdebug")
+					EndIf
 					
 					y = y + 50*MenuScale
 					
@@ -2096,6 +2105,8 @@ Function DrawOptionsTooltip(x%,y%,width%,height%,option$,value#=0,ingame%=False)
 			txt = "Toggles the use of the developer console. Can be used in-game by pressing " + KeyName(KEY_CONSOLE) + "."
 		Case "consoleerror"
 			txt = Chr(34)+"Open console on error"+Chr(34)+" is self-explanatory."
+		Case "resourcepackdebug"
+			txt = "Resources failing to load from mods cause a runtime error instead of silently falling back to the vanilla resource."
 		Case "achpopup"
 			txt = "Displays a pop-up notification when an achievement is unlocked."
 		Case "showfps"

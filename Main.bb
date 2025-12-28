@@ -48,6 +48,8 @@ Global EnableSFXRelease_Prev% = EnableSFXRelease%
 
 Global CanOpenConsole% = GetINIInt(OptionFile, "console", "enabled")
 
+Global DebugResourcePacks% = GetINIInt(OptionFile, "options", "resource pack debug")
+
 Dim ArrowIMG(4)
 
 ;[Block]
@@ -7481,6 +7483,15 @@ Function DrawMenu()
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale)
 						DrawOptionsTooltip(tx,ty,tw,th,"consoleerror")
 					EndIf
+
+					y = y + 30*MenuScale
+
+					Color 255,255,255
+					Text(x, y, "Debug resource packs:")
+					DebugResourcePacks = DrawTick(x + 270 * MenuScale, y + MenuScale, DebugResourcePacks)
+					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale)
+						DrawOptionsTooltip(tx,ty,tw,th,"resourcepackdebug")
+					EndIf
 					
 					y = y + 50*MenuScale
 					
@@ -11104,6 +11115,7 @@ Function SaveOptionsINI()
 	PutINIValue(OptionFile, "options", "texture details", TextureDetails%)
 	PutINIValue(OptionFile, "console", "enabled", CanOpenConsole%)
 	PutINIValue(OptionFile, "console", "auto opening", ConsoleOpening%)
+	PutINIValue(OptionFile, "options", "resource pack debug", DebugResourcePacks%)
 	PutINIValue(OptionFile, "options", "particle amount", ParticleAmount)
 	PutINIValue(OptionFile, "options", "enable vram", EnableVRam)
 	PutINIValue(OptionFile, "options", "mouse smoothing", MouseSmooth)
