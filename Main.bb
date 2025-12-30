@@ -30,6 +30,9 @@ While FileType(ErrorFile+Str(ErrorFileInd)+".txt")<>0
 Wend
 ErrorFile = ErrorFile+Str(ErrorFileInd)+".txt"
 
+Global SteamActive = Steam_Init() = 0
+If SteamActive <> 1 Then RuntimeError("Steam failed to initialize")
+
 Include "ModManager.bb"
 ReloadMods()
 
@@ -2751,7 +2754,7 @@ Global I_Zone.MapZones = New MapZones
 ;----------------------------------------------------------------------------------------------------------------------------------------------------
 
 Repeat
-	
+
 	Cls
 	
 	CurTime = MilliSecs()
@@ -3263,7 +3266,7 @@ Repeat
 			;everyone uses landscape so it's probably a non-issue
 		EndIf
 	EndIf
-	
+
 	;not by any means a perfect solution
 	;Not even proper gamma correction but it's a nice looking alternative that works in windowed mode
 	If ScreenGamma>1.0 Then
@@ -3298,13 +3301,17 @@ Repeat
 	EntityAlpha fresize_image,1.0
 	
 	CatchErrors("Main loop / uncaught")
-	
+
+	If SteamActive Then Steam_Update()
+
 	If Vsync = 0 Then
 		Flip 0
 	Else 
 		Flip 1
 	EndIf
 Forever
+
+Steam_Shutdown()
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------------
 ;----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -7085,13 +7092,15 @@ Function DrawMenu()
 	CatchErrors("Uncaught (DrawMenu)")
 	
 	Local x%, y%, width%, height%
-	If api_GetFocus() = 0 Then ;Game is out of focus -> pause the game
+	Local steamOverlayActive = Steam_GetOverlayState()
+	If api_GetFocus() = 0 Lor steamOverlayActive Then ;Game is out of focus -> pause the game
 		If (Not Using294) Then
 			MenuOpen = True
 			PauseSounds()
 		EndIf
-        Delay 1000 ;Reduce the CPU take while game is not in focus
-    EndIf
+		;Reduce the CPU take while game is not in focus, unless Steam overlay is active
+		If Not steamOverlayActive Then Delay 1000
+	EndIf
 	If MenuOpen Then
 		
 		;DebugLog AchievementsMenu+"|"+OptionsMenu+"|"+QuitMSG
