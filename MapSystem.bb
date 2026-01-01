@@ -95,7 +95,15 @@ Function AddTextureToCache(texture%)
 		tc.Materials=New Materials
 		tc\name=StripPath(TextureName(texture))
 		If BumpEnabled Then
-			Local temp$=GetINIString("Data\materials.ini",tc\name,"bump")
+			Local temp$=""
+			For m.Mods = Each Mods
+				Local modMatPath$ = m\Path + MATERIALS_DATA_PATH
+				If FileType(modMatPath) = 1 Then
+					temp = GetINIString(modMatPath,tc\name,"bump")
+					If temp <> "" Then Exit
+				EndIf
+			Next
+			If temp="" Then temp=GetINIString(MATERIALS_DATA_PATH,tc\name,"bump")
 			If temp<>"" Then
 				tc\Bump=LoadTexture_Strict(temp)
 				TextureBlend tc\Bump,6
@@ -1626,7 +1634,14 @@ Function LoadRoomMeshes()
 End Function
 
 
-LoadRoomTemplates("Data\rooms.ini")
+Const MATERIALS_DATA_PATH$ = "Data\materials.ini"
+Const ROOMS_DATA_PATH$ = "Data\rooms.ini"
+; We load the vanilla templates first, so that they will also be placed within the map first (to be potentially overriden with mod rooms).
+LoadRoomTemplates(ROOMS_DATA_PATH)
+For m.Mods = Each Mods
+	Local modRooms$ = m\Path + ROOMS_DATA_PATH
+	If FileType(modRooms) = 1 Then LoadRoomTemplates(modRooms)
+Next
 
 Global RoomScale# = 8.0 / 2048.0
 Const ZONEAMOUNT = 3

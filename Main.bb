@@ -8254,7 +8254,11 @@ Function LoadEntities()
 	
 	;[End Block]
 	
-	LoadMaterials("DATA\materials.ini")
+	For m.Mods = Each Mods
+		Local modMatPath$ = m\Path + MATERIALS_DATA_PATH
+		If FileType(modMatPath) = 1 Then LoadMaterials(modMatPath)
+	Next
+	LoadMaterials(MATERIALS_DATA_PATH)
 	
 	OBJTunnel(0)=LoadRMesh("GFX\map\mt1.rmesh",Null)	
 	HideEntity OBJTunnel(0)				
