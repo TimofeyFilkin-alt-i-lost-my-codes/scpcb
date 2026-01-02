@@ -62,6 +62,11 @@ Global ModUIState%
 Global ModChangelog$
 Global SelectedMod.Mods
 
+Function EllipsisLeft$(txt$, maxLen%)
+	If Len(txt) > maxLen Then Return Left(txt, maxLen-3) + "…"
+	Return txt
+End Function
+
 Function UpdateMainMenu()
 	Local x%, y%, width%, height%, temp%
 	
@@ -1211,9 +1216,9 @@ Function UpdateMainMenu()
 								DrawImage(m\Icon, x + 3 * MenuScale, y + 3 * MenuScale)
 							EndIf
 
-							Text(x + 85 * MenuScale, y + 10 * MenuScale, m\Name)
-							Text(x + 85 * MenuScale, y + (10+18) * MenuScale, m\Description)
-							Text(x + 85 * MenuScale, y + (10+18*2) * MenuScale, m\Author)
+							Text(x + 85 * MenuScale, y + 10 * MenuScale, EllipsisLeft(m\Name, 24))
+							Text(x + 85 * MenuScale, y + (10+18) * MenuScale, EllipsisLeft(m\Description, 24))
+							Text(x + 85 * MenuScale, y + (10+18*2) * MenuScale, EllipsisLeft(m\Author, 24))
 							m\IsActive = DrawTick(x + 370 * MenuScale, y + 25 * MenuScale, m\IsActive)
 
 							If DrawButton(x + 500 * MenuScale, y + 10 * MenuScale, 30 * MenuScale, 20 * MenuScale, "▲", False, False, i = 1) Then
