@@ -3853,6 +3853,7 @@ Function InitCredits()
 		cl = New CreditsLine
 		cl\txt = l
 	Until Eof(file)
+	CloseFile(file)
 	
 	Delete First CreditsLine
 	CreditsTimer = 0

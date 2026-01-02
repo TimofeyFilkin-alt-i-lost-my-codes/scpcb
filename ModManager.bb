@@ -42,6 +42,7 @@ Function InstantiateMod.Mods(id$, path$)
             End Select
         EndIf
     Wend
+    CloseFile(ini)
 
     If m\Name = "" Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " is missing a name in its info.ini file.")
     For m2.Mods = Each Mods
@@ -111,6 +112,7 @@ Function ReloadMods()
                 Next
             EndIf
         Wend
+        CloseFile(mods)
     EndIf
     
     UpdateActiveMods()
