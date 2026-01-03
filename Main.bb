@@ -193,7 +193,7 @@ Global CursorIMG% = LoadImage_Strict("GFX\cursor.png")
 
 Global SelectedLoadingScreen.LoadingScreens, LoadingScreenAmount%, LoadingScreenText%
 Global LoadingBack% = LoadImage_Strict("Loadingscreens\loadingback.jpg")
-InitLoadingScreens("Loadingscreens\loadingscreens.ini")
+InitLoadingScreens()
 
 ;For some reason, Blitz3D doesn't load fonts that have filenames that
 ;don't match their "internal name" (i.e. their display name in applications
@@ -5962,6 +5962,7 @@ Function DrawGUI()
 
 						Local iniStr$ = "DATA\SCP-294.ini"
 						Local loc% = -1
+						Local hasOverride%
 						For m.ActiveMods = Each ActiveMods
 							Local modIniStr$ = m\Path + iniStr
 							If FileType(modIniStr) = 1 Then
@@ -5971,10 +5972,14 @@ Function DrawGUI()
 									loc = sectionLocation
 									Exit
 								EndIf
+								If FileType(modIniStr + ".OVERRIDE") Then
+									hasOverride = True
+									Exit
+								EndIf
 							EndIf
 						Next
 
-						If loc = -1 Then
+						If loc = -1 And (Not hasOverride) Then
 							loc% = GetINISectionLocation(iniStr, strtemp)
 						EndIf
 
@@ -8271,12 +8276,8 @@ Function LoadEntities()
 	FreeTexture tex
 	
 	;[End Block]
-	
-	For m.Mods = Each Mods
-		Local modMatPath$ = m\Path + MATERIALS_DATA_PATH
-		If FileType(modMatPath) = 1 Then LoadMaterials(modMatPath)
-	Next
-	LoadMaterials(MATERIALS_DATA_PATH)
+
+	InitMaterials()
 	
 	OBJTunnel(0)=LoadRMesh("GFX\map\mt1.rmesh",Null)	
 	HideEntity OBJTunnel(0)				
@@ -10154,6 +10155,7 @@ Function Use294()
 				
 				Local iniStr$ = "DATA\SCP-294.ini"
 				Local loc% = -1
+				Local hasOverride%
 				If Input294<>""
 					For m.ActiveMods = Each ActiveMods
 						Local modIniStr$ = m\Path + iniStr
@@ -10164,10 +10166,14 @@ Function Use294()
 								loc = sectionLocation
 								Exit
 							EndIf
+							If FileType(modIniStr + ".OVERRIDE") Then
+								hasOverride = True
+								Exit
+							EndIf
 						EndIf
 					Next
 
-					If loc = -1 Then
+					If loc = -1 And (Not hasOverride) Then
 						loc = GetINISectionLocation(iniStr, Input294)
 					EndIf
 				EndIf

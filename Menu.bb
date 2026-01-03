@@ -1566,7 +1566,24 @@ Type LoadingScreens
 	Field txt$[5], txtamount%
 End Type
 
-Function InitLoadingScreens(file$)
+Const LOADING_SCREENS_DATA_PATH$ = "Loadingscreens\loadingscreens.ini"
+
+Function InitLoadingScreens()
+	Local hasOverride%
+	For m.ActiveMods = Each ActiveMods
+		Local modPath$ = m\Path + LOADING_SCREENS_DATA_PATH
+		If FileType(modPath) = 1 Then
+			LoadLoadingScreens(modPath)
+			If FileType(modPath + ".OVERRIDE") = 1 Then
+				hasOverride = True
+				Exit
+			EndIf
+		EndIf
+	Next
+	If Not hasOverride Then LoadLoadingScreens(LOADING_SCREENS_DATA_PATH)
+End Function
+
+Function LoadLoadingScreens(file$)
 	Local TemporaryString$, i%
 	Local ls.LoadingScreens
 	

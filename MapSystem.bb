@@ -8,6 +8,23 @@ Type Materials
 	Field StepSound%
 End Type
 
+Const MATERIALS_DATA_PATH$ = "Data\materials.ini"
+
+Function InitMaterials()
+	Local hasOverride%
+	For m.ActiveMods = Each ActiveMods
+		Local modMatPath$ = m\Path + MATERIALS_DATA_PATH
+		If FileType(modMatPath) = 1 Then
+			LoadMaterials(modMatPath)
+			If FileType(modMatPath + ".OVERRIDE") = 1 Then
+				hasOverride = True
+				Exit
+			EndIf
+		EndIf
+	Next
+	If Not hasOverride Then LoadMaterials(MATERIALS_DATA_PATH)
+End Function
+
 Function LoadMaterials(file$)
 	CatchErrors("Uncaught (LoadMaterials)")
 	;If Not BumpEnabled Then Return
@@ -96,14 +113,18 @@ Function AddTextureToCache(texture%)
 		tc\name=StripPath(TextureName(texture))
 		If BumpEnabled Then
 			Local temp$=""
-			For m.Mods = Each Mods
+			Local hasOverride%
+			For m.ActiveMods = Each ActiveMods
 				Local modMatPath$ = m\Path + MATERIALS_DATA_PATH
 				If FileType(modMatPath) = 1 Then
 					temp = GetINIString(modMatPath,tc\name,"bump")
-					If temp <> "" Then Exit
+					If temp <> "" Lor FileType(modMatPath + ".OVERRIDE") = 1 Then
+						hasOverride = True
+						Exit
+					EndIf
 				EndIf
 			Next
-			If temp="" Then temp=GetINIString(MATERIALS_DATA_PATH,tc\name,"bump")
+			If (Not hasOverride) And temp="" Then temp=GetINIString(MATERIALS_DATA_PATH,tc\name,"bump")
 			If temp<>"" Then
 				tc\Bump=LoadTexture_Strict(temp)
 				TextureBlend tc\Bump,6
@@ -1636,14 +1657,30 @@ Function LoadRoomMeshes()
 End Function
 
 
-Const MATERIALS_DATA_PATH$ = "Data\materials.ini"
 Const ROOMS_DATA_PATH$ = "Data\rooms.ini"
-; We load the vanilla templates first, so that they will also be placed within the map first (to be potentially overriden with mod rooms).
-LoadRoomTemplates(ROOMS_DATA_PATH)
-For m.Mods = Each Mods
-	Local modRooms$ = m\Path + ROOMS_DATA_PATH
-	If FileType(modRooms) = 1 Then LoadRoomTemplates(modRooms)
-Next
+
+InitRoomTemplates()
+
+Function InitRoomTemplates()
+	Local modRooms$
+	Local hasOverride%
+	For m.ActiveMods = Each ActiveMods
+		modRooms$ = m\Path + ROOMS_DATA_PATH
+		If FileType(m\Path + ROOMS_DATA_PATH) = 1 And FileType(m\Path + ROOMS_DATA_PATH + ".OVERRIDE") = 1 Then
+			hasOverride = True
+			Exit
+		EndIf
+	Next
+	; We load the vanilla templates first, so that they will also be placed within the map first (to be potentially overriden with mod rooms).
+	If Not hasOverride Then LoadRoomTemplates(ROOMS_DATA_PATH)
+	For m.ActiveMods = Each ActiveMods
+		modRooms$ = m\Path + ROOMS_DATA_PATH
+		If FileType(modRooms) = 1 Then
+			LoadRoomTemplates(modRooms)
+			If FileType(m\Path + ROOMS_DATA_PATH + ".OVERRIDE") = 1 Then Exit
+		EndIf
+	Next
+End Function
 
 Global RoomScale# = 8.0 / 2048.0
 Const ZONEAMOUNT = 3

@@ -198,14 +198,20 @@ Function InitItemTemplatesFromFile(file$)
 
 End Function
 
-Function InitItemTemplates()
-	Local itemsDataPath$ = "Data\items.ini"
+Const ITEMS_DATA_PATH$ = "Data\items.ini"
 
+Function InitItemTemplates()
+	Local hasOverride%
 	For m.ActiveMods = Each ActiveMods
-		InitItemTemplatesFromFile(m\Path + itemsDataPath)
+		Local modPath$ = m\Path + ITEMS_DATA_PATH
+		InitItemTemplatesFromFile(modPath)
+		If FileType(modPath + ".OVERRIDE") = 1 Then
+			hasOverride = True
+			Exit
+		EndIf
 	Next
 
-	InitItemTemplatesFromFile(itemsDataPath)
+	If Not hasOverride Then InitItemTemplatesFromFile(ITEMS_DATA_PATH)
 
 	Local it.ItemTemplates,it2.ItemTemplates
 	For it = Each ItemTemplates
