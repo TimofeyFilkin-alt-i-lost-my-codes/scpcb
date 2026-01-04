@@ -8,8 +8,8 @@ Type Mods
     Field Name$
     Field Description$
     Field Author$
-    Field IconPath$
-    Field Icon%
+    Field IconPath$, Icon%, DisabledIcon%
+    Field RequiresReload%
     Field IsActive%
     Field SteamWorkshopId$
     Field IsUserOwner%
@@ -39,6 +39,8 @@ Function InstantiateMod.Mods(id$, path$)
                     m\Description = value
                 Case "author"
                     m\Author = value
+                Case "requires reload"
+                    m\RequiresReload = ParseINIInt(value)
             End Select
         EndIf
     Wend
@@ -106,7 +108,7 @@ Function ReloadMods()
                     If key = m\Id Then
                         Insert m After firstSorted
                         firstSorted = m
-                        m\IsActive = ParseIniInt(value)
+                        m\IsActive = ParseINIInt(value)
                         Exit
                     EndIf
                 Next

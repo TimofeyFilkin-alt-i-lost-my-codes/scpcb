@@ -196,7 +196,7 @@ PlayStartupVideos()
 
 Global CursorIMG% = LoadImage_Strict("GFX\cursor.png")
 
-Global SelectedLoadingScreen.LoadingScreens, LoadingScreenAmount%, LoadingScreenText%
+Global SelectedLoadingScreen.LoadingScreens, LoadingScreenAmount% = 0, LoadingScreenText%
 Global LoadingBack% = LoadImage_Strict("Loadingscreens\loadingback.jpg")
 InitLoadingScreens()
 
@@ -3332,6 +3332,9 @@ If SteamActive Then Steam_Shutdown()
 
 Function Restart()
 	Cls
+	StopStream_Strict(MusicCHN)
+	MusicCHN = 0
+	ClearLoadedINIFiles()
 	IsRunning = False
 	ShouldRestart = True
 End Function
@@ -10994,7 +10997,14 @@ Function GetINIString$(file$, section$, parameter$, defaultvalue$="")
 	Return defaultvalue
 End Function
 
-Function ParseIniInt%(txt$)
+Function ClearLoadedINIFiles()
+	For ini.INIFile = Each INIFile
+		If ini\bank <> 0 Then FreeBank ini\bank
+		Delete ini
+	Next
+End Function
+
+Function ParseINIInt%(txt$)
 	txt = Lower(Trim(txt))
 	If txt = "true" Then
 		Return 1
@@ -11007,7 +11017,7 @@ End Function
 
 Function GetINIInt%(file$, section$, parameter$, defaultvalue% = 0)
 	Local txt$ = GetINIString(file$, section$, parameter$, defaultvalue)
-	Return ParseIniInt(txt)
+	Return ParseINIInt(txt)
 End Function
 
 Function GetINIFloat#(file$, section$, parameter$, defaultvalue# = 0.0)

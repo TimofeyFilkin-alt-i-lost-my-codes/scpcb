@@ -61,6 +61,7 @@ Global CurrLoadGamePage% = 0
 Global ModUIState%
 Global ModChangelog$
 Global ShouldKeepModDescription% = True
+Global ModsDirty% = False
 Global SelectedMod.Mods
 
 Function EllipsisLeft$(txt$, maxLen%)
@@ -268,7 +269,12 @@ Function UpdateMainMenu()
 				Case 8
 					MainMenuTab = 0
 					SerializeMods()
-					UpdateActiveMods()
+					If ModsDirty Then
+						ModsDirty = False
+						Restart()
+					Else
+						UpdateActiveMods()
+					EndIf
 				Default
 					MainMenuTab = 0
 			End Select
@@ -1194,40 +1200,63 @@ Function UpdateMainMenu()
 				If CurrLoadGamePage > Ceil(Float(ModCount)/6.0)-1 Then
 					CurrLoadGamePage = CurrLoadGamePage - 1
 				EndIf
-				
+
 				If ModCount = 0 Then
 					Text (x + 20 * MenuScale, y + 20 * MenuScale, "No mods.")
 				Else
-					x = x + 20 * MenuScale
+					x = x + 10 * MenuScale
 					y = y + 20 * MenuScale
 					
 					UpdateUpdatingMod()
+
+					Local xStart = x
 
 					i% = 1
 					Local drawn% = 0
 					For m.Mods = Each Mods
 						If i => (1+(6*CurrLoadGamePage)) Then
-							DrawFrame(x,y,540* MenuScale, 70 * MenuScale)
+							x = xStart
+
+							Local mActive = DrawTick(x, y + 25 * MenuScale, m\IsActive)
+							If mActive <> m\IsActive Then
+								m\IsActive = mActive
+								If m\RequiresReload Then ModsDirty = True
+							EndIf
+
+							x = x + 25 * MenuScale
+
+							DrawFrame(x,y,490* MenuScale, 70 * MenuScale)
 							If m\Icon = 0 And m\Iconpath <> "" Then
 								m\Icon = LoadImage_Strict(m\IconPath)
+								m\DisabledIcon = CreateGrayScaleImage(m\Icon)
 								ResizeImage(m\Icon, 64 * MenuScale, 64 * MenuScale)
+								ResizeImage(m\DisabledIcon, 64 * MenuScale, 64 * MenuScale)
 							EndIf
 
 							If m\Icon <> 0 Then
-								DrawImage(m\Icon, x + 3 * MenuScale, y + 3 * MenuScale)
+								Local ico%
+								If m\IsActive Then ico = m\Icon Else ico = m\DisabledIcon
+								DrawImage(ico, x + 3 * MenuScale, y + 3 * MenuScale)
+							EndIf
+
+							If m\IsActive Then
+								Color 255, 255, 255
+							Else
+								Color 150, 150, 150
 							EndIf
 
 							Text(x + 85 * MenuScale, y + 10 * MenuScale, EllipsisLeft(m\Name, 24))
 							Text(x + 85 * MenuScale, y + (10+18) * MenuScale, EllipsisLeft(m\Description, 24))
 							Text(x + 85 * MenuScale, y + (10+18*2) * MenuScale, EllipsisLeft(m\Author, 24))
-							m\IsActive = DrawTick(x + 370 * MenuScale, y + 25 * MenuScale, m\IsActive)
 
 							If DrawButton(x + 500 * MenuScale, y + 10 * MenuScale, 30 * MenuScale, 20 * MenuScale, "▲", False, False, i = 1) Then
 								Insert m Before Before m
+								If m\IsActive And m\RequiresReload Then ModsDirty = True
 							EndIf
 							
 							If DrawButton(x + 500 * MenuScale, y + (70 - 30) * MenuScale, 30 * MenuScale, 20 * MenuScale, "▼", False, False, i = ModCount) Then
 								Insert m After After m
+								If m\IsActive And m\RequiresReload Then ModsDirty = True
 							EndIf
 
 							If UpdatingMod = m Then
@@ -1247,22 +1276,22 @@ Function UpdateMainMenu()
 									Case 5
 										strr = "  ."
 								End Select
-								DrawButton(x + 395 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, strr, False, False, True)
+								DrawButton(x + 370 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, strr, False, False, True)
 							Else
 								Local buttonsInactive% = UpdateModErrorCode <> 0 Or ModUIState <> 0 Or UpdatingMod <> Null Or (Not SteamActive)
 								If m\SteamWorkshopId = "" Then
-									If DrawButton(x + 395 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Upload", False, False, buttonsInactive) Then
+									If DrawButton(x + 370 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Upload", False, False, buttonsInactive) Then
 										ModUIState = 1
 										SelectedMod = m
 									EndIf
 								Else
 									If m\IsUserOwner Then
-										If DrawButton(x + 395 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Update", False, False, buttonsInactive) Then
+										If DrawButton(x + 370 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Update", False, False, buttonsInactive) Then
 											ModUIState = 2
 											SelectedMod = m
 										EndIf
 									Else
-										If DrawButton(x + 395 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Visit", False, False, buttonsInactive) Then
+										If DrawButton(x + 370 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Visit", False, False, buttonsInactive) Then
 											VisitModPage(m)
 										EndIf
 									EndIf
@@ -1317,6 +1346,23 @@ Function UpdateMainMenu()
 							ModUIState = 0
 							SelectedMod = Null
 						EndIf
+					Else
+						If DrawButton(x + 10 * MenuScale, y, 150 * MenuScale, 30 * MenuScale, "Reload mods", False) Then
+							SerializeMods()
+							ReloadMods()
+						EndIf
+
+						If DrawButton(x + 10 * MenuScale, y + 40 * MenuScale, 150 * MenuScale, 30 * MenuScale, "Reload game", False) Then
+							SerializeMods()
+							Restart()
+							Return
+						EndIf
+
+						If DrawButton(x + 10 * MenuScale, y + 80 * MenuScale, 150 * MenuScale, 50 * MenuScale, "", False) Then
+							ExecFile("Mods")
+						EndIf
+						Text(x + (10 + 150 / 2) * MenuScale, y + (80 + 50 / 2 - 10) * MenuScale, "Open local", True, True)
+						Text(x + (10 + 150 / 2) * MenuScale, y + (80 + 50 / 2 + 10) * MenuScale, "mods folder", True, True)
 					EndIf
 				EndIf
 
@@ -1333,6 +1379,24 @@ Function UpdateMainMenu()
 	If Fullscreen Then DrawImage CursorIMG, ScaledMouseX(),ScaledMouseY()
 	
 	SetFont Font1
+End Function
+
+Function CreateGrayScaleImage%(img%)
+	Local ret% = CreateImage(ImageWidth(img), ImageHeight(img))
+	Local rbuf% = ImageBuffer(img)
+	Local buf% = ImageBuffer(ret)
+	LockBuffer(rbuf)
+	LockBuffer(buf)
+	For x = 0 To BufferWidth(rbuf)-1
+		For y = 0 To BufferHeight(rbuf)-1
+			Local color% = ReadPixelFast(x, y, rbuf)
+			Local g% = ((color Shr 16) And 255) * 0.21 + ((color Shr 8) And 255) * 0.72 + (color And 255) * 0.07
+			WritePixelFast(x, y, (color And $FF000000) + (g Shl 16) + (g Shl 8) + g, buf)
+		Next
+	Next
+	UnlockBuffer(rbuf)
+	UnlockBuffer(buf)
+	Return ret
 End Function
 
 Dim GfxDrivers$(0)
@@ -1569,6 +1633,7 @@ End Type
 Const LOADING_SCREENS_DATA_PATH$ = "Loadingscreens\loadingscreens.ini"
 
 Function InitLoadingScreens()
+	Delete Each LoadingScreens
 	Local hasOverride%
 	For m.ActiveMods = Each ActiveMods
 		Local modPath$ = m\Path + LOADING_SCREENS_DATA_PATH
