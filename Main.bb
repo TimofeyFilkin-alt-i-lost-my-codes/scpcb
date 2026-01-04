@@ -245,8 +245,6 @@ Global KEY_CONSOLE = GetINIInt(OptionFile, "binds", "Console key")
 
 Global MouseSmooth# = GetINIFloat(OptionFile,"options", "mouse smoothing", 1.0)
 
-Const NAN# = (-1.0) ^ (0.5)
-
 Global Mesh_MinX#, Mesh_MinY#, Mesh_MinZ#
 Global Mesh_MaxX#, Mesh_MaxY#, Mesh_MaxZ#
 Global Mesh_MagX#, Mesh_MagY#, Mesh_MagZ#
@@ -4378,12 +4376,8 @@ Function MouseLook()
 		
 		HeadDropSpeed = 0
 		
-		;If 0 Then 
 		;fixing the black screen bug with some bubblegum code 
-		Local Zero# = 0.0
-		Local Nan1# = 0.0 / Zero
-		If Int(EntityX(Collider))=Int(Nan1) Then
-			
+		If IsNaN(EntityX(Collider)) Then
 			PositionEntity Collider, EntityX(Camera, True), EntityY(Camera, True) - 0.5, EntityZ(Camera, True), True
 			Msg = "EntityX(Collider) = NaN, RESETTING COORDINATES    -    New coordinates: "+EntityX(Collider)
 			MsgTimer = 300				
@@ -4404,20 +4398,13 @@ Function MouseLook()
 		;moveentity player, side, up, 0	
 		; -- Update the smoothing que To smooth the movement of the mouse.
 		mouse_x_speed_1# = CurveValue(MouseXSpeed() * (MouseSens + 0.6) , mouse_x_speed_1, (6.0 / (MouseSens + 1.0))*MouseSmooth) 
-		If Int(mouse_x_speed_1) = Int(Nan1) Then mouse_x_speed_1 = 0
-		If PrevFPSFactor>0 Then
-            If Abs(FPSfactor/PrevFPSFactor-1.0)>1.0 Then
-                ;lag spike detected - stop all camera movement
-                mouse_x_speed_1 = 0.0
-                mouse_y_speed_1 = 0.0
-            EndIf
-        EndIf
+		If IsNaN(mouse_x_speed_1) Then mouse_x_speed_1 = 0
 		If InvertMouse Then
 			mouse_y_speed_1# = CurveValue(-MouseYSpeed() * (MouseSens + 0.6), mouse_y_speed_1, (6.0/(MouseSens+1.0))*MouseSmooth) 
 		Else
 			mouse_y_speed_1# = CurveValue(MouseYSpeed () * (MouseSens + 0.6), mouse_y_speed_1, (6.0/(MouseSens+1.0))*MouseSmooth) 
 		EndIf
-		If Int(mouse_y_speed_1) = Int(Nan1) Then mouse_y_speed_1 = 0
+		If IsNaN(mouse_y_speed_1) Then mouse_y_speed_1 = 0
 		
 		Local the_yaw# = ((mouse_x_speed_1#)) * mouselook_x_inc# / (1.0+WearingVest)
 		Local the_pitch# = ((mouse_y_speed_1#)) * mouselook_y_inc# / (1.0+WearingVest)
