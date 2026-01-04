@@ -61,7 +61,7 @@ Dim ArrowIMG(4)
 
 Global LauncherWidth%= Min(GetINIInt(OptionFile, "launcher", "launcher width"), 1024)
 Global LauncherHeight% = Min(GetINIInt(OptionFile, "launcher", "launcher height"), 768)
-Global LauncherEnabled% = GetINIInt(OptionFile, "launcher", "launcher enabled") And (Not IsRestart)
+Global LauncherEnabled% = GetINIInt(OptionFile, "launcher", "launcher enabled")
 
 Global GraphicWidth% = GetINIInt(OptionFile, "options", "width")
 Global GraphicHeight% = GetINIInt(OptionFile, "options", "height")
@@ -106,7 +106,7 @@ Global SFXVolume# = GetINIFloat(OptionFile, "audio", "sound volume")
 
 Global Bit16Mode = GetINIInt(OptionFile, "options", "16bit")
 
-If LauncherEnabled Then 
+If LauncherEnabled And (Not IsRestart) Then 
 	AspectRatioRatio = 1.0
 	UpdateLauncher()
 Else
