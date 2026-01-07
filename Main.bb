@@ -573,21 +573,20 @@ Function UpdateConsole()
 							CreateConsoleMsg("******************************")
 							CreateConsoleMsg("- asd")
 							CreateConsoleMsg("- status")
-							CreateConsoleMsg("- camerapick")
-							CreateConsoleMsg("- fov")
-							CreateConsoleMsg("- ending")
-							CreateConsoleMsg("- noclipspeed")
 							CreateConsoleMsg("- noclip")
+							CreateConsoleMsg("- noclipspeed")
+							CreateConsoleMsg("- godmode")
+							CreateConsoleMsg("- revive")
 							CreateConsoleMsg("- injure [value]")
 							CreateConsoleMsg("- infect [value]")
 							CreateConsoleMsg("- heal")
-							CreateConsoleMsg("- teleport [room name]")
+							CreateConsoleMsg("- infinitestamina")
+							CreateConsoleMsg("- sanic")
+							CreateConsoleMsg("- notarget")
+							CreateConsoleMsg("- teleport [room name] [index]")
+							CreateConsoleMsg("- roomlist")
 							CreateConsoleMsg("- spawnitem [item name]")
-							CreateConsoleMsg("- wireframe")
-							CreateConsoleMsg("- 173speed")
-							CreateConsoleMsg("- 106speed")
-							CreateConsoleMsg("- 173state")
-							CreateConsoleMsg("- 106state")
+							CreateConsoleMsg("- itemlist")
 							CreateConsoleMsg("******************************")
 							CreateConsoleMsg("Use "+Chr(34)+"help 2/3"+Chr(34)+" to find more commands.")
 							CreateConsoleMsg("Use "+Chr(34)+"help [command name]"+Chr(34)+" to get more information about a command.")
@@ -596,31 +595,38 @@ Function UpdateConsole()
 							CreateConsoleMsg("LIST OF COMMANDS - PAGE 2/3")
 							CreateConsoleMsg("******************************")
 							CreateConsoleMsg("- spawn [npc type] [state]")
+							CreateConsoleMsg("- 096state")
 							CreateConsoleMsg("- reset096")
-							CreateConsoleMsg("- disable173")
-							CreateConsoleMsg("- enable173")
+							CreateConsoleMsg("- 106state")
+							CreateConsoleMsg("- 106speed")
 							CreateConsoleMsg("- disable106")
 							CreateConsoleMsg("- enable106")
+							CreateConsoleMsg("- 173speed")
+							CreateConsoleMsg("- 173state")
+							CreateConsoleMsg("- disable173")
+							CreateConsoleMsg("- enable173")
 							CreateConsoleMsg("- halloween")
-							CreateConsoleMsg("- sanic")
 							CreateConsoleMsg("- scp-420-j")
-							CreateConsoleMsg("- godmode")
-							CreateConsoleMsg("- revive")
-							CreateConsoleMsg("- noclip")
-							CreateConsoleMsg("- showfps")
-							CreateConsoleMsg("- 096state")
-							CreateConsoleMsg("- debughud")
-							CreateConsoleMsg("- camerafog [near] [far]")
-							CreateConsoleMsg("- gamma [value]")
-							CreateConsoleMsg("- infinitestamina")
 							CreateConsoleMsg("******************************")
 							CreateConsoleMsg("Use "+Chr(34)+"help [command name]"+Chr(34)+" to get more information about a command.")
 							CreateConsoleMsg("******************************")
 						Case "3"
+							CreateConsoleMsg("LIST OF COMMANDS - PAGE 3/3")
+							CreateConsoleMsg("******************************")
+							CreateConsoleMsg("- wireframe")
+							CreateConsoleMsg("- showfps")
+							CreateConsoleMsg("- debughud")
+							CreateConsoleMsg("- camerafog [near] [far]")
+							CreateConsoleMsg("- fov [value]")
+							CreateConsoleMsg("- gamma [value]")
 							CreateConsoleMsg("- playmusic [clip + .wav/.ogg]")
-							CreateConsoleMsg("- notarget")
+							CreateConsoleMsg("- camerapick")
+							CreateConsoleMsg("- ending")
 							CreateConsoleMsg("- unlockexits")
 							CreateConsoleMsg("- omni")
+							CreateConsoleMsg("******************************")
+							CreateConsoleMsg("Use "+Chr(34)+"help [command name]"+Chr(34)+" to get more information about a command.")
+							CreateConsoleMsg("******************************")
 						Case "asd"
 							CreateConsoleMsg("HELP - asd")
 							CreateConsoleMsg("******************************")
@@ -674,6 +680,11 @@ Function UpdateConsole()
 							CreateConsoleMsg("is a valid parameter.")
 							CreateConsoleMsg("Example: spawnitem Key Card Omni")
 							CreateConsoleMsg("******************************")
+						Case "itemlist", "items"
+							CreateConsoleMsg("HELP - itemlist")
+							CreateConsoleMsg("******************************")
+							CreateConsoleMsg("Lists all currently loaded item templates.")
+							CreateConsoleMsg("******************************")
 						Case "spawn"
 							CreateConsoleMsg("HELP - spawn")
 							CreateConsoleMsg("******************************")
@@ -694,9 +705,15 @@ Function UpdateConsole()
 						Case "teleport"
 							CreateConsoleMsg("HELP - teleport")
 							CreateConsoleMsg("******************************")
-							CreateConsoleMsg("Teleports the player to the first instance")
-							CreateConsoleMsg("of the specified room. Any room that appears")
-							CreateConsoleMsg("in rooms.ini is a valid parameter.")
+							CreateConsoleMsg("Teleports the player to the first (or specified)")
+							CreateConsoleMsg("instance of the specified room. Any room that")
+							CreateConsoleMsg("appears in rooms.ini is a valid parameter.")
+							CreateConsoleMsg("******************************")
+						Case "roomlist", "rooms"
+							CreateConsoleMsg("HELP - roomlist")
+							CreateConsoleMsg("******************************")
+							CreateConsoleMsg("Lists all currently loaded room templates.")
+							CreateConsoleMsg("Not all room templates may appear in the map.")
 							CreateConsoleMsg("******************************")
 						Case "stopsound", "stfu"
 							CreateConsoleMsg("HELP - stopsound")
@@ -853,34 +870,50 @@ Function UpdateConsole()
 					;[End Block]
 				Case "teleport"
 					;[Block]
-					StrTemp$ = Lower(Right(ConsoleInput, Len(ConsoleInput) - Instr(ConsoleInput, " ")))
-					
-					Select StrTemp
-						Case "895", "scp-895"
-							StrTemp = "coffin"
-						Case "scp-914"
-							StrTemp = "914"
+					Local roomName$ = Piece(ConsoleInput, 2, " ")
+					Local roomIndex% = Int(Piece(ConsoleInput, 3, " "))
+
+					Select roomName
+						Case "895", "scp-895", "room895"
+							roomName = "coffin"
+						Case "scp-914", "room914"
+							roomName = "914"
 						Case "offices", "office"
-							StrTemp = "room2offices"
+							roomName = "room2offices"
+						Case "room372"
+							roomName = "roompj"
+						Case "room970"
+							roomName = "room2storage"
 					End Select
 					
+					Local roomFound% = False
+
 					For r.Rooms = Each Rooms
-						If r\RoomTemplate\Name = StrTemp Then
-							;PositionEntity (Collider, EntityX(r\obj), 0.7, EntityZ(r\obj))
-							PositionEntity (Collider, EntityX(r\obj), EntityY(r\obj)+0.7, EntityZ(r\obj))
-							ResetEntity(Collider)
-							UpdateDoors()
-							UpdateRooms()
-							For it.Items = Each Items
-								it\disttimer = 0
-							Next
-							PlayerRoom = r
-							Exit
+						If r\RoomTemplate\Name = roomName Then
+							If roomIndex <> 0 Then
+								roomIndex = roomIndex - 1
+							Else
+								PositionEntity (Collider, EntityX(r\obj), EntityY(r\obj)+0.7, EntityZ(r\obj))
+								ResetEntity(Collider)
+								UpdateDoors()
+								UpdateRooms()
+								For it.Items = Each Items
+									it\disttimer = 0
+								Next
+								PlayerRoom = r
+								roomFound = True
+								Exit
+							EndIf
 						EndIf
 					Next
 					
-					If PlayerRoom\RoomTemplate\Name <> StrTemp Then CreateConsoleMsg("Room not found.",255,150,0)
+					If Not roomFound Then CreateConsoleMsg("Room not found.",255,150,0)
 					;[End Block]
+				Case "roomlist", "rooms"
+					CreateConsoleMsg("Listing rooms:")
+					For rt.RoomTemplates = Each RoomTemplates
+						CreateConsoleMsg("- " + rt\Name)
+					Next
 				Case "spawnitem"
 					;[Block]
 					Local itt.ItemTemplates = FindItemTemplate(Right(ConsoleInput, Len(ConsoleInput) - Instr(ConsoleInput, " ")))
@@ -892,6 +925,11 @@ Function UpdateConsole()
 						EntityType(it\collider, HIT_ITEM)
 					End If
 					;[End Block]
+				Case "itemlist", "items"
+					CreateConsoleMsg("Listing items:")
+					For itt.ItemTemplates = Each ItemTemplates
+						CreateConsoleMsg("- " + itt\name + "(" + itt\tempname + ")")
+					Next
 				Case "wireframe"
 					;[Block]
 					StrTemp$ = Lower(Right(ConsoleInput, Len(ConsoleInput) - Instr(ConsoleInput, " ")))
@@ -1532,7 +1570,6 @@ CreateConsoleMsg("  - disable173/enable173")
 CreateConsoleMsg("  - disable106/enable106")
 CreateConsoleMsg("  - 173state/106state/096state")
 CreateConsoleMsg("  - spawn [npc type]")
-CreateConsoleMsg("  - fov [x] (default = "+Str(DEFAULT_FOV)+")")
 
 ;---------------------------------------------------------------------------------------------------
 
