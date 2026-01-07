@@ -4108,6 +4108,9 @@ Function FillRoom(r.Rooms)
 			
 			CameraZoom (sc\Cam, 1.5)
 			
+			HideEntity sc\obj
+			HideEntity sc\CameraObj
+			HideEntity sc\ScrObj
 			HideEntity sc\ScrOverlay
 			HideEntity sc\MonitorObj
 			
