@@ -10354,6 +10354,8 @@ Function Use294()
 				EndIf
 				
 				If loc <> -1 Then
+					GiveAchievement(Achv294)
+
 					strtemp$ = GetINIString2(iniStr, loc, "dispensesound")
 					If strtemp="" Then
 						PlayerRoom\SoundCHN = PlaySound_Strict (LoadTempSound("SFX\SCP\294\dispense1.ogg"))

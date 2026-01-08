@@ -2522,7 +2522,6 @@ Function UpdateEvents()
 				If PlayerRoom = e\room Then
 					If Not Using294 Then
 						If EntityDistance(e\room\Objects[0], Collider)<1.5 Then
-							GiveAchievement(Achv294)
 							If EntityInView(e\room\Objects[0], Camera) Then
 								DrawHandIcon = True
 								If MouseHit1 Then
