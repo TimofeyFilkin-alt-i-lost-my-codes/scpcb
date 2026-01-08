@@ -249,6 +249,7 @@ Function CreateNPC.NPCs(NPCtype%, x#, y#, z#)
 			EntityRadius n\Collider, 0.26
 			EntityType n\Collider, HIT_PLAYER
 			n\obj = LoadAnimMesh_Strict("GFX\npcs\scp096.b3d")
+			n\obj2 = CreatePivot(FindChild(n\obj, "Reyelid"))
 			
 			n\Speed = (GetINIFloat("DATA\NPCs.ini", "SCP-096", "speed") / 100.0)
 			
@@ -1279,34 +1280,19 @@ Function UpdateNPCs()
 							EndIf
 							;AnimateNPC(n, 1085,1412, 0.1) ;sitting
 							
-							angle = WrapAngle(DeltaYaw(n\Collider, Collider));-EntityYaw(n\Collider,True))
-							
-							If (Not NoTarget)
-								If angle<90 Or angle>270 Then
-									CameraProject Camera,EntityX(n\Collider), EntityY(n\Collider)+0.25, EntityZ(n\Collider)
-									
-									If ProjectedX()>0 And ProjectedX()<GraphicWidth Then
-										If ProjectedY()>0 And ProjectedY()<GraphicHeight Then
-											If EntityVisible(Collider, n\Collider) Then
-												If (BlinkTimer < - 16 Or BlinkTimer > - 6)
-													PlaySound_Strict LoadTempSound("SFX\SCP\096\Triggered.ogg")
-													
-													CurrCameraZoom = 10
-													
-													n\Frame = 194
-													;n\Frame = 307
-													If n\SoundChn <> 0 Then
-														StopStream_Strict(n\SoundChn) : n\SoundChn = 0 : n\SoundChn_IsStream = False
-													EndIf
-													n\Sound = 0
-													n\State = 1
-													n\State3 = 0
-												EndIf
-											EndIf									
-										EndIf
-									EndIf								
-									
+							If dist < (CameraFogFar * LightVolume) And Sees096Face(n) Then
+								PlaySound_Strict LoadTempSound("SFX\SCP\096\Triggered.ogg")
+								
+								CurrCameraZoom = 10
+								
+								n\Frame = 194
+								;n\Frame = 307
+								If n\SoundChn <> 0 Then
+									StopStream_Strict(n\SoundChn) : n\SoundChn = 0 : n\SoundChn_IsStream = False
 								EndIf
+								n\Sound = 0
+								n\State = 1
+								n\State3 = 0
 							EndIf
 						EndIf
 						;[End Block]
@@ -1622,33 +1608,19 @@ Function UpdateNPCs()
 								AnimateNPC(n,312,422,0.3,False)
 							EndIf
 							
-							angle = WrapAngle(DeltaYaw(n\Collider, Camera));-EntityYaw(n\Collider))
-							If (Not NoTarget)
-								If angle<55 Or angle>360-55 Then
-									CameraProject Camera,EntityX(n\Collider), EntityY(Collider)+5.8*0.2-0.25, EntityZ(n\Collider)
-									
-									If ProjectedX()>0 And ProjectedX()<GraphicWidth Then
-										If ProjectedY()>0 And ProjectedY()<GraphicHeight Then
-											If EntityVisible(Collider, n\Collider) Then
-												If (BlinkTimer < - 16 Or BlinkTimer > - 6)
-													PlaySound_Strict LoadTempSound("SFX\SCP\096\Triggered.ogg")
-													
-													CurrCameraZoom = 10
-													
-													If n\Frame >= 422
-														n\Frame = 677 ;833
-													EndIf
-													If n\SoundChn <> 0 Then
-														StopStream_Strict(n\SoundChn) : n\SoundChn = 0 : n\SoundChn_IsStream = False
-													EndIf
-													n\Sound = 0
-													n\State = 2
-												EndIf
-											EndIf									
-										EndIf
-									EndIf
-									
+							If dist < (CameraFogFar * LightVolume) And Sees096Face(n) Then
+								PlaySound_Strict LoadTempSound("SFX\SCP\096\Triggered.ogg")
+								
+								CurrCameraZoom = 10
+								
+								If n\Frame >= 422
+									n\Frame = 677 ;833
 								EndIf
+								If n\SoundChn <> 0 Then
+									StopStream_Strict(n\SoundChn) : n\SoundChn = 0 : n\SoundChn_IsStream = False
+								EndIf
+								n\Sound = 0
+								n\State = 2
 							EndIf
 						EndIf
 						;[End Block]
@@ -5217,6 +5189,11 @@ Function MeNPCSeesPlayer%(me.NPCs,disablesoundoncrouch%=False)
 		Return 3
 	EndIf
 	
+End Function
+
+Function Sees096Face%(n.NPCs)
+	Local angle# = WrapAngle(DeltaYaw(n\Collider, Collider));-EntityYaw(n\Collider,True))
+	Return (Not NoTarget) And (angle < 55 Lor angle > 360-55) And EntityVisible(Camera, n\obj2) And EntityInView(n\obj2, Camera) And (BlinkTimer < - 16 Lor BlinkTimer > - 6) And (Not IsNVGBlinking)
 End Function
 
 Function TeleportMTFGroup(n.NPCs)
