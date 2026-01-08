@@ -8667,8 +8667,6 @@ Function PreventRoomOverlap(r.Rooms)
 					PositionEntity r2\obj,r2\x,r2\y,r2\z
 					RotateEntity r2\obj,0,r2\angle,0
 					CalculateRoomExtents(r2)
-					
-					isIntersecting = False
 				EndIf
 			EndIf
 		EndIf
