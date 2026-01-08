@@ -4182,8 +4182,6 @@ Function UpdateNPCs()
 							If n\State3<900 Then
 								BlurTimer = ((Sin(MilliSecs()/50)+1.0)*200)/dist
 								
-								If (WearingNightVision>0) Then GiveAchievement(Achv966)
-								
 								If (Not Wearing714) And (WearingGasMask<3) And (WearingHazmat<3) And dist<16 Then
 									If StaminaEffect<1.5 Then
 										Select Rand(4)
@@ -4308,6 +4306,7 @@ Function UpdateNPCs()
 										HideEntity n\Collider
 										EntityPick(n\Collider, 1.5)
 										If PickedEntity() <> 0 Then
+											If WearingNightVision<> 0 Then GiveAchievement(Achv966)
 											n\Angle = EntityYaw(n\Collider)+Rnd(80,110)
 										EndIf
 										ShowEntity n\Collider
