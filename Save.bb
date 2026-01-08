@@ -751,9 +751,7 @@ Function LoadGame(file$)
 		
 		For rt.roomtemplates = Each RoomTemplates
 			If rt\id = roomtemplateID Then
-				r.Rooms = CreateRoom(level, rt\shape, x, y, z, rt\name)
-				TurnEntity(r\obj, 0, angle, 0)
-				r\angle = angle
+				r.Rooms = CreateRoom(level, rt\shape, x, y, z, angle, rt\name)
 				r\found = found
 				Exit
 			End If
@@ -2173,18 +2171,12 @@ Function LoadMap(file$)
 			
 			For rt.RoomTemplates=Each RoomTemplates
 				If Lower(rt\Name) = name Then
-					
-					r.Rooms = CreateRoom(0, rt\Shape, (MapWidth-x) * 8.0, 0, y * 8.0, name)
-					DebugLog "createroom"
-					
-					r\angle = angle
-					If r\angle<>90 And r\angle<>270
-						r\angle = r\angle + 180
+					If angle<>90 And angle<>270
+						angle = angle + 180
 					EndIf
-					r\angle = WrapAngle(r\angle)
+					angle = WrapAngle(angle)
 					
-					TurnEntity(r\obj, 0, r\angle, 0)
-					
+					r.Rooms = CreateRoom(0, rt\Shape, (MapWidth-x) * 8.0, 0, y * 8.0, angle, name)
 					MapTemp(MapWidth-x,y)=True
 					
 					Exit
@@ -2349,18 +2341,12 @@ Function LoadMap(file$)
 			
 			For rt.RoomTemplates=Each RoomTemplates
 				If Lower(rt\Name) = name Then
-					
-					r.Rooms = CreateRoom(0, rt\Shape, (MapWidth-x) * 8.0, 0, y * 8.0, name)
-					DebugLog "createroom"
-					
-					r\angle = angle
-					If r\angle<>90 And r\angle<>270
-						r\angle = r\angle + 180
+					If angle<>90 And angle<>270
+						angle = angle + 180
 					EndIf
-					r\angle = WrapAngle(r\angle)
+					angle = WrapAngle(angle)
 					
-					TurnEntity(r\obj, 0, r\angle, 0)
-					
+					r.Rooms = CreateRoom(0, rt\Shape, (MapWidth-x) * 8.0, 0, y * 8.0, angle, name)
 					MapTemp(MapWidth-x,y)=True
 					
 					Exit
@@ -2482,10 +2468,10 @@ Function LoadMap(file$)
 	;r = CreateRoom(0, ROOM1, 8, 0, (MapHeight-1) * 8, "173")
 	;r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 0, (MapHeight-1) * 8, "pocketdimension")
 	;r = CreateRoom(0, ROOM1, 0, 0, 8, "gatea")
-	If IntroEnabled Then r = CreateRoom(0, ROOM1, 8, 0, (MapHeight+2) * 8, "173")
-	r = CreateRoom(0, ROOM1, (MapWidth+2) * 8, 0, (MapHeight+2) * 8, "pocketdimension")
-	r = CreateRoom(0, ROOM1, 0, 500, -16, "gatea")
-	r = CreateRoom(0, ROOM1, -16, 800, 0, "dimension1499")
+	If IntroEnabled Then r = CreateRoom(0, ROOM1, 8, 0, (MapHeight+2) * 8, 0, "173")
+	r = CreateRoom(0, ROOM1, (MapWidth+2) * 8, 0, (MapHeight+2) * 8, 0, "pocketdimension")
+	r = CreateRoom(0, ROOM1, 0, 500, -16, 0, "gatea")
+	r = CreateRoom(0, ROOM1, -16, 800, 0, 0, "dimension1499")
 	
 	CreateEvent("173", "173", 0)
 	CreateEvent("pocketdimension", "pocketdimension", 0)   

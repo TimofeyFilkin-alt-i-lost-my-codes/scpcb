@@ -1953,7 +1953,7 @@ Function PlaceGrid_MapCreator(r.Rooms)
 	
 End Function
 
-Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, name$ = "")
+Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, angle%, name$ = "")
 	CatchErrors("Uncaught (CreateRoom)")
 	Local r.Rooms = New Rooms
 	Local rt.RoomTemplates
@@ -1982,7 +1982,8 @@ Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, name$ = "")
 					AddLightCones(r)
 				EndIf
 				
-				CalculateRoomExtents(r)
+				r\angle = angle
+				If angle <> 0 Then TurnEntity(r\obj, 0, angle, 0)
 				Return r
 			EndIf
 		Next
@@ -2022,7 +2023,8 @@ Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, name$ = "")
 						AddLightCones(r)
 					EndIf
 					
-					CalculateRoomExtents(r)
+					r\angle = angle
+					If angle <> 0 Then TurnEntity(r\obj, 0, angle, 0)
 					Return r	
 				End If
 			EndIf
@@ -7428,6 +7430,8 @@ Function CreateMap()
 				EndIf
 			ElseIf MapTemp(x, y) > 0
 				
+				Local angle%
+
 				temp = Min(MapTemp(x + 1, y),1) + Min(MapTemp(x - 1, y),1) + Min(MapTemp(x, y + 1),1) + Min(MapTemp(x, y - 1),1)
 				
 				Select temp ;viereisiss� ruuduissa olevien huoneiden m��r�
@@ -7436,36 +7440,31 @@ Function CreateMap()
 							If MapRoom(ROOM1, MapRoomID(ROOM1)) <> "" Then MapName(x, y) = MapRoom(ROOM1, MapRoomID(ROOM1))	
 						EndIf
 						
-						r = CreateRoom(zone, ROOM1, x * 8, 0, y * 8, MapName(x, y))
 						If MapTemp(x, y + 1) Then
-							r\angle = 180 
-							TurnEntity(r\obj, 0, r\angle, 0)
+							angle = 180 
 						ElseIf MapTemp(x - 1, y)
-							r\angle = 270
-							TurnEntity(r\obj, 0, r\angle, 0)
+							angle = 270
 						ElseIf MapTemp(x + 1, y)
-							r\angle = 90
-							TurnEntity(r\obj, 0, r\angle, 0)
+							angle = 90
 						Else 
-							r\angle = 0
+							angle = 0
 						End If
+						r = CreateRoom(zone, ROOM1, x * 8, 0, y * 8, angle, MapName(x, y))
 						MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 					Case 2
 						If MapTemp(x - 1, y)>0 And MapTemp(x + 1, y)>0 Then
 							If MapRoomID(ROOM2) < MaxRooms And MapName(x,y) = ""  Then
 								If MapRoom(ROOM2, MapRoomID(ROOM2)) <> "" Then MapName(x, y) = MapRoom(ROOM2, MapRoomID(ROOM2))	
 							EndIf
-							r = CreateRoom(zone, ROOM2, x * 8, 0, y * 8, MapName(x, y))
-							If Rand(2) = 1 Then r\angle = 90 Else r\angle = 270
-							TurnEntity(r\obj, 0, r\angle, 0)
+							If Rand(2) = 1 Then angle = 90 Else angle = 270
+							r = CreateRoom(zone, ROOM2, x * 8, 0, y * 8, angle, MapName(x, y))
 							MapRoomID(ROOM2)=MapRoomID(ROOM2)+1
 						ElseIf MapTemp(x, y - 1)>0 And MapTemp(x, y + 1)>0
 							If MapRoomID(ROOM2) < MaxRooms And MapName(x,y) = ""  Then
 								If MapRoom(ROOM2, MapRoomID(ROOM2)) <> "" Then MapName(x, y) = MapRoom(ROOM2, MapRoomID(ROOM2))	
 							EndIf
-							r = CreateRoom(zone, ROOM2, x * 8, 0, y * 8, MapName(x, y))
-							If Rand(2) = 1 Then r\angle = 180 Else r\angle = 0
-							TurnEntity(r\obj, 0, r\angle, 0)
+							If Rand(2) = 1 Then angle = 180 Else angle = 0
+							r = CreateRoom(zone, ROOM2, x * 8, 0, y * 8, angle, MapName(x, y))
 							MapRoomID(ROOM2)=MapRoomID(ROOM2)+1
 						Else
 							If MapRoomID(ROOM2C) < MaxRooms And MapName(x,y) = ""  Then
@@ -7473,20 +7472,15 @@ Function CreateMap()
 							EndIf
 							
 							If MapTemp(x - 1, y)>0 And MapTemp(x, y + 1)>0 Then
-								r = CreateRoom(zone, ROOM2C, x * 8, 0, y * 8, MapName(x, y))
-								r\angle = 180
-								TurnEntity(r\obj, 0, r\angle, 0)
+								angle = 180
 							ElseIf MapTemp(x + 1, y)>0 And MapTemp(x, y + 1)>0
-								r = CreateRoom(zone, ROOM2C, x * 8, 0, y * 8, MapName(x, y))
-								r\angle = 90
-								TurnEntity(r\obj, 0, r\angle, 0)
+								angle = 90
 							ElseIf MapTemp(x - 1, y)>0 And MapTemp(x, y - 1)>0
-								r = CreateRoom(zone, ROOM2C, x * 8, 0, y * 8, MapName(x, y))
-								TurnEntity(r\obj, 0, 270, 0)
-								r\angle = 270
+								angle = 270
 							Else
-								r = CreateRoom(zone, ROOM2C, x * 8, 0, y * 8, MapName(x, y))
+								angle = 0
 							EndIf
+							r = CreateRoom(zone, ROOM2C, x * 8, 0, y * 8, angle, MapName(x, y))
 							MapRoomID(ROOM2C)=MapRoomID(ROOM2C)+1
 						EndIf
 					Case 3
@@ -7494,44 +7488,48 @@ Function CreateMap()
 							If MapRoom(ROOM3, MapRoomID(ROOM3)) <> "" Then MapName(x, y) = MapRoom(ROOM3, MapRoomID(ROOM3))	
 						EndIf
 						
-						r = CreateRoom(zone, ROOM3, x * 8, 0, y * 8, MapName(x, y))
 						If (Not MapTemp(x, y - 1)) Then
-							TurnEntity(r\obj, 0, 180, 0)
-							r\angle = 180
+							angle = 180
 						ElseIf (Not MapTemp(x - 1, y))
-							TurnEntity(r\obj, 0, 90, 0)
-							r\angle = 90
+							angle = 90
 						ElseIf (Not MapTemp(x + 1, y))
-							TurnEntity(r\obj, 0, -90, 0)
-							r\angle = 270
+							angle = 270
+						Else
+							angle = 0
 						End If
+						r = CreateRoom(zone, ROOM3, x * 8, 0, y * 8, angle, MapName(x, y))
 						MapRoomID(ROOM3)=MapRoomID(ROOM3)+1
 					Case 4
 						If MapRoomID(ROOM4) < MaxRooms And MapName(x,y) = ""  Then
 							If MapRoom(ROOM4, MapRoomID(ROOM4)) <> "" Then MapName(x, y) = MapRoom(ROOM4, MapRoomID(ROOM4))	
 						EndIf
 						
-						r = CreateRoom(zone, ROOM4, x * 8, 0, y * 8, MapName(x, y))
+						r = CreateRoom(zone, ROOM4, x * 8, 0, y * 8, 0, MapName(x, y))
 						MapRoomID(ROOM4)=MapRoomID(ROOM4)+1
 				End Select
 				
 			EndIf
 			
+			CalculateRoomExtents(r)
 		Next
 	Next		
 	
-	r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 500, 8, "gatea")
+	r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 500, 8, 0, "gatea")
+	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	
-	r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 0, (MapHeight-1) * 8, "pocketdimension")
+	r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 0, (MapHeight-1) * 8, 0, "pocketdimension")
+	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1	
 	
 	If IntroEnabled
-		r = CreateRoom(0, ROOM1, 8, 0, (MapHeight-1) * 8, "173")
+		r = CreateRoom(0, ROOM1, 8, 0, (MapHeight-1) * 8, 0, "173")
+		CalculateRoomExtents(r)
 		MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	EndIf
 	
-	r = CreateRoom(0, ROOM1, 8, 800, 0, "dimension1499")
+	r = CreateRoom(0, ROOM1, 8, 800, 0, 0, "dimension1499")
+	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	
 	For r.Rooms = Each Rooms
