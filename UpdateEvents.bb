@@ -5493,19 +5493,8 @@ Function UpdateEvents()
 									dist = EntityDistance(e\room\RoomDoors[0]\frameobj, e\room\NPC[0]\Collider)
 									
 									e\room\NPC[0]\State = 1
-									If dist > 2.5 Then
-										PointEntity e\room\NPC[0]\obj, e\room\RoomDoors[1]\frameobj
-										RotateEntity e\room\NPC[0]\Collider, 0, CurveAngle(EntityYaw(e\room\NPC[0]\obj), EntityYaw(e\room\NPC[0]\Collider), 15.0), 0
-									ElseIf dist > 0.7
-										If ChannelPlaying (e\room\NPC[0]\SoundChn) Then
-											e\room\NPC[0]\State = 0
-											PointEntity e\room\NPC[0]\obj, Collider
-											RotateEntity e\room\NPC[0]\Collider, 0, CurveAngle(EntityYaw(e\room\NPC[0]\obj), EntityYaw(e\room\NPC[0]\Collider), 15.0), 0
-										Else
-											PointEntity e\room\NPC[0]\obj, e\room\RoomDoors[0]\frameobj
-											RotateEntity e\room\NPC[0]\Collider, 0, CurveAngle(EntityYaw(e\room\NPC[0]\obj), EntityYaw(e\room\NPC[0]\Collider), 15.0), 0
-										EndIf
-									Else
+									; The > 100 check is a failsafe because there are reports of him being teleported god knows where that I'm struggling to reproduce.
+									If dist <= 0.7 Lor dist > 100 Then
 										RemoveNPC(e\room\NPC[0])
 										e\room\NPC[0]=Null
 										e\EventState = -1
@@ -5525,6 +5514,18 @@ Function UpdateEvents()
 												EndIf
 											EndIf
 										Next
+									Else If dist <= 2.5 Then
+										If ChannelPlaying (e\room\NPC[0]\SoundChn) Then
+											e\room\NPC[0]\State = 0
+											PointEntity e\room\NPC[0]\obj, Collider
+											RotateEntity e\room\NPC[0]\Collider, 0, CurveAngle(EntityYaw(e\room\NPC[0]\obj), EntityYaw(e\room\NPC[0]\Collider), 15.0), 0
+										Else
+											PointEntity e\room\NPC[0]\obj, e\room\RoomDoors[0]\frameobj
+											RotateEntity e\room\NPC[0]\Collider, 0, CurveAngle(EntityYaw(e\room\NPC[0]\obj), EntityYaw(e\room\NPC[0]\Collider), 15.0), 0
+										EndIf
+									Else
+										PointEntity e\room\NPC[0]\obj, e\room\RoomDoors[1]\frameobj
+										RotateEntity e\room\NPC[0]\Collider, 0, CurveAngle(EntityYaw(e\room\NPC[0]\obj), EntityYaw(e\room\NPC[0]\Collider), 15.0), 0
 									EndIf
 								EndIf
 								
