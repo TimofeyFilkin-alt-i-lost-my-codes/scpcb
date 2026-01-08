@@ -7761,6 +7761,7 @@ Function DrawMenu()
 						PrevSave = CurrSave
 						CurrSave = ""
 						FlushKeys()
+						Return
 					EndIf
 				EndIf
 			EndIf
@@ -7773,6 +7774,7 @@ Function DrawMenu()
 				PrevSave = CurrSave
 				CurrSave = ""
 				FlushKeys()
+				Return
 			EndIf
 			
 			If DrawButton(x+101*MenuScale, y + 344*MenuScale, 230*MenuScale, 60*MenuScale, "Back") Then

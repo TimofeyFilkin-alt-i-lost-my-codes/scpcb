@@ -538,6 +538,7 @@ Function UpdateMainMenu()
 										CurrSave = SaveGames(i - 1)
 										InitLoadGame()
 										MainMenuOpen = False
+										Return
 									EndIf
 								EndIf
 								
