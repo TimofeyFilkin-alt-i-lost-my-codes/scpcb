@@ -223,9 +223,6 @@ Global viewport_center_x% = RealGraphicWidth / 2, viewport_center_y% = RealGraph
 ; -- Mouselook.
 Global mouselook_x_inc# = 0.3 ; This sets both the sensitivity and direction (+/-) of the mouse on the X axis.
 Global mouselook_y_inc# = 0.3 ; This sets both the sensitivity and direction (+/-) of the mouse on the Y axis.
-; Used to limit the mouse movement to within a certain number of pixels (250 is used here) from the center of the screen. This produces smoother mouse movement than continuously moving the mouse back to the center each loop.
-Global mouse_left_limit% = 250, mouse_right_limit% = GraphicsWidth () - 250
-Global mouse_top_limit% = 150, mouse_bottom_limit% = GraphicsHeight () - 150 ; As above.
 Global mouse_x_speed_1#, mouse_y_speed_1#
 
 Global KEY_RIGHT = GetINIInt(OptionFile, "binds", "Right key")
@@ -4547,10 +4544,7 @@ Function MouseLook()
 		End If
 	EndIf
 	
-	; -- Limit the mouse;s movement. Using this method produces smoother mouselook movement than centering the mouse Each loop.
-	If (MouseX() > mouse_right_limit) Or (MouseX() < mouse_left_limit) Or (MouseY() > mouse_bottom_limit) Or (MouseY() < mouse_top_limit)
-		MoveMouse viewport_center_x, viewport_center_y
-	EndIf
+	MoveMouse viewport_center_x, viewport_center_y
 	
 	If WearingGasMask Or WearingHazmat Or Wearing1499 Then
 		If Wearing714 = False Then
