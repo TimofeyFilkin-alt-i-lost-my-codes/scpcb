@@ -117,17 +117,10 @@ Global Bit16Mode = GetINIInt(OptionFile, "options", "16bit")
 If LauncherEnabled And (Not IsRestart) Then 
 	AspectRatioRatio = 1.0
 	UpdateLauncher()
-Else If Fullscreen
-	Local TotalGfxModes% = CountGfxModes3D()
-	Local samefound% = False
-	For i% = 1 To TotalGfxModes
-		If GraphicWidth = GfxModeWidth(i) And GraphicHeight = GfxModeHeight(i) Then samefound = True : Exit
-	Next
-	If Not samefound Then
-		; Exclusive fullscreen ONLY supports the reported resolutions
-		AspectRatioRatio = 1.0
-		UpdateLauncher()
-	End If
+Else If Fullscreen And (Not GfxModeExists(GraphicWidth, GraphicHeight, 16*Bit16Mode)) Then
+	; Exclusive fullscreen ONLY supports the reported resolutions
+	AspectRatioRatio = 1.0
+	UpdateLauncher()
 EndIf
 SetGfxDriver(SelectedGFXDriver)
 Global GFXDriverName$ = GFXDriverName(SelectedGFXDriver)
@@ -2377,14 +2370,16 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
                     EndIf
 					MsgTimer = 70 * 5
 				Else
-					Local now% = MilliSecs()
-					If now - ElevatorButtonLastPressMillis > 200 Then
-						ElevatorButtonSpamCount = Max(0, ElevatorButtonSpamCount - (now - ElevatorButtonLastPressMillis) / 200)
-					Else If d\IsElevatorDoor <> 3
-						ElevatorButtonSpamCount = ElevatorButtonSpamCount + 1
-						If ElevatorButtonSpamCount >= 30 Then api_MessageBox(api_GetActiveWindow(), "Memory Access Violation!" + Chr(10) + "The program attempted to read or write to a protected memory address.", "I warned you!", 0)
+					If d\IsElevatorDoor <> 3 Then
+						Local now% = MilliSecs()
+						If now - ElevatorButtonLastPressMillis > 200 Then
+							ElevatorButtonSpamCount = Max(0, ElevatorButtonSpamCount - (now - ElevatorButtonLastPressMillis) / 200)
+						Else
+							ElevatorButtonSpamCount = ElevatorButtonSpamCount + 1
+							If ElevatorButtonSpamCount >= 30 Then api_MessageBox(api_GetActiveWindow(), "Memory Access Violation!" + Chr(10) + "The program attempted to read or write to a protected memory address.", "I warned you!", 0)
+						EndIf
+						ElevatorButtonLastPressMillis = now
 					EndIf
-					ElevatorButtonLastPressMillis = now
 
 					If d\IsElevatorDoor = 1 Then
 						Msg = "You called the elevator."
