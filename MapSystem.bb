@@ -1497,7 +1497,7 @@ Const MaxRoomDoors% = 32
 
 Const ROOM1% = 1, ROOM2% = 2, ROOM2C% = 3, ROOM3% = 4, ROOM4% = 5
 
-Global RoomTempID%
+Global RoomTempID% = 0
 Type RoomTemplates
 	Field obj%, id%
 	Field objPath$
@@ -1551,10 +1551,12 @@ Type TempDoors
 	Field AllowRemoteControl%
 End Type
 
-Function CreateRoomTemplate.RoomTemplates(meshpath$)
+Function CreateRoomTemplate.RoomTemplates(name$)
 	Local rt.RoomTemplates = New RoomTemplates
 	
-	rt\objPath = meshpath
+	rt\SetRoom = -1
+
+	rt\Name = Lower(name)
 	
 	rt\id = RoomTempID
 	RoomTempID=RoomTempID+1
@@ -1571,40 +1573,38 @@ Function LoadRoomTemplates(file$)
 	Local f = OpenFile(file)
 	
 	While Not Eof(f)
-		TemporaryString = Trim(ReadLine(f))
-		If Left(TemporaryString,1) = "[" Then
-			TemporaryString = Mid(TemporaryString, 2, Len(TemporaryString) - 2)
-			StrTemp = GetINIString(file, TemporaryString, "mesh path")
-			
-			rt = CreateRoomTemplate(StrTemp)
-			rt\Name = Lower(TemporaryString)
-			
-			StrTemp = Lower(GetINIString(file, TemporaryString, "shape"))
-			
-			Select StrTemp
-				Case "room1", "1"
-					rt\Shape = ROOM1
-				Case "room2", "2"
-					rt\Shape = ROOM2
-				Case "room2c", "2c"
-					rt\Shape = ROOM2C
-				Case "room3", "3"
-					rt\Shape = ROOM3
-				Case "room4", "4"
-					rt\Shape = ROOM4
-				Default
-			End Select
-			
-			For i = 0 To 4
-				rt\zone[i]= GetINIInt(file, TemporaryString, "zone"+(i+1))
+		Local l$ = Trim(ReadLine(f))
+		If Left(l,1) = "[" Then
+			l = Mid(l, 2, Len(l) - 2)
+
+			rt = Null
+			For rtt.RoomTemplates = Each RoomTemplates
+				If rtt\Name = l Then rt = rtt : Exit
 			Next
-			
-			rt\Commonness = Max(Min(GetINIInt(file, TemporaryString, "commonness"), 100), 0)
-			rt\Large = GetINIInt(file, TemporaryString, "large")
-			rt\SetRoom = GetINIFloat(file, TemporaryString, "set room", -1)
-			rt\DisableDecals = GetINIInt(file, TemporaryString, "disabledecals")
-			rt\UseLightCones = GetINIInt(file, TemporaryString, "usevolumelighting")
-			rt\DisableOverlapCheck = GetINIInt(file, TemporaryString, "disableoverlapcheck")
+
+			If rt = Null Then rt = CreateRoomTemplate(l)
+		Else If l <> "" And Instr(l, ";") <> 1 Then
+			Local splitterPos% = Instr(l, "=")
+			Local key$ = Lower(Trim(Left(l, splitterPos - 1)))
+			Local value$ = Trim(Right(l, Len(l) - splitterPos))
+			Select key
+				Case "mesh path" rt\objPath = value
+				Case "shape"
+					Select Lower(value)
+						Case "room1", "1" rt\Shape = ROOM1
+						Case "room2", "2" rt\Shape = ROOM2
+						Case "room2c", "2c" rt\Shape = ROOM2C
+						Case "room3", "3" rt\Shape = ROOM3
+						Case "room4", "4" rt\Shape = ROOM4
+					End Select
+				Case "zone1", "zone2", "zone3", "zone4", "zone5" rt\zone[Int(Right(key, 1))-1] = Int(value)
+				Case "commonness" rt\Commonness = Max(Min(Int(value), 100), 0)
+				Case "large" rt\Large = ParseINIInt(value)
+				Case "set room" rt\SetRoom = Float(value)
+				Case "disabledecals" rt\DisableDecals = ParseINIInt(value)
+				Case "usevolumelighting" rt\UseLightCones = ParseINIInt(value)
+				Case "disableoverlapcheck" rt\DisableDecals = ParseINIInt(value)
+			End Select
 		EndIf
 	Wend
 	
@@ -1664,22 +1664,24 @@ InitRoomTemplates()
 Function InitRoomTemplates()
 	Local modRooms$
 	Local hasOverride%
+	Local lowest.ActiveMods = Last ActiveMods
 	For m.ActiveMods = Each ActiveMods
 		modRooms$ = m\Path + ROOMS_DATA_PATH
 		If FileType(m\Path + ROOMS_DATA_PATH) = 1 And FileType(m\Path + ROOMS_DATA_PATH + ".OVERRIDE") = 1 Then
 			hasOverride = True
+			lowest = m
 			Exit
 		EndIf
 	Next
 	; We load the vanilla templates first, so that they will also be placed within the map first (to be potentially overriden with mod rooms).
 	If Not hasOverride Then LoadRoomTemplates(ROOMS_DATA_PATH)
-	For m.ActiveMods = Each ActiveMods
-		modRooms$ = m\Path + ROOMS_DATA_PATH
+	While lowest<>Null
+		modRooms$ = lowest\Path + ROOMS_DATA_PATH
 		If FileType(modRooms) = 1 Then
 			LoadRoomTemplates(modRooms)
-			If FileType(m\Path + ROOMS_DATA_PATH + ".OVERRIDE") = 1 Then Exit
 		EndIf
-	Next
+		lowest = Before lowest
+	Wend
 End Function
 
 Global RoomScale# = 8.0 / 2048.0
@@ -1987,6 +1989,7 @@ Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, angle%, name$)
 				Return r
 			EndIf
 		Next
+		RuntimeErrorExt("Room " + Chr(34) + name + Chr(34) + " not found!")
 	EndIf
 	
 	Local temp% = 0
@@ -2025,7 +2028,7 @@ Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, angle%, name$)
 					
 					r\angle = angle
 					If angle <> 0 Then TurnEntity(r\obj, 0, angle, 0)
-					Return r	
+					Return r
 				End If
 			EndIf
 		Next
