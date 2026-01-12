@@ -909,6 +909,10 @@ Function UpdateConsole()
 						CreateConsoleMsg(itt\name + " spawned.")
 						it.Items = CreateItem(itt\name, itt\tempname, EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 						EntityType(it\collider, HIT_ITEM)
+
+						If itt\name = "S-NAV Navigator Ultimate" Lor itt\tempname = "fineradio" Then
+							it\state = 101
+						EndIf
 					End If
 					;[End Block]
 				Case "itemlist", "items"
