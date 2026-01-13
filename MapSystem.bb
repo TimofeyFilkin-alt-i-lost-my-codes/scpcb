@@ -7290,14 +7290,14 @@ Function CreateMap()
 									EndIf
 								EndIf
 							Case MapTemp(x+1,y)>0
-								If (MapTemp(x-1,y-1)+MapTemp(x-1,y+1)+MapTemp(x-2,y))=0 And x>x_min Then
-									If (MapTemp(x-1,y-2)+MapTemp(x-2,y-1))=0 And (y>y_min Or i=2) Then
+								If (x-2<0 Lor MapTemp(x-2,y)=0) And (MapTemp(x-1,y-1)+MapTemp(x-1,y+1))=0 And x>x_min Then
+									If (x-2<0 Lor MapTemp(x-2,y-1)=0) And MapTemp(x-1,y-2)=0 And (y>y_min Or i=2) Then
 										MapTemp(x,y)=2
 										MapTemp(x-1,y)=2
 										DebugLog "ROOM2C forced into slot ("+(x-1)+", "+(y)+")"
 										MapTemp(x-1,y-1)=1
 										temp=1
-									Else If (MapTemp(x-1,y+2)+MapTemp(x-2,y+1))=0 And (y<y_max Or i>0) Then
+									Else If (x-2<0 Lor MapTemp(x-2,y+1)=0) And MapTemp(x-1,y+2)=0 And (y<y_max Or i>0) Then
 										MapTemp(x,y)=2
 										MapTemp(x-1,y)=2
 										DebugLog "ROOM2C forced into slot ("+(x-1)+", "+(y)+")"
@@ -7307,7 +7307,7 @@ Function CreateMap()
 								EndIf
 							Case MapTemp(x,y-1)>0
 								If (MapTemp(x-1,y+1)+MapTemp(x+1,y+1)+MapTemp(x,y+2))=0 And (y<y_max Or i>0) Then
-									If (MapTemp(x-2,y+1)+MapTemp(x-1,y+2))=0 And x>x_min Then
+									If (x-2<0 Lor MapTemp(x-2,y+1)=0) And MapTemp(x-1,y+2)=0 And x>x_min Then
 										MapTemp(x,y)=2
 										MapTemp(x,y+1)=2
 										DebugLog "ROOM2C forced into slot ("+(x)+", "+(y+1)+")"
@@ -7323,7 +7323,7 @@ Function CreateMap()
 								EndIf
 							Case MapTemp(x,y+1)>0
 								If (MapTemp(x-1,y-1)+MapTemp(x+1,y-1)+MapTemp(x,y-2))=0 And (y>y_min Or i=2) Then
-									If (MapTemp(x-2,y-1)+MapTemp(x-1,y-2))=0 And x>x_min Then
+									If (x-2<0 Lor MapTemp(x-2,y-1)=0) And MapTemp(x-1,y-2)=0 And x>x_min Then
 										MapTemp(x,y)=2
 										MapTemp(x,y-1)=2
 										DebugLog "ROOM2C forced into slot ("+(x)+", "+(y-1)+")"
