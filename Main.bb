@@ -1577,9 +1577,9 @@ Global HUDenabled% = GetINIInt("options.ini", "options", "HUD enabled")
 
 Global Camera%, CameraShake#, CurrCameraZoom#
 
-Global Brightness% = GetINIFloat("options.ini", "options", "brightness")
-Global CameraFogNear# = GetINIFloat("options.ini", "options", "camera fog near")
-Global CameraFogFar# = GetINIFloat("options.ini", "options", "camera fog far")
+Global Brightness% = GetModdedINIFloat(MapOptions, "facility", "brightness")
+Global CameraFogNear# = GetModdedINIFloat(MapOptions, "facility", "camera fog near")
+Global CameraFogFar# = GetModdedINIFloat(MapOptions, "facility", "camera fog far")
 
 Global StoredCameraFogFar# = CameraFogFar
 
@@ -7987,9 +7987,9 @@ Function LoadEntities()
 	MaskImage(Panel294, 255,0,255)
 	
 	
-	Brightness% = GetINIFloat("options.ini", "options", "brightness")
-	CameraFogNear# = GetINIFloat("options.ini", "options", "camera fog near")
-	CameraFogFar# = GetINIFloat("options.ini", "options", "camera fog far")
+	Brightness% = GetModdedINIFloat(MapOptions, "facility", "brightness")
+	CameraFogNear# = GetModdedINIFloat(MapOptions, "facility", "camera fog near")
+	CameraFogFar# = GetModdedINIFloat(MapOptions, "facility", "camera fog far")
 	StoredCameraFogFar# = CameraFogFar
 	
 	;TextureLodBias
@@ -8009,7 +8009,6 @@ Function LoadEntities()
 	CameraRange(Camera, 0.05, CameraFogFar)
 	CameraFogMode (Camera, 1)
 	CameraFogRange (Camera, CameraFogNear, CameraFogFar)
-	CameraFogColor (Camera, GetINIInt("options.ini", "options", "fog r"), GetINIInt("options.ini", "options", "fog g"), GetINIInt("options.ini", "options", "fog b"))
 	AmbientLight Brightness, Brightness, Brightness
 	
 	ScreenTexs[0] = CreateTexture(512, 512, 1+256)
