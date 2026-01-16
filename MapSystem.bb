@@ -203,6 +203,8 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 	EndIf
 	
 	file=StripFilename(file)
+	; Modded rooms must try loading textures starting from the vanilla root.
+	If Left(file, 5) = "Mods\" Then file = Right(file, Len(file) - Instr(file, "\", 6))
 	
 	Local count%,count2%
 	
