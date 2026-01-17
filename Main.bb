@@ -196,6 +196,23 @@ Global ScreenGamma# = GetOptionFloat("options", "screengamma")
 Global FOV% = GetOptionInt("options", "fov")
 Const DEFAULT_FOV% = 59
 
+Global HUDStartX%, HUDEndX%, HUDStartY%, HUDEndY%
+Global HUDOffsetScale# = GetOptionFloat("options", "hud offset")
+
+UpdateHUDOffsets()
+
+Function UpdateHUDOffsets()
+	If GraphicWidth > GraphicHeight Then
+		HUDStartY = 0 : HUDEndY = GraphicHeight
+		HUDStartX = Int(HUDOffsetScale * GraphicWidth / 2)
+		HUDEndX = GraphicWidth - HUDStartX
+	Else
+		HUDStartX = 0 : HUDEndX = GraphicWidth
+		HUDStartY = Int(HUDOffsetScale * GraphicHeight / 2)
+		HUDEndY = GraphicHeight - HUDStartY
+	EndIf
+End Function
+
 Const HIT_MAP% = 1, HIT_PLAYER% = 2, HIT_ITEM% = 3, HIT_APACHE% = 4, HIT_178% = 5, HIT_DEAD% = 6
 SeedRnd MilliSecs()
 
@@ -4851,8 +4868,8 @@ Function DrawGUI()
 		If SpeedRunMode Then DrawTimer()
 
 		Local width% = 204 * HUDScale
-		x% = 80 * HUDScale
-		y% = GraphicHeight - 95 * HUDScale
+		x% = HUDStartX + 80 * HUDScale
+		y% = HUDEndY - 95 * HUDScale
 
 		DrawBar(BlinkMeterIMG, x, y, width, BlinkTimer / BLINKFREQ)
 		Color 0, 0, 0
@@ -4868,7 +4885,7 @@ Function DrawGUI()
 		
 		DrawImage BlinkIcon, x - 50 * HUDScale, y
 		
-		y = GraphicHeight - 55 * HUDScale
+		y = HUDEndY - 55 * HUDScale
 		DrawBar(StaminaMeterIMG, x, y, width, Stamina / 100.0)
 		
 		Color 0, 0, 0
@@ -6238,8 +6255,8 @@ Function DrawGUI()
 					
 					strtemp$ = ""
 					
-					x = GraphicWidth - ImageWidth(SelectedItem\itemtemplate\img) ;+ 120
-					y = GraphicHeight - ImageHeight(SelectedItem\itemtemplate\img) ;- 30
+					x = HUDEndX - ImageWidth(SelectedItem\itemtemplate\img) ;+ 120
+					y = HUDEndY - ImageHeight(SelectedItem\itemtemplate\img) ;- 30
 					
 					DrawImage(SelectedItem\itemtemplate\img, x, y)
 					
@@ -6722,8 +6739,8 @@ Function DrawGUI()
 					
 					If SelectedItem\state <= 100 Then SelectedItem\state = Max(0, SelectedItem\state - FPSfactor * 0.005)
 					
-					x = GraphicWidth - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
-					y = GraphicHeight - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
+					x = HUDEndX - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
+					y = HUDEndY - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
 					width = 287
 					height = 256
 					
@@ -7210,8 +7227,8 @@ Function DrawTimer()
 	Else
 		durText$ = "Pre-made save loaded"
 	EndIf
-	Local x% = GraphicWidth - StringWidth(durText) - 24 * HUDScale
-	Local y% = 24 * HUDScale
+	Local x% = HUDEndX - StringWidth(durText) - 24 * HUDScale
+	Local y% = HUDStartY + 24 * HUDScale
 	Color 0, 0, 0
 	Text(x + 3 * HUDScale, y + 3 * HUDScale, durText)
 	If TimerStopped Then
@@ -7410,7 +7427,7 @@ Function DrawMenu()
 					
 					ScreenGamma = (SlideBar(x + 270*MenuScale, y+6*MenuScale, 100*MenuScale, ScreenGamma*50.0, 1)/50.0)
 					Color 255,255,255
-					Text(x, y, "Screen gamma")
+					Text(x, y, "Screen gamma:")
 					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 						DrawOptionsTooltip(tx,ty,tw,th,"gamma",ScreenGamma)
 					EndIf
@@ -7444,6 +7461,16 @@ Function DrawMenu()
 					If MouseOn(x + 270 * MenuScale, y + MenuScale, 20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"vram")
 					EndIf
+
+					y=y+50*MenuScale
+
+					HUDOffsetScale = SlideBar(x + 270*MenuScale, y+6*MenuScale,100*MenuScale, HUDOffsetScale*100, 5)/100
+					Color 255,255,255
+					Text(x, y, "HUD offset:")
+					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=5
+						DrawOptionsTooltip(tx,ty,tw,th,"hudoffset")
+					EndIf
+					UpdateHUDOffsets()
 
 					y=y+50*MenuScale
 
@@ -11270,6 +11297,7 @@ Function SaveOptionsINI()
 	PutINIValue(OptionFile, "options", "numeric seeds", UseNumericSeeds%)
 	PutINIValue(OptionFile, "options", "enable vram", EnableVRam)
 	PutINIValue(OptionFile, "options", "mouse smoothing", MouseSmooth)
+	PutINIValue(OptionFile, "options", "hud offset", HUDOffsetScale)
 	PutINIValue(OptionFile, "options", "fov", FOV)
 	
 	PutINIValue(OptionFile, "audio", "music volume", MusicVolume)
@@ -11465,10 +11493,10 @@ Function RenderWorld2()
 			Local plusY% = 0
 			If hasBattery=1 Then plusY% = 40
 			
-			Text GraphicWidth/2,(20+plusY)*MenuScale,"REFRESHING DATA IN",True,False
+			Text GraphicWidth/2,HUDStartY+(20+plusY)*MenuScale,"REFRESHING DATA IN",True,False
 			
-			Text GraphicWidth/2,(60+plusY)*MenuScale,Max(f2s(NVTimer/60.0,1),0.0),True,False
-			Text GraphicWidth/2,(100+plusY)*MenuScale,"SECONDS",True,False
+			Text GraphicWidth/2,HUDStartY+(60+plusY)*MenuScale,Max(f2s(NVTimer/60.0,1),0.0),True,False
+			Text GraphicWidth/2,HUDStartY+(100+plusY)*MenuScale,"SECONDS",True,False
 			
 			temp% = CreatePivot() : temp2% = CreatePivot()
 			PositionEntity temp, EntityX(Collider), EntityY(Collider), EntityZ(Collider)
@@ -11512,25 +11540,25 @@ Function RenderWorld2()
 			
 			Color 0,0,55
 			For k=0 To 10
-				Rect 45,GraphicHeight*0.5-(k*20),54,10,True
+				Rect HUDStartX+45,GraphicHeight*0.5-(k*20),54,10,True
 			Next
 			Color 0,0,255
 			For l=0 To Floor((power%+50)*0.01)
-				Rect 45,GraphicHeight*0.5-(l*20),54,10,True
+				Rect HUDStartX+45,GraphicHeight*0.5-(l*20),54,10,True
 			Next
-			DrawImage NVGImages,40,GraphicHeight*0.5+30,1
+			DrawImage NVGImages,HUDStartX+40,GraphicHeight*0.5+30,1
 			
 			Color 255,255,255
 		ElseIf WearingNightVision=1 And hasBattery<>0
 			Color 0,55,0
 			For k=0 To 10
-				Rect 45,GraphicHeight*0.5-(k*20),54,10,True
+				Rect HUDStartX+45,GraphicHeight*0.5-(k*20),54,10,True
 			Next
 			Color 0,255,0
 			For l=0 To Floor((power%+50)*0.01)
-				Rect 45,GraphicHeight*0.5-(l*20),54,10,True
+				Rect HUDStartX+45,GraphicHeight*0.5-(l*20),54,10,True
 			Next
-			DrawImage NVGImages,40,GraphicHeight*0.5+30,0
+			DrawImage NVGImages,HUDStartX+40,GraphicHeight*0.5+30,0
 		EndIf
 	EndIf
 	

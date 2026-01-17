@@ -265,6 +265,7 @@ Function UpdateMainMenu()
 					UserTrackCheck2% = 0
 					
 					AntiAlias Opt_AntiAlias
+					UpdateHUDOffsets()
 					MainMenuTab = 0
 				Case 4 ;move back to the "new game" tab
 					MainMenuTab = 1
@@ -674,7 +675,7 @@ Function UpdateMainMenu()
 					;Local prevGamma# = ScreenGamma
 					ScreenGamma = (SlideBar(x + 310*MenuScale, y+6*MenuScale, 150*MenuScale, ScreenGamma*50.0, 1)/50.0)
 					Color 255,255,255
-					Text(x + 20 * MenuScale, y, "Screen gamma")
+					Text(x + 20 * MenuScale, y, "Screen gamma:")
 					If (MouseOn(x+310*MenuScale,y+6*MenuScale,150*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 						DrawOptionsTooltip(tx,ty,tw,th,"gamma",ScreenGamma)
 					EndIf
@@ -711,6 +712,15 @@ Function UpdateMainMenu()
 					EndIf
 
 					y=y+50*MenuScale
+
+					HUDOffsetScale = SlideBar(x + 310*MenuScale, y+6*MenuScale,150*MenuScale, HUDOffsetScale*100, 5)/100
+					Color 255,255,255
+					Text(x + 20 * MenuScale, y, "HUD offset:")
+					If (MouseOn(x+310*MenuScale,y+6*MenuScale,150*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=5
+						DrawOptionsTooltip(tx,ty,tw,th,"hudoffset")
+					EndIf
+
+					y=y+50*MenuScale
 					
 					Local SlideBarFOV# = FOV-40
 					SlideBarFOV = (SlideBar(x + 310*MenuScale, y+6*MenuScale,150*MenuScale, SlideBarFOV*2.0, 4)/2.0)
@@ -722,7 +732,7 @@ Function UpdateMainMenu()
 					If (MouseOn(x+310*MenuScale,y+6*MenuScale,150*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=4
 						DrawOptionsTooltip(tx,ty,tw,th,"fov")
 					EndIf
-					
+
 					;[End Block]
 				ElseIf MainMenuTab = 5 ;Audio
 					;[Block]
@@ -2441,6 +2451,13 @@ Function DrawOptionsTooltip(x%,y%,width%,height%,option$,value#=0,ingame%=False)
 			txt = "Textures that are stored in the Video-RAM will load faster, but this also has negative effects on the texture quality as well."
 			txt2 = "This option cannot be changed in-game."
 			R = 255
+		Case "hudoffset"
+			txt = Chr(34)+"HUD offset"+Chr(34)+" is used to move the stamina and blink meters, as well as the heads-up display of various items towards the center of the screen."
+			txt = txt + " Primarily intended for use with ultrawide monitors."
+			R = 255
+			G = 255
+			B = 255
+			txt2 = "Current value: "+Int(HUDOffsetScale*100)+"% (default is 0%)"
 		Case "fov"
 			txt = Chr(34)+"Field of view"+Chr(34)+" (FOV) is the amount of game view that is on display during a game."
 			R = 255
