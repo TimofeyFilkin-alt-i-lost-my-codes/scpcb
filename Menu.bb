@@ -32,7 +32,7 @@ Global MenuStr$, MenuStrX%, MenuStrY%
 Global MainMenuTab%
 
 
-Global IntroEnabled% = GetOptionInt("options", "intro enabled")
+Global IntroEnabled% = GetOptionInt("general", "intro enabled")
 
 Global SelectedInputBox%
 
@@ -253,7 +253,7 @@ Function UpdateMainMenu()
 		If DrawButton(x + width + 20 * MenuScale, y, 580 * MenuScale - width - 20 * MenuScale, height, "BACK", False, False, UpdatingMod<>Null) Then 
 			Select MainMenuTab
 				Case 1
-					PutINIValue(OptionFile, "options", "intro enabled", IntroEnabled%)
+					PutINIValue(OptionFile, "general", "intro enabled", IntroEnabled%)
 					MainMenuTab = 0
 				Case 2
 					CurrLoadGamePage = 0
@@ -448,7 +448,7 @@ Function UpdateMainMenu()
 					FlushKeys()
 					FlushMouse()
 					
-					PutINIValue(OptionFile, "options", "intro enabled", IntroEnabled%)
+					PutINIValue(OptionFile, "general", "intro enabled", IntroEnabled%)
 					
 				EndIf
 				
@@ -1662,12 +1662,12 @@ Function UpdateLauncher()
 		Flip
 	Forever
 	
-	PutINIValue(OptionFile, "options", "width", GfxModeWidthsByAspectRatio(SelectedAspectRatio, SelectedGfxMode))
-	PutINIValue(OptionFile, "options", "height", GfxModeHeightsByAspectRatio(SelectedAspectRatio, SelectedGfxMode))
+	PutINIValue(OptionFile, "graphics", "width", GfxModeWidthsByAspectRatio(SelectedAspectRatio, SelectedGfxMode))
+	PutINIValue(OptionFile, "graphics", "height", GfxModeHeightsByAspectRatio(SelectedAspectRatio, SelectedGfxMode))
 	If Fullscreen Then
-		PutINIValue(OptionFile, "options", "fullscreen", "true")
+		PutINIValue(OptionFile, "graphics", "fullscreen", "true")
 	Else
-		PutINIValue(OptionFile, "options", "fullscreen", "false")
+		PutINIValue(OptionFile, "graphics", "fullscreen", "false")
 	EndIf
 	If LauncherEnabled Then
 		PutINIValue(OptionFile, "launcher", "launcher enabled", "true")
@@ -1675,16 +1675,16 @@ Function UpdateLauncher()
 		PutINIValue(OptionFile, "launcher", "launcher enabled", "false")
 	EndIf
 	If BorderlessWindowed Then
-		PutINIValue(OptionFile, "options", "borderless windowed", "true")
+		PutINIValue(OptionFile, "graphics", "borderless windowed", "true")
 	Else
-		PutINIValue(OptionFile, "options", "borderless windowed", "false")
+		PutINIValue(OptionFile, "graphics", "borderless windowed", "false")
 	EndIf
 	If Bit16Mode Then
-		PutINIValue(OptionFile, "options", "16bit", "true")
+		PutINIValue(OptionFile, "graphics", "16bit", "true")
 	Else
-		PutINIValue(OptionFile, "options", "16bit", "false")
+		PutINIValue(OptionFile, "optiographicsns", "16bit", "false")
 	EndIf
-	PutINIValue(OptionFile, "options", "gfx driver", SelectedGFXDriver)
+	PutINIValue(OptionFile, "graphics", "gfx driver", SelectedGFXDriver)
 	
 	FreeImage(LauncherIMG) : LauncherIMG = 0
 	
