@@ -1682,7 +1682,7 @@ Function UpdateLauncher()
 	If Bit16Mode Then
 		PutINIValue(OptionFile, "graphics", "16bit", "true")
 	Else
-		PutINIValue(OptionFile, "optiographicsns", "16bit", "false")
+		PutINIValue(OptionFile, "graphics", "16bit", "false")
 	EndIf
 	PutINIValue(OptionFile, "graphics", "gfx driver", SelectedGFXDriver)
 	
