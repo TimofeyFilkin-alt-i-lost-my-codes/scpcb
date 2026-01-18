@@ -4125,7 +4125,7 @@ Function UpdateNPCs()
 								;echo/stare/walk around periodically
 								;If n\Frame>1014.0 Then
 								If n\Frame>213.0
-									If Rand(3)=1 And dist<4 Then
+									If Rand(3)=1 And dist<4 And (Not NoTarget) Then
 										n\State = Rand(1,4)
 									Else
 										n\State = Rand(5,6)								
@@ -4133,7 +4133,7 @@ Function UpdateNPCs()
 								EndIf
 								
 								;echo if player gets close
-								If dist<2.0 Then 
+								If dist<2.0 And (Not NoTarget) Then 
 									n\State=Rand(1,4)
 								EndIf 							
 							EndIf
@@ -4223,7 +4223,7 @@ Function UpdateNPCs()
 								AnimateNPC(n, 580, 628, n\CurrSpeed*25.0)
 								
 								;chasing the player
-								If n\State = 8 And dist<32 Then
+								If n\State = 8 And dist<32 And (Not NoTarget) Then
 									If n\PathTimer <= 0 Then
 										n\PathStatus = FindPath (n, EntityX(Collider,True), EntityY(Collider,True), EntityZ(Collider,True))
 										n\PathTimer = 40*10
@@ -4288,7 +4288,7 @@ Function UpdateNPCs()
 									If MilliSecs() > n\State2 And dist<16.0 Then
 										HideEntity n\Collider
 										EntityPick(n\Collider, 1.5)
-										If PickedEntity() <> 0 Then
+										If PickedEntity() <> 0 And (Not NoTarget) Then
 											If WearingNightVision<> 0 Then GiveAchievement(Achv966)
 											n\Angle = EntityYaw(n\Collider)+Rnd(80,110)
 										EndIf
