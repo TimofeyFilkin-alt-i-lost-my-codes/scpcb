@@ -224,7 +224,7 @@ Function UpdateMainMenu()
 					If temp Then MainMenuTab = 8
 				Case 3
 					txt = "OPTIONS"
-					If temp Then MainMenuTab = 3
+					If temp Then MainMenuTab = 3 : OnSliderID = 66
 				Case 4
 					txt = "QUIT"
 					If temp Then
