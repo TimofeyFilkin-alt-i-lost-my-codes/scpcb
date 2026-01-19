@@ -273,6 +273,10 @@ ScaleImage(BlinkMeterIMG, HUDScale, HUDScale)
 
 DrawLoading(0, True)
 
+Const StringsFile$ = "Data\strings.ini"
+
+DrawLoading(5, True)
+
 ; - -Viewport.
 Global viewport_center_x% = RealGraphicWidth / 2, viewport_center_y% = RealGraphicHeight / 2
 
