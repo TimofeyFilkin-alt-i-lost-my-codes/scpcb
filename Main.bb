@@ -973,7 +973,7 @@ Function UpdateConsole()
 						it.Items = CreateItem(itt\name, EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 						EntityType(it\collider, HIT_ITEM)
 
-						If itt\name = "snavulti" Lor itt\name = "fineradio" Then
+						If itt\name = "snavulti" Lor itt\name = "fineradio" Lor itt\name = "veryfineradio" Then
 							it\state = 101
 						EndIf
 					End If
@@ -6242,7 +6242,7 @@ Function DrawGUI()
 					;radiostate(6) = a timer for the "code channel"
 					;RadioState(7) = another timer for the "code channel"
 					
-					If RadioState(5) = 0 Then 
+					If RadioState(5) = 0 And SelectedItem\state > 0 And SelectedItem\itemtemplate\name <> "veryfineradio" Then 
 						Msg = "Use the numbered keys 1 through 5 to cycle between various channels."
 						MsgTimer = 70 * 5
 						RadioState(5) = 1
