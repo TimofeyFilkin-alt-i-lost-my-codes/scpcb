@@ -1732,7 +1732,7 @@ Function UpdateNPCs()
 											ElseIf BlurTimer => 500
 												For i = 0 To MaxItemAmount-1
 													If Inventory(i)<>Null Then
-														If Instr(Inventory(i)\itemtemplate\tempname,"hazmatsuit") And WearingHazmat<3 Then
+														If Inventory(i)\itemtemplate\group = "hazmat" And WearingHazmat<3 Then
 															If Inventory(i)\state2 < 3 Then
 																Inventory(i)\state2 = Inventory(i)\state2 + 1
 																BlurTimer = 260.0
@@ -3423,8 +3423,7 @@ Function UpdateNPCs()
 										Local docamount% = 0
 										For i = 0 To MaxItemAmount-1
 											If Inventory(i)<>Null
-												Local docname$ = Inventory(i)\itemtemplate\name
-												If docname = "Log #1" Or docname = "Log #2" Or docname = "Log #3"
+												If Instr(Inventory(i)\itemtemplate\name, "log") = 1 Then
 													;860,850,830,800
 													docamount% = docamount% + 1
 													docchance = docchance + 10*docamount%
@@ -7040,7 +7039,7 @@ Function PlayMTFSound(sound%, n.NPCs)
 	
 	If SelectedItem <> Null Then
 		If SelectedItem\state2 = 3 And SelectedItem\state > 0 Then 
-			Select SelectedItem\itemtemplate\tempname 
+			Select SelectedItem\itemtemplate\name 
 				Case "radio","fineradio","18vradio"
 					If sound<>MTFSFX(5) Or (Not ChannelPlaying(RadioCHN(3)))
 						If RadioCHN(3)<> 0 Then StopChannel RadioCHN(3)

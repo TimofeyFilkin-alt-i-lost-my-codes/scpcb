@@ -381,9 +381,8 @@ Function SaveGame(file$)
 	WriteInt f, temp
 	For it.items = Each Items
 		WriteString f, it\itemtemplate\name
-		WriteString f, it\itemtemplate\tempName
 		
-		WriteString f, it\name
+		WriteString f, it\displayname
 		
 		WriteFloat f, EntityX(it\collider, True)
 		WriteFloat f, EntityY(it\collider, True)
@@ -1086,13 +1085,7 @@ Function LoadGame(file$)
 	temp = ReadInt(f)
 	For i = 1 To temp
 		Local ittName$ = ReadString(f)
-		Local tempName$ = ReadString(f)
 		Local Name$ = ReadString(f)
-		
-		If tempName = "50ct" Then
-			ittName = "Quarter"
-			tempName = "25ct"
-		EndIf
 		
 		x = ReadFloat(f)
 		y = ReadFloat(f)
@@ -1103,8 +1096,8 @@ Function LoadGame(file$)
 		blue = ReadByte(f)		
 		a = ReadFloat(f)
 		
-		it.Items = CreateItem(ittName, tempName, x, y, z, red,green,blue,a)
-		it\name = Name
+		it.Items = CreateItem(ittName, x, y, z, red,green,blue,a)
+		it\displayname = Name
 		
 		EntityType it\collider, HIT_ITEM
 		
@@ -1125,12 +1118,7 @@ Function LoadGame(file$)
 			ItemAmount = ItemAmount + 1
 		EndIf
 		
-		For itt.ItemTemplates = Each ItemTemplates
-			If (itt\tempname = tempName) And (itt\name = ittName) Then
-				If itt\isAnim<>0 Then SetAnimTime it\model,ReadFloat(f)
-				Exit
-			EndIf
-		Next
+		If it\itemtemplate\isAnim<>0 Then SetAnimTime it\model,ReadFloat(f)
 		it\invSlots = ReadByte(f)
 		it\ID = ReadInt(f)
 		
@@ -1805,13 +1793,7 @@ Function LoadGameQuick(file$)
 	temp = ReadInt(f)
 	For i = 1 To temp
 		Local ittName$ = ReadString(f)
-		Local tempName$ = ReadString(f)
 		Local Name$ = ReadString(f)
-		
-		If tempName = "50ct" Then
-			ittName = "Quarter"
-			tempName = "25ct"
-		EndIf
 		
 		x = ReadFloat(f)
 		y = ReadFloat(f)
@@ -1822,8 +1804,8 @@ Function LoadGameQuick(file$)
 		blue = ReadByte(f)		
 		a = ReadFloat(f)
 		
-		it.Items = CreateItem(ittName, tempName, x, y, z, red,green,blue,a)
-		it\name = Name
+		it.Items = CreateItem(ittName, x, y, z, red,green,blue,a)
+		it\displayname = Name
 		
 		EntityType it\collider, HIT_ITEM
 		
@@ -1844,12 +1826,7 @@ Function LoadGameQuick(file$)
 			ItemAmount = ItemAmount + 1
 		EndIf
 		
-		For itt.ItemTemplates = Each ItemTemplates
-			If itt\tempname = tempName Then
-				If itt\isAnim<>0 Then SetAnimTime it\model,ReadFloat(f)
-				Exit
-			EndIf
-		Next
+		If it\itemtemplate\isAnim<>0 Then SetAnimTime it\model,ReadFloat(f)
 		it\invSlots = ReadByte(f)
 		it\ID = ReadInt(f)
 		

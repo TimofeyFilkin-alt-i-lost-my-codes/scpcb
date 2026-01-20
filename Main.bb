@@ -969,11 +969,11 @@ Function UpdateConsole()
 					If itt = Null Then
 						CreateConsoleMsg("Item not found.",255,150,0)
 					Else
-						CreateConsoleMsg(itt\name + " spawned.")
-						it.Items = CreateItem(itt\name, itt\tempname, EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
+						CreateConsoleMsg(itt\displayname + " spawned.")
+						it.Items = CreateItem(itt\name, EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 						EntityType(it\collider, HIT_ITEM)
 
-						If itt\name = "S-NAV Navigator Ultimate" Lor itt\tempname = "fineradio" Then
+						If itt\name = "snavulti" Lor itt\name = "fineradio" Then
 							it\state = 101
 						EndIf
 					End If
@@ -981,7 +981,7 @@ Function UpdateConsole()
 				Case "itemlist", "items"
 					CreateConsoleMsg("Listing items:")
 					For itt.ItemTemplates = Each ItemTemplates
-						CreateConsoleMsg("- " + itt\name + "(" + itt\tempname + ")")
+						CreateConsoleMsg("- " + itt\displayname + "(" + itt\name + ")")
 					Next
 				Case "wireframe"
 					;[Block]
@@ -1098,9 +1098,9 @@ Function UpdateConsole()
 					;[Block]
 					For i = 1 To 20
 						If Rand(2)=1 Then
-							it.Items = CreateItem("Some SCP-420-J","420", EntityX(Collider,True)+Cos((360.0/20.0)*i)*Rnd(0.3,0.5), EntityY(Camera,True), EntityZ(Collider,True)+Sin((360.0/20.0)*i)*Rnd(0.3,0.5))
+							it.Items = CreateItem("scp420j", EntityX(Collider,True)+Cos((360.0/20.0)*i)*Rnd(0.3,0.5), EntityY(Camera,True), EntityZ(Collider,True)+Sin((360.0/20.0)*i)*Rnd(0.3,0.5))
 						Else
-							it.Items = CreateItem("Joint","420s", EntityX(Collider,True)+Cos((360.0/20.0)*i)*Rnd(0.3,0.5), EntityY(Camera,True), EntityZ(Collider,True)+Sin((360.0/20.0)*i)*Rnd(0.3,0.5))
+							it.Items = CreateItem("joint", EntityX(Collider,True)+Cos((360.0/20.0)*i)*Rnd(0.3,0.5), EntityY(Camera,True), EntityZ(Collider,True)+Sin((360.0/20.0)*i)*Rnd(0.3,0.5))
 						EndIf
 						EntityType (it\collider, HIT_ITEM)
 					Next
@@ -1424,13 +1424,13 @@ Function UpdateConsole()
 					;[End Block]
 				Case "spawnradio"
 					;[Block]
-					it.Items = CreateItem("Radio Transceiver", "fineradio", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
+					it.Items = CreateItem("fineradio", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 					EntityType(it\collider, HIT_ITEM)
 					it\state = 101
 					;[End Block]
 				Case "spawnnvg"
 					;[Block]
-					it.Items = CreateItem("Night Vision Goggles", "nvgoggles", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
+					it.Items = CreateItem("nvgoggles", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 					EntityType(it\collider, HIT_ITEM)
 					it\state = 1000
 					;[End Block]
@@ -1440,7 +1440,7 @@ Function UpdateConsole()
 					;[End Block]
 				Case "spawnnav"
 					;[Block]
-					it.Items = CreateItem("S-NAV Navigator Ultimate", "nav", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
+					it.Items = CreateItem("snavulti", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 					EntityType(it\collider, HIT_ITEM)
 					it\state = 101
 					;[End Block]
@@ -2348,7 +2348,7 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 			EndIf
 			Return
 		Else
-			Select SelectedItem\itemtemplate\tempname
+			Select SelectedItem\itemtemplate\name
 				Case "key1"
 					temp = 1
 				Case "key2"
@@ -2404,7 +2404,7 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 	ElseIf d\KeyCard < 0
 		;I can't find any way to produce short circuited boolean expressions so work around this by using a temporary variable - risingstar64
 		If SelectedItem <> Null Then
-			temp = (SelectedItem\itemtemplate\tempname = "hand" And d\KeyCard=-1) Or (SelectedItem\itemtemplate\tempname = "hand2" And d\KeyCard=-2)
+			temp = (SelectedItem\itemtemplate\name = "hand" And d\KeyCard=-1) Or (SelectedItem\itemtemplate\name = "hand2" And d\KeyCard=-2)
 		EndIf
 		SelectedItem = Null
 		If temp <> 0 Then
@@ -3203,7 +3203,7 @@ While IsRunning
 			
 			If FallTimer < 0 Then
 				If SelectedItem <> Null Then
-					If Instr(SelectedItem\itemtemplate\tempname,"hazmatsuit") Or Instr(SelectedItem\itemtemplate\tempname,"vest") Then
+					If SelectedItem\itemtemplate\group = "hazmat" Or SelectedItem\itemtemplate\group = "vest" Then
 						If WearingHazmat=0 And WearingVest=0 Then
 							DropItem(SelectedItem)
 						EndIf
@@ -3218,7 +3218,7 @@ While IsRunning
 				darkA = Max(darkA, Min(Abs(FallTimer / 400.0), 1.0))				
 			EndIf
 			
-			If SelectedScreen <> Null Lor (Not InvOpen) And SelectedItem <> Null And (SelectedItem\itemtemplate\tempname = "navigator" Lor SelectedItem\itemtemplate\tempname = "nav") Then darkA = Max(darkA, 0.5)
+			If SelectedScreen <> Null Lor (Not InvOpen) And SelectedItem <> Null And SelectedItem\itemtemplate\group = "nav" Then darkA = Max(darkA, 0.5)
 			
 			EntityAlpha(Dark, darkA)	
 		EndIf
@@ -3242,10 +3242,10 @@ While IsRunning
 			Local W$ = ""
 			Local V# = 0
 			If SelectedItem<>Null
-				W$ = SelectedItem\itemtemplate\tempname
+				W$ = SelectedItem\itemtemplate\group
 				V# = SelectedItem\state
 			EndIf
-			If (W<>"vest" And W<>"finevest" And W<>"hazmatsuit" And W<>"hazmatsuit2" And W<>"hazmatsuit3") Or V=0 Or V=100
+			If (W<>"vest" And W<>"hazmat") Or V=0 Or V=100
 				InvOpen = Not InvOpen
 				If OtherOpen<>Null Then OtherOpen=Null
 				SelectedItem = Null
@@ -3348,7 +3348,7 @@ While IsRunning
 			Local temp% = False
 			If (Not InvOpen And OtherOpen = Null) Then
 				If SelectedItem <> Null
-					If SelectedItem\itemtemplate\tempname = "paper" Or SelectedItem\itemtemplate\tempname = "oldpaper"
+					If SelectedItem\itemtemplate\group = "paper" Or SelectedItem\itemtemplate\name = "oldpaper"
 						temp% = True
 					EndIf
 				EndIf
@@ -3944,7 +3944,7 @@ Function DrawEnding()
 					
 					Local docamount=0, docsfound=0
 					For itt.ItemTemplates = Each ItemTemplates
-						If itt\tempname = "paper" Then
+						If itt\group = "paper" Then
 							docamount=docamount+1
 							docsfound=docsfound+itt\found
 						EndIf
@@ -4284,7 +4284,7 @@ Function MovePlayer()
 	
 	For i = 0 To MaxItemAmount-1
 		If Inventory(i)<>Null Then
-			If Inventory(i)\itemtemplate\tempname = "finevest" Then
+			If Inventory(i)\itemtemplate\name = "finevest" Then
 				Stamina = Min(Stamina, 60)
 				Exit
 			EndIf
@@ -4323,7 +4323,7 @@ Function MovePlayer()
 			If ForceMove>0 Then Speed=Speed*ForceMove
 			
 			If SelectedItem<>Null Then
-				If SelectedItem\itemtemplate\tempname = "firstaid" Or SelectedItem\itemtemplate\tempname = "finefirstaid" Or SelectedItem\itemtemplate\tempname = "firstaid2" Then 
+				If SelectedItem\itemtemplate\name = "firstaid" Or SelectedItem\itemtemplate\name = "finefirstaid" Or SelectedItem\itemtemplate\name = "firstaid2" Then 
 					Sprint = 0
 				EndIf
 			EndIf
@@ -5190,7 +5190,7 @@ Function DrawGUI()
 		SelectedScreen = Null
 		SelectedMonitor = Null
 		If SelectedItem <> Null Then
-			If Instr(SelectedItem\itemtemplate\tempname,"vest") Or Instr(SelectedItem\itemtemplate\tempname,"hazmatsuit") Then
+			If SelectedItem\itemtemplate\group = "vest" Or SelectedItem\itemtemplate\group = "hazmat" Then
 				If (Not WearingVest) And (Not WearingHazmat) Then
 					DropItem(SelectedItem)
 				EndIf
@@ -5264,9 +5264,9 @@ Function DrawGUI()
 				If isMouseOn Then
 					SetFont Font1
 					Color 0,0,0
-					Text(x + width / 2 + 1, y + height + spacing - 15 + 1, OtherOpen\SecondInv[n]\itemtemplate\name, True)
+					Text(x + width / 2 + 1, y + height + spacing - 15 + 1, OtherOpen\SecondInv[n]\itemtemplate\displayname, True)
 					Color 255, 255, 255	
-					Text(x + width / 2, y + height + spacing - 15, OtherOpen\SecondInv[n]\itemtemplate\name, True)				
+					Text(x + width / 2, y + height + spacing - 15, OtherOpen\SecondInv[n]\itemtemplate\displayname, True)
 					If SelectedItem = Null Then
 						If MouseHit1 Then
 							SelectedItem = OtherOpen\SecondInv[n]
@@ -5354,11 +5354,11 @@ Function DrawGUI()
 					Next
 					
 					isEmpty=True
-					If OtherOpen\itemtemplate\tempname = "wallet" Then
+					If OtherOpen\itemtemplate\name = "wallet" Then
 						If (Not isEmpty) Then
 							For z% = 0 To OtherSize - 1
 								If OtherOpen\SecondInv[z]<>Null
-									Local name$=OtherOpen\SecondInv[z]\itemtemplate\tempname
+									Local name$=OtherOpen\SecondInv[z]\itemtemplate\name
 									If name$<>"25ct" And name$<>"coin" And name$<>"key" And name$<>"scp860" And name$<>"scp714" Then
 										isEmpty=False
 										Exit
@@ -5376,7 +5376,7 @@ Function DrawGUI()
 					EndIf
 					
 					If isEmpty Then
-						Select OtherOpen\itemtemplate\tempname
+						Select OtherOpen\itemtemplate\name
 							Case "clipboard"
 								OtherOpen\invimg = OtherOpen\itemtemplate\invimg2
 								SetAnimTime OtherOpen\model,17.0
@@ -5402,11 +5402,8 @@ Function DrawGUI()
 						PrevOtherOpen\SecondInv[MouseSlot] = SelectedItem
 						SelectedItem = Null
 					ElseIf PrevOtherOpen\SecondInv[MouseSlot] <> SelectedItem
-						Select SelectedItem\itemtemplate\tempname
-							Default
-								Msg = "You cannot combine these two items."
-								MsgTimer = 70 * 5
-						End Select					
+						Msg = "You cannot combine these two items."
+						MsgTimer = 70 * 5
 					EndIf
 					
 				EndIf
@@ -5442,7 +5439,7 @@ Function DrawGUI()
 			
 			If Inventory(n) <> Null Then
 				Color 200, 200, 200
-				Select Inventory(n)\itemtemplate\tempname 
+				Select Inventory(n)\itemtemplate\name 
 					Case "gasmask"
 						If WearingGasMask=1 Then Rect(x - 3, y - 3, width + 6, height + 6)
 					Case "supergasmask"
@@ -5507,7 +5504,7 @@ Function DrawGUI()
 							MouseHit1 = False
 							
 							If DoubleClick Then
-								If WearingHazmat > 0 And Instr(SelectedItem\itemtemplate\tempname,"hazmatsuit")=0 Then
+								If WearingHazmat > 0 And SelectedItem\itemtemplate\group <> "hazmat" Then
 									Msg = "You cannot use any items while wearing a hazmat suit."
 									MsgTimer = 70*5
 									SelectedItem = Null
@@ -5522,9 +5519,9 @@ Function DrawGUI()
 						
 						SetFont Font1
 						Color 0,0,0
-						Text(x + width / 2 + 1, y + height + spacing - 15 + 1, Inventory(n)\name, True)							
+						Text(x + width / 2 + 1, y + height + spacing - 15 + 1, Inventory(n)\displayname, True)							
 						Color 255, 255, 255	
-						Text(x + width / 2, y + height + spacing - 15, Inventory(n)\name, True)	
+						Text(x + width / 2, y + height + spacing - 15, Inventory(n)\displayname, True)	
 						
 					EndIf
 				EndIf
@@ -5559,7 +5556,7 @@ Function DrawGUI()
 				EndIf
 			Else
 				If MouseSlot = 66 Then
-					Select SelectedItem\itemtemplate\tempname
+					Select SelectedItem\itemtemplate\name
 						Case "vest","finevest","hazmatsuit","hazmatsuit2","hazmatsuit3"
 							Msg = "Double click on this item to take it off."
 							MsgTimer = 70*5
@@ -5590,15 +5587,17 @@ Function DrawGUI()
 						Inventory(MouseSlot) = SelectedItem
 						SelectedItem = Null
 					ElseIf Inventory(MouseSlot) <> SelectedItem
-						Select SelectedItem\itemtemplate\tempname
-							Case "paper","key1","key2","key3","key4","key5","key6","misc","oldpaper","badge","ticket","25ct","coin","key","scp860"
+						Local paperSelector$ = ""
+						If SelectedItem\itemtemplate\group = "paper" Then paperSelector = SelectedItem\itemtemplate\name
+						Select SelectedItem\itemtemplate\name
+							Case paperSelector,"key1","key2","key3","key4","key5","key6","misc","oldpaper","badge","oldbadge","ticket","25ct","coin","key","scp860"
 								;[Block]
-								If Inventory(MouseSlot)\itemtemplate\tempname = "clipboard" Then
+								If Inventory(MouseSlot)\itemtemplate\name = "clipboard" Then
 									;Add an item to clipboard
 									Local added.Items = Null
-									Local b$ = SelectedItem\itemtemplate\tempname
+									Local b$ = SelectedItem\itemtemplate\group
 									Local b2$ = SelectedItem\itemtemplate\name
-									If (b<>"misc" And b<>"25ct" And b<>"coin" And b<>"key" And b<>"scp860" And b<>"scp714") Or (b2="Playing Card" Or b2="Mastercard") Then
+									If (b<>"misc" And b2<>"25ct" And b2<>"coin" And b2<>"key" And b2<>"scp860" And b2<>"scp714") Or (b2="playingcard" Or b2="mastercard") Then
 										For c% = 0 To Inventory(MouseSlot)\invSlots-1
 											If (Inventory(MouseSlot)\SecondInv[c] = Null)
 												If SelectedItem <> Null Then
@@ -5622,12 +5621,12 @@ Function DrawGUI()
 										If SelectedItem <> Null Then
 											Msg = "The paperclip is not strong enough to hold any more items."
 										Else
-											If added\itemtemplate\tempname = "paper" Or added\itemtemplate\tempname = "oldpaper" Then
+											If added\itemtemplate\group = "paper" Or added\itemtemplate\name = "oldpaper" Then
 												Msg = "This document was added to the clipboard."
-											ElseIf added\itemtemplate\tempname = "badge"
-												Msg = added\itemtemplate\name + " was added to the clipboard."
+											ElseIf added\itemtemplate\name = "badge" Lor added\itemtemplate\name = "oldbadge"
+												Msg = added\itemtemplate\displayname + " was added to the clipboard."
 											Else
-												Msg = "The " + added\itemtemplate\name + " was added to the clipboard."
+												Msg = "The " + added\itemtemplate\displayname + " was added to the clipboard."
 											EndIf
 											
 										EndIf
@@ -5636,18 +5635,18 @@ Function DrawGUI()
 										Msg = "You cannot combine these two items."
 										MsgTimer = 70 * 5
 									EndIf
-								ElseIf Inventory(MouseSlot)\itemtemplate\tempname = "wallet" Then
+								ElseIf Inventory(MouseSlot)\itemtemplate\name = "wallet" Then
 									;Add an item to clipboard
 									added.Items = Null
-									b$ = SelectedItem\itemtemplate\tempname
+									b$ = SelectedItem\itemtemplate\group
 									b2$ = SelectedItem\itemtemplate\name
-									If (b<>"misc" And b<>"paper" And b<>"oldpaper") Or (b2="Playing Card" Or b2="Mastercard") Then
+									If (b<>"misc" And b<>"paper" And b2<>"oldpaper") Or (b2="playingcard" Or b2="mastercard") Then
 										For c% = 0 To Inventory(MouseSlot)\invSlots-1
 											If (Inventory(MouseSlot)\SecondInv[c] = Null)
 												If SelectedItem <> Null Then
 													Inventory(MouseSlot)\SecondInv[c] = SelectedItem
 													Inventory(MouseSlot)\state = 1.0
-													If b<>"25ct" And b<>"coin" And b<>"key" And b<>"scp860"
+													If b2<>"25ct" And b2<>"coin" And b2<>"key" And b2<>"scp860"
 														SetAnimTime Inventory(MouseSlot)\model,3.0
 													EndIf
 													Inventory(MouseSlot)\invimg = Inventory(MouseSlot)\itemtemplate\invimg
@@ -5667,7 +5666,7 @@ Function DrawGUI()
 										If SelectedItem <> Null Then
 											Msg = "The wallet is full."
 										Else
-											Msg = "You put "+added\itemtemplate\name+" into the wallet."
+											Msg = "You put "+added\itemtemplate\displayname+" into the wallet."
 										EndIf
 										
 										MsgTimer = 70 * 5
@@ -5682,48 +5681,42 @@ Function DrawGUI()
 								SelectedItem = Null
 								
 								;[End Block]
-							Case "battery", "bat"
+							Case "bat"
 								;[Block]
 								Select Inventory(MouseSlot)\itemtemplate\name
-									Case "S-NAV Navigator", "S-NAV 300 Navigator", "S-NAV 310 Navigator"
+									Case "snav", "snav300", "snav310"
 										If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
 										RemoveItem (SelectedItem)
 										SelectedItem = Null
 										Inventory(MouseSlot)\state = 100.0
 										Msg = "You replaced the navigator's battery."
 										MsgTimer = 70 * 5
-									Case "S-NAV Navigator Ultimate"
+									Case "snavulti"
 										Msg = "There seems to be no place for batteries in this navigator."
 										MsgTimer = 70 * 5
-									Case "Radio Transceiver"
-										Select Inventory(MouseSlot)\itemtemplate\tempname 
-											Case "fineradio", "veryfineradio"
-												Msg = "There seems to be no place for batteries in this radio."
-												MsgTimer = 70 * 5
-											Case "18vradio"
-												Msg = "The battery does not fit inside this radio."
-												MsgTimer = 70 * 5
-											Case "radio"
-												If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
-												RemoveItem (SelectedItem)
-												SelectedItem = Null
-												Inventory(MouseSlot)\state = 100.0
-												Msg = "You replaced the radio's battery."
-												MsgTimer = 70 * 5
-										End Select
-									Case "Night Vision Goggles"
-										Local nvname$ = Inventory(MouseSlot)\itemtemplate\tempname
-										If nvname$="nvgoggles" Or nvname$="supernv" Then
-											If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
-											RemoveItem (SelectedItem)
-											SelectedItem = Null
-											Inventory(MouseSlot)\state = 1000.0
-											Msg = "You replaced the goggles' battery."
-											MsgTimer = 70 * 5
-										Else
-											Msg = "There seems to be no place for batteries in these night vision goggles."
-											MsgTimer = 70 * 5
-										EndIf
+									Case "radio"
+										If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
+										RemoveItem (SelectedItem)
+										SelectedItem = Null
+										Inventory(MouseSlot)\state = 100.0
+										Msg = "You replaced the radio's battery."
+										MsgTimer = 70 * 5
+									Case "fineradio", "veryfineradio"
+										Msg = "There seems to be no place for batteries in this radio."
+										MsgTimer = 70 * 5
+									Case "18vradio"
+										Msg = "The battery does not fit inside this radio."
+										MsgTimer = 70 * 5
+									Case "supernv", "nvgoggles"
+										If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
+										RemoveItem (SelectedItem)
+										SelectedItem = Null
+										Inventory(MouseSlot)\state = 1000.0
+										Msg = "You replaced the goggles' battery."
+										MsgTimer = 70 * 5
+									Case "finenvgoggles"
+										Msg = "There seems to be no place for batteries in these night vision goggles."
+										MsgTimer = 70 * 5
 									Default
 										Msg = "You cannot combine these two items."
 										MsgTimer = 70 * 5	
@@ -5732,28 +5725,28 @@ Function DrawGUI()
 							Case "18vbat"
 								;[Block]
 								Select Inventory(MouseSlot)\itemtemplate\name
-									Case "S-NAV Navigator", "S-NAV 300 Navigator", "S-NAV 310 Navigator"
+									Case "snav", "snav300", "snav310"
 										Msg = "The battery does not fit inside this navigator."
 										MsgTimer = 70 * 5
-									Case "S-NAV Navigator Ultimate"
+									Case "snavulti"
 										Msg = "There seems to be no place for batteries in this navigator."
 										MsgTimer = 70 * 5
-									Case "Radio Transceiver"
-										Select Inventory(MouseSlot)\itemtemplate\tempname 
-											Case "fineradio", "veryfineradio"
-												Msg = "There seems to be no place for batteries in this radio."
-												MsgTimer = 70 * 5		
-											Case "18vradio"
-												If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
-												RemoveItem (SelectedItem)
-												SelectedItem = Null
-												Inventory(MouseSlot)\state = 100.0
-												Msg = "You replaced the radio's battery."
-												MsgTimer = 70 * 5
-										End Select 
+									Case "radio"
+										Msg = "The battery does not fit inside this radio."
+										MsgTimer = 70 * 5
+									Case "fineradio", "veryfineradio"
+										Msg = "There seems to be no place for batteries in this radio."
+										MsgTimer = 70 * 5
+									Case "18vradio"
+										If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
+										RemoveItem (SelectedItem)
+										SelectedItem = Null
+										Inventory(MouseSlot)\state = 100.0
+										Msg = "You replaced the radio's battery."
+										MsgTimer = 70 * 5
 									Default
 										Msg = "You cannot combine these two items."
-										MsgTimer = 70 * 5	
+										MsgTimer = 70 * 5
 								End Select
 								;[End Block]
 							Default
@@ -5777,7 +5770,7 @@ Function DrawGUI()
 	Else ;invopen = False
 		
 		If SelectedItem <> Null Then
-			Select SelectedItem\itemtemplate\tempname
+			Select SelectedItem\itemtemplate\name
 				Case "nvgoggles"
 					;[Block]
 					If Wearing1499 = 0 And WearingHazmat=0 Then
@@ -5847,20 +5840,7 @@ Function DrawGUI()
 					SelectedItem = Null
 					MsgTimer = 70 * 5
 					;[End Block]
-				Case "ring"
-					;[Block]
-					If Wearing714=2 Then
-						Msg = "You removed the ring."
-						Wearing714 = False
-					Else
-						;Achievements(Achv714)=True
-						Msg = "You put on the ring."
-						Wearing714 = 2
-					EndIf
-					MsgTimer = 70 * 5
-					SelectedItem = Null
-					;[End Block]
-				Case "1123"
+				Case "scp1123"
 					;[Block]
 					If Not (Wearing714 = 1) Then
 						If PlayerRoom\RoomTemplate\Name <> "room1123" Then
@@ -5886,10 +5866,6 @@ Function DrawGUI()
 							EndIf
 						Next
 					EndIf
-					;[End Block]
-				Case "battery"
-					;[Block]
-					;InvOpen = True
 					;[End Block]
 				Case "key1", "key2", "key3", "key4", "key5", "key6", "keyomni", "scp860", "hand", "hand2", "25ct"
 					;[Block]
@@ -5991,7 +5967,7 @@ Function DrawGUI()
 							SelectedItem\state = Min(SelectedItem\state+(FPSfactor/5.0),100)			
 							
 							If SelectedItem\state = 100 Then
-								If SelectedItem\itemtemplate\tempname = "finefirstaid" Then
+								If SelectedItem\itemtemplate\name = "finefirstaid" Then
 									Bloodloss = 0
 									Injuries = Max(0, Injuries - 2.0)
 									If Injuries = 0 Then
@@ -6025,7 +6001,7 @@ Function DrawGUI()
 										EndIf
 									EndIf
 									
-									If SelectedItem\itemtemplate\tempname = "firstaid2" Then 
+									If SelectedItem\itemtemplate\name = "firstaid2" Then 
 										Select Rand(6)
 											Case 1
 												SuperMan = True
@@ -6056,7 +6032,7 @@ Function DrawGUI()
 						EndIf
 					EndIf
 					;[End Block]
-				Case "eyedrops"
+				Case "eyedrops","redeyedrops"
 					;[Block]
 					If CanUseItem(False,False,False)
 						If (Not (Wearing714=1)) Then ;wtf is this
@@ -6091,53 +6067,6 @@ Function DrawGUI()
 						RemoveItem(SelectedItem)
 					EndIf
 					;[End Block]
-				Case "paper", "ticket"
-					;[Block]
-					If SelectedItem\itemtemplate\img = 0 Then
-						Select SelectedItem\itemtemplate\name
-							Case "Burnt Note" 
-								SelectedItem\itemtemplate\img = LoadImage_Strict("GFX\items\bn.it")
-								SetBuffer ImageBuffer(SelectedItem\itemtemplate\img)
-								Color 0,0,0
-								SetFont Font1
-								Text 277, 469, AccessCode, True, True
-								Color 255,255,255
-								SetBuffer BackBuffer()
-							Case "Document SCP-372"
-								SelectedItem\itemtemplate\img = LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
-								SelectedItem\itemtemplate\img = ResizeImage2(SelectedItem\itemtemplate\img, ImageWidth(SelectedItem\itemtemplate\img) * MenuScale, ImageHeight(SelectedItem\itemtemplate\img) * MenuScale)
-								
-								SetBuffer ImageBuffer(SelectedItem\itemtemplate\img)
-								Color 37,45,137
-								SetFont Font5
-								temp = ((Int(AccessCode)*3) Mod 10000)
-								If temp < 1000 Then temp = temp+1000
-								Text 383*MenuScale, 734*MenuScale, temp, True, True
-								Color 255,255,255
-								SetBuffer BackBuffer()
-							Case "Movie Ticket"
-								;don't resize because it messes up the masking
-								SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
-								
-								If (SelectedItem\state = 0) Then
-									Msg = Chr(34)+"Hey, I remember this movie!"+Chr(34)
-									MsgTimer = 70*10
-									PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(1,5)+".ogg")
-									SelectedItem\state = 1
-								EndIf
-							Case "Leaflet"
-								;don't resize because it messes up the masking
-								SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
-							Default 
-								SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
-								SelectedItem\itemtemplate\img = ResizeImage2(SelectedItem\itemtemplate\img, ImageWidth(SelectedItem\itemtemplate\img) * MenuScale, ImageHeight(SelectedItem\itemtemplate\img) * MenuScale)
-						End Select
-						
-						MaskImage(SelectedItem\itemtemplate\img, 255, 0, 255)
-					EndIf
-					
-					DrawImage(SelectedItem\itemtemplate\img, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\img) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\img) / 2)
-					;[End Block]
 				Case "scp1025"
 					;[Block]
 					GiveAchievement(Achv1025) 
@@ -6156,7 +6085,7 @@ Function DrawGUI()
 				Case "cup"
 					;[Block]
 					If CanUseItem(False,False,True)
-						strtemp = Trim(Lower(SelectedItem\name))
+						strtemp = Trim(Lower(SelectedItem\displayname)) ; TODOOOOO
 						If Left(strtemp, 6) = "cup of" Then
 							strtemp = Right(strtemp, Len(strtemp)-7)
 						ElseIf Left(strtemp, 8) = "a cup of"
@@ -6240,7 +6169,7 @@ Function DrawGUI()
 							Msg = strtemp 
 							MsgTimer = 70*6		
 						Else
-							it.Items = CreateItem("Empty Cup", "emptycup", 0,0,0)
+							it.Items = CreateItem("emptycup", 0,0,0)
 							it\Picked = True
 							For i = 0 To MaxItemAmount-1
 								If Inventory(i)=SelectedItem Then Inventory(i) = it : Exit
@@ -6568,7 +6497,7 @@ Function DrawGUI()
 							SetFont Font3
 							Text(x+60, y, "CHN")						
 							
-							If SelectedItem\itemtemplate\tempname = "veryfineradio" Then ;"KOODIKANAVA"
+							If SelectedItem\itemtemplate\name = "veryfineradio" Then ;"KOODIKANAVA"
 								ResumeChannel(RadioCHN(0))
 								If ChannelPlaying(RadioCHN(0)) = False Then RadioCHN(0) = PlaySound_Strict(RadioStatic)
 								
@@ -6652,7 +6581,7 @@ Function DrawGUI()
 						MsgTimer = 70 * 5
 					EndIf
 					;[End Block]
-				Case "420"
+				Case "scp420j"
 					;[Block]
 					If CanUseItem(False,False,True)
 						If Wearing714=1 Then
@@ -6668,7 +6597,7 @@ Function DrawGUI()
 						RemoveItem(SelectedItem)
 					EndIf
 					;[End Block]
-				Case "420s"
+				Case "smellyjoint", "joint"
 					;[Block]
 					If CanUseItem(False,False,True)
 						If Wearing714=1 Then
@@ -6714,10 +6643,10 @@ Function DrawGUI()
 								WearingHazmat = False
 								DropItem(SelectedItem)
 							Else
-								If SelectedItem\itemtemplate\tempname="hazmatsuit" Then
+								If SelectedItem\itemtemplate\name="hazmatsuit" Then
 									;Msg = "Hazmat1."
 									WearingHazmat = 1
-								ElseIf SelectedItem\itemtemplate\tempname="hazmatsuit2" Then
+								ElseIf SelectedItem\itemtemplate\name="hazmatsuit2" Then
 									;Msg = "Hazmat2."
 									WearingHazmat = 2
 								Else
@@ -6744,7 +6673,7 @@ Function DrawGUI()
 					
 					DrawBar(BlinkMeterIMG, GraphicWidth / 2, GraphicHeight / 2 + 80 * HUDScale, 300 * HUDScale, SelectedItem\state / 100.0, True)
 
-					SelectedItem\state = Min(SelectedItem\state+(FPSfactor/(2.0+(0.5*(SelectedItem\itemtemplate\tempname="finevest")))),100)
+					SelectedItem\state = Min(SelectedItem\state+(FPSfactor/(2.0+(0.5*(SelectedItem\itemtemplate\name="finevest")))),100)
 					
 					If SelectedItem\state=100 Then
 						If WearingVest>0 Then
@@ -6752,7 +6681,7 @@ Function DrawGUI()
 							WearingVest = False
 							DropItem(SelectedItem)
 						Else
-							If SelectedItem\itemtemplate\tempname="vest" Then
+							If SelectedItem\itemtemplate\name="vest" Then
 								Msg = "You put on the vest and feel slightly encumbered."
 								WearingVest = 1
 							Else
@@ -6772,7 +6701,7 @@ Function DrawGUI()
 						If WearingGasMask Then
 							Msg = "You removed the gas mask."
 						Else
-							If SelectedItem\itemtemplate\tempname = "supergasmask"
+							If SelectedItem\itemtemplate\name = "supergasmask"
 								Msg = "You put on the gas mask and you can breathe easier."
 							Else
 								Msg = "You put on the gas mask."
@@ -6781,9 +6710,9 @@ Function DrawGUI()
 							WearingNightVision = 0
 							WearingGasMask = 0
 						EndIf
-						If SelectedItem\itemtemplate\tempname="gasmask3" Then
+						If SelectedItem\itemtemplate\name="gasmask3" Then
 							If WearingGasMask = 0 Then WearingGasMask = 3 Else WearingGasMask=0
-						ElseIf SelectedItem\itemtemplate\tempname="supergasmask"
+						ElseIf SelectedItem\itemtemplate\name="supergasmask"
 							If WearingGasMask = 0 Then WearingGasMask = 2 Else WearingGasMask=0
 						Else
 							WearingGasMask = (Not WearingGasMask)
@@ -6796,7 +6725,7 @@ Function DrawGUI()
 					SelectedItem = Null
 					MsgTimer = 70 * 5
 					;[End Block]
-				Case "navigator", "nav"
+				Case "snav", "snav300", "snav310", "snavulti"
 					;[Block]
 					
 					If SelectedItem\itemtemplate\img=0 Then
@@ -6855,7 +6784,7 @@ Function DrawGUI()
 								For z2 = Max(0, PlayerZ - 6) To Min(MapHeight, PlayerZ + 6)
 									
 									If CoffinDistance > 16.0 Or Rnd(16.0)<CoffinDistance Then 
-										If MapTemp(x2, z2)>0 And (MapFound(x2, z2) > 0 Or SelectedItem\itemtemplate\name = "S-NAV 310 Navigator" Or SelectedItem\itemtemplate\name = "S-NAV Navigator Ultimate") Then
+										If MapTemp(x2, z2)>0 And (MapFound(x2, z2) > 0 Or SelectedItem\itemtemplate\name = "snav310" Or SelectedItem\itemtemplate\name = "snavulti") Then
 											Local drawx% = x + (PlayerX - 1 - x2) * 24 , drawy% = y - (PlayerZ - 1 - z2) * 24
 											
 											If x2+1<=MapWidth Then
@@ -6895,19 +6824,19 @@ Function DrawGUI()
 							SetBuffer BackBuffer()
 							DrawImageRect NavBG,xx+80,yy+70,xx+80,yy+70,270,230
 							Color 30,30,30
-							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then Color(100, 0, 0)
+							If SelectedItem\itemtemplate\name = "snav" Then Color(100, 0, 0)
 							Rect xx+80,yy+70,270,230,False
 							
 							x = HUDEndX - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
 							y = HUDEndY - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
 							
-							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then 
+							If SelectedItem\itemtemplate\name = "snav" Then 
 								Color(100, 0, 0)
 							Else
 								Color (30,30,30)
 							EndIf
 							If (MilliSecs() Mod 1000) > 300 Then
-								If SelectedItem\itemtemplate\name <> "S-NAV 310 Navigator" And SelectedItem\itemtemplate\name <> "S-NAV Navigator Ultimate" Then
+								If SelectedItem\itemtemplate\name <> "snav310" And SelectedItem\itemtemplate\name <> "snavulti" Then
 									Text(x - width/2 + 10, y - height/2 + 10, "MAP DATABASE OFFLINE")
 								EndIf
 								
@@ -6922,7 +6851,7 @@ Function DrawGUI()
 							EndIf
 							
 							Local SCPs_found% = 0
-							If SelectedItem\itemtemplate\name = "S-NAV Navigator Ultimate" And (MilliSecs() Mod 600) < 400 Then
+							If SelectedItem\itemtemplate\name = "snavulti" And (MilliSecs() Mod 600) < 400 Then
 								If Curr173<>Null Then
 									Local dist# = EntityDistance(Camera, Curr173\obj)
 									dist = Ceil(dist / 8.0) * 8.0
@@ -6976,7 +6905,7 @@ Function DrawGUI()
 							End If
 							
 							Color (30,30,30)
-							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then Color(100, 0, 0)
+							If SelectedItem\itemtemplate\name = "snav" Then Color(100, 0, 0)
 							If SelectedItem\state <= 100 Then
 								;Text (x - width/2 + 10, y - height/2 + 10, "BATTERY")
 								;xtemp = x - width/2 + 10
@@ -7032,7 +6961,7 @@ Function DrawGUI()
 							;DropItem(SelectedItem)
 							If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))
 						Else
-							If SelectedItem\itemtemplate\tempname="scp1499" Then
+							If SelectedItem\itemtemplate\name="scp1499" Then
 								;Msg = "scp1499."
 								Wearing1499 = 1
 							Else
@@ -7095,7 +7024,7 @@ Function DrawGUI()
 						SelectedItem = Null
 					EndIf
 					;[End Block]
-				Case "badge"
+				Case "badge", "oldbadge"
 					;[Block]
 					If SelectedItem\itemtemplate\img=0 Then
 						SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)	
@@ -7108,11 +7037,10 @@ Function DrawGUI()
 					
 					If SelectedItem\state = 0 Then
 						PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(6,10)+".ogg")
-						Select SelectedItem\itemtemplate\name
-							Case "Old Badge"
-								Msg = Chr(34)+"Huh? This guy looks just like me!"+Chr(34)
-								MsgTimer = 70*10
-						End Select
+						If SelectedItem\itemtemplate\name = "oldbadge"
+							Msg = Chr(34)+"Huh? This guy looks just like me!"+Chr(34)
+							MsgTimer = 70*10
+						EndIf
 						
 						SelectedItem\state = 1
 					EndIf
@@ -7141,15 +7069,12 @@ Function DrawGUI()
 					DrawImage(SelectedItem\itemtemplate\img, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\img) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\img) / 2)
 					
 					If SelectedItem\state = 0
-						Select SelectedItem\itemtemplate\name
-							Case "Disciplinary Hearing DH-S-4137-17092"
-								BlurTimer = 1000
-								
-								Msg = Chr(34)+"Why does this seem so familiar?"+Chr(34)
-								MsgTimer = 70*10
-								PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(6,10)+".ogg")
-								SelectedItem\state = 1
-						End Select
+						BlurTimer = 1000
+						
+						Msg = Chr(34)+"Why does this seem so familiar?"+Chr(34)
+						MsgTimer = 70*10
+						PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(6,10)+".ogg")
+						SelectedItem\state = 1
 					EndIf
 					;[End Block]
 				Case "coin"
@@ -7201,25 +7126,76 @@ Function DrawGUI()
 					EndIf
 					;[End Block]
 				Default
-					;[Block]
-					;check if the item is an inventory-type object
-					DoubleClick = 0
-					MouseHit1 = 0
-					MouseDown1 = 0
-					LastMouseHit1 = 0
-					If SelectedItem\invSlots>0 Then OtherOpen = SelectedItem
-					SelectedItem = Null
-					;[End Block]
+					If SelectedItem\itemtemplate\group = "paper" Lor SelectedItem\itemtemplate\name = "ticket" Then
+						;[Block]
+						If SelectedItem\itemtemplate\img = 0 Then
+							Select SelectedItem\itemtemplate\name
+								Case "burntnote" 
+									SelectedItem\itemtemplate\img = LoadImage_Strict("GFX\items\bn.it")
+									SetBuffer ImageBuffer(SelectedItem\itemtemplate\img)
+									Color 0,0,0
+									SetFont Font1
+									Text 277, 469, AccessCode, True, True
+									Color 255,255,255
+									SetBuffer BackBuffer()
+								Case "doc372"
+									SelectedItem\itemtemplate\img = LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
+									SelectedItem\itemtemplate\img = ResizeImage2(SelectedItem\itemtemplate\img, ImageWidth(SelectedItem\itemtemplate\img) * MenuScale, ImageHeight(SelectedItem\itemtemplate\img) * MenuScale)
+									
+									SetBuffer ImageBuffer(SelectedItem\itemtemplate\img)
+									Color 37,45,137
+									SetFont Font5
+									temp = ((Int(AccessCode)*3) Mod 10000)
+									If temp < 1000 Then temp = temp+1000
+									Text 383*MenuScale, 734*MenuScale, temp, True, True
+									Color 255,255,255
+									SetBuffer BackBuffer()
+								Case "ticket"
+									;don't resize because it messes up the masking
+									SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
+									
+									If (SelectedItem\state = 0) Then
+										Msg = Chr(34)+"Hey, I remember this movie!"+Chr(34)
+										MsgTimer = 70*10
+										PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(1,5)+".ogg")
+										SelectedItem\state = 1
+									EndIf
+								Case "leaflet"
+									;don't resize because it messes up the masking
+									SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
+								Default 
+									SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
+									SelectedItem\itemtemplate\img = ResizeImage2(SelectedItem\itemtemplate\img, ImageWidth(SelectedItem\itemtemplate\img) * MenuScale, ImageHeight(SelectedItem\itemtemplate\img) * MenuScale)
+							End Select
+							
+							MaskImage(SelectedItem\itemtemplate\img, 255, 0, 255)
+						EndIf
+						
+						DrawImage(SelectedItem\itemtemplate\img, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\img) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\img) / 2)
+						;[End Block]
+					Else
+						;[Block]
+						;check if the item is an inventory-type object
+						DoubleClick = 0
+						MouseHit1 = 0
+						MouseDown1 = 0
+						LastMouseHit1 = 0
+						If SelectedItem\invSlots>0 Then OtherOpen = SelectedItem
+						SelectedItem = Null
+						;[End Block]
+					EndIf
 			End Select
 			
 			If SelectedItem <> Null Then
 				If SelectedItem\itemtemplate\img <> 0
-					Local IN$ = SelectedItem\itemtemplate\tempname
-					If IN$ = "paper" Or IN$ = "badge" Or IN$ = "oldpaper" Or IN$ = "ticket" Then
+					Local IN$ = SelectedItem\itemtemplate\group
+					Local INN$ = SelectedItem\itemtemplate\name
+					If IN$ = "paper" Or INN$ = "badge" Or INN$ = "oldbadge" Or INN$ = "oldpaper" Or INN$ = "ticket" Then
 						For a_it.Items = Each Items
 							If a_it <> SelectedItem
-								Local IN2$ = a_it\itemtemplate\tempname
-								If IN2$ = "paper" Or IN2$ = "badge" Or IN2$ = "oldpaper" Or IN2$ = "ticket" Then
+								Local IN2$ = a_it\itemtemplate\group
+								Local INN2$ = a_it\itemtemplate\name
+								If IN2$ = "paper" Or INN2$ = "badge" Or INN2$ = "oldbadge" Or INN2$ = "oldpaper" Or INN2$ = "ticket" Then
 									If a_it\itemtemplate\img<>0
 										If a_it\itemtemplate\img <> SelectedItem\itemtemplate\img
 											FreeImage(a_it\itemtemplate\img) : a_it\itemtemplate\img = 0
@@ -7234,18 +7210,19 @@ Function DrawGUI()
 			EndIf
 			
 			If MouseHit2 Then
-				IN$ = SelectedItem\itemtemplate\tempname
+				IN$ = SelectedItem\itemtemplate\name
+				G$ = SelectedItem\itemtemplate\group
 				If IN$ = "scp1025" Then
 					If SelectedItem\itemtemplate\img<>0 Then FreeImage(SelectedItem\itemtemplate\img)
 					SelectedItem\itemtemplate\img=0
 				ElseIf IN$ = "firstaid" Or IN$="finefirstaid" Or IN$="firstaid2" Then
 					SelectedItem\state = 0
-				ElseIf IN$ = "vest" Or IN$="finevest"
+				ElseIf G$ = "vest"
 					SelectedItem\state = 0
 					If (Not WearingVest)
 						DropItem(SelectedItem,False)
 					EndIf
-				ElseIf IN$="hazmatsuit" Or IN$="hazmatsuit2" Or IN$="hazmatsuit3"
+				ElseIf G$="hazmat"
 					SelectedItem\state = 0
 					If (Not WearingHazmat)
 						DropItem(SelectedItem,False)
@@ -7273,7 +7250,7 @@ Function DrawGUI()
 	
 	For it.Items = Each Items
 		If it<>SelectedItem
-			Select it\itemtemplate\tempname
+			Select it\itemtemplate\name
 				Case "firstaid","finefirstaid","firstaid2","vest","finevest","hazmatsuit","hazmatsuit2","hazmatsuit3","scp1499","super1499"
 					it\state = 0
 			End Select
@@ -8727,7 +8704,7 @@ Function InitNewGame()
 		If (r\RoomTemplate\Name = "start" And IntroEnabled = False) Then 
 			PositionEntity (Collider, EntityX(r\obj)+3584*RoomScale, 704*RoomScale, EntityZ(r\obj)+1024*RoomScale)
 			PlayerRoom = r
-			it = CreateItem("Class D Orientation Leaflet", "paper", 1, 1, 1)
+			it = CreateItem("docORI", 1, 1, 1)
 			it\Picked = True
 			it\Dropped = -1
 			it\itemtemplate\found=True
@@ -8736,7 +8713,7 @@ Function InitNewGame()
 			EntityType (it\collider, HIT_ITEM)
 			EntityParent(it\collider, 0)
 			ItemAmount = ItemAmount + 1
-			it = CreateItem("Document SCP-173", "paper", 1, 1, 1)
+			it = CreateItem("doc173", 1, 1, 1)
 			it\Picked = True
 			it\Dropped = -1
 			it\itemtemplate\found=True
@@ -9715,7 +9692,7 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 	
 	Local it2.Items
 	Select item\itemtemplate\name
-		Case "Gas Mask", "Heavy Gas Mask"
+		Case "gasmask", "supergasmask", "gasmask3"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
@@ -9725,20 +9702,20 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 				Case "fine", "very fine"
-					it2 = CreateItem("Gas Mask", "supergasmask", x, y, z)
+					it2 = CreateItem("supergasmask", x, y, z)
 					RemoveItem(item)
 			End Select
-		Case "SCP-1499"
+		Case "scp1499", "super1499"
 				Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
 					RemoveItem(item)
 				Case "1:1"
-					it2 = CreateItem("Gas Mask", "gasmask", x, y, z)
+					it2 = CreateItem("gasmask", x, y, z)
 					RemoveItem(item)
 				Case "fine"
-					it2 = CreateItem("SCP-1499", "super1499", x, y, z)
+					it2 = CreateItem("super1499", x, y, z)
 					RemoveItem(item)
 				Case "very fine"
 					n.NPCs = CreateNPC(NPCtype1499,x,y,z)
@@ -9748,7 +9725,7 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					n\State3 = 1
 					RemoveItem(item)
 			End Select
-		Case "Ballistic Vest"
+		Case "vest", "finevest", "veryfinevest"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
@@ -9758,13 +9735,13 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 				Case "fine"
-					it2 = CreateItem("Heavy Ballistic Vest", "finevest", x, y, z)
+					it2 = CreateItem("finevest", x, y, z)
 					RemoveItem(item)
 				Case "very fine"
-					it2 = CreateItem("Bulky Ballistic Vest", "veryfinevest", x, y, z)
+					it2 = CreateItem("veryfinevest", x, y, z)
 					RemoveItem(item)
 			End Select
-		Case "Clipboard"
+		Case "clipboard"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(7, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
@@ -9786,17 +9763,7 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 			End Select
-		Case "Cowbell"
-			Select setting
-				Case "rough","coarse"
-					d.Decals = CreateDecal(0, x, 8*RoomScale+0.010, z, 90, Rand(360), 0)
-					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
-					RemoveItem(item)
-				Case "1:1","fine","very fine"
-					PositionEntity(item\collider, x, y, z)
-					ResetEntity(item\collider)
-			End Select
-		Case "Night Vision Goggles"
+		Case "supernv", "supernv", "finenvgoggles"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
@@ -9806,17 +9773,17 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 				Case "fine"
-					it2 = CreateItem("Night Vision Goggles", "finenvgoggles", x, y, z)
+					it2 = CreateItem("finenvgoggles", x, y, z)
 					RemoveItem(item)
 				Case "very fine"
-					it2 = CreateItem("Night Vision Goggles", "supernv", x, y, z)
+					it2 = CreateItem("supernv", x, y, z)
 					it2\state = 1000
 					RemoveItem(item)
 			End Select
-		Case "Metal Panel", "SCP-148 Ingot"
+		Case "scp148", "scp148ingot"
 			Select setting
 				Case "rough", "coarse"
-					it2 = CreateItem("SCP-148 Ingot", "scp148ingot", x, y, z)
+					it2 = CreateItem("scp148ingot", x, y, z)
 					RemoveItem(item)
 				Case "1:1", "fine", "very fine"
 					it2 = Null
@@ -9833,24 +9800,24 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					Next
 					
 					If it2<>Null Then
-						Select it2\itemtemplate\tempname
+						Select it2\itemtemplate\name
 							Case "gasmask", "supergasmask"
 								RemoveItem (it2)
 								RemoveItem (item)
 								
-								it2 = CreateItem("Heavy Gas Mask", "gasmask3", x, y, z)
+								it2 = CreateItem("gasmask3", x, y, z)
 							Case "vest"
 								RemoveItem (it2)
 								RemoveItem(item)
-								it2 = CreateItem("Heavy Ballistic Vest", "finevest", x, y, z)
+								it2 = CreateItem("finevest", x, y, z)
 							Case "hazmatsuit","hazmatsuit2"
 								RemoveItem (it2)
 								RemoveItem(item)
-								it2 = CreateItem("Heavy Hazmat Suit", "hazmatsuit3", x, y, z)
+								it2 = CreateItem("hazmatsuit3", x, y, z)
 						End Select
 					Else 
-						If item\itemtemplate\name="SCP-148 Ingot" Then
-							it2 = CreateItem("Metal Panel", "scp148", x, y, z)
+						If item\itemtemplate\name="scp148ingot" Then
+							it2 = CreateItem("scp148", x, y, z)
 							RemoveItem(item)
 						Else
 							PositionEntity(item\collider, x, y, z)
@@ -9858,118 +9825,118 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 						EndIf
 					EndIf					
 			End Select
-		Case "Severed Hand", "Black Severed Hand"
+		Case "hand", "hand2"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(3, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1", "fine", "very fine"
-					If (item\itemtemplate\name = "Severed Hand")
-						it2 = CreateItem("Black Severed Hand", "hand2", x, y, z)
+					If (item\itemtemplate\name = "hand")
+						it2 = CreateItem("hand2", x, y, z)
 					Else
-						it2 = CreateItem("Severed Hand", "hand", x, y, z)
+						it2 = CreateItem("hand", x, y, z)
 					EndIf
 			End Select
 			RemoveItem(item)
-		Case "First Aid Kit", "Blue First Aid Kit"
+		Case "firstaidkit", "firstaid2" ; TODO Missing small and very fine
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
 				If Rand(2)=1 Then
-					it2 = CreateItem("Blue First Aid Kit", "firstaid2", x, y, z)
+					it2 = CreateItem("firstaid2", x, y, z)
 				Else
-				    it2 = CreateItem("First Aid Kit", "firstaid", x, y, z)
+				    it2 = CreateItem("firstaid", x, y, z)
 				EndIf
 				Case "fine"
-					it2 = CreateItem("Small First Aid Kit", "finefirstaid", x, y, z)
+					it2 = CreateItem("finefirstaid", x, y, z)
 				Case "very fine"
-					it2 = CreateItem("Strange Bottle", "veryfinefirstaid", x, y, z)
+					it2 = CreateItem("veryfinefirstaid", x, y, z)
 			End Select
 			RemoveItem(item)
-		Case "Level 1 Key Card", "Level 2 Key Card", "Level 3 Key Card", "Level 4 Key Card", "Level 5 Key Card", "Key Card"
+		Case "key1", "key2", "key3", "key4", "key5"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Playing Card", "misc", x, y, z)
+					it2 = CreateItem("playingcard", x, y, z)
 				Case "fine"
 					Select item\itemtemplate\name
-						Case "Level 1 Key Card"
+						Case "key1"
 							Select SelectedDifficulty\otherFactors
 								Case EASY
-									it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+									it2 = CreateItem("key2", x, y, z)
 								Case NORMAL
 									If Rand(5)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+										it2 = CreateItem("key2", x, y, z)
 									EndIf
 								Case HARD
 									If Rand(4)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+										it2 = CreateItem("key2", x, y, z)
 									EndIf
 							End Select
-						Case "Level 2 Key Card"
+						Case "key2"
 							Select SelectedDifficulty\otherFactors
 								Case EASY
-									it2 = CreateItem("Level 3 Key Card", "key3", x, y, z)
+									it2 = CreateItem("key3", x, y, z)
 								Case NORMAL
 									If Rand(4)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 3 Key Card", "key3", x, y, z)
+										it2 = CreateItem("key3", x, y, z)
 									EndIf
 								Case HARD
 									If Rand(3)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 3 Key Card", "key3", x, y, z)
+										it2 = CreateItem("key3", x, y, z)
 									EndIf
 							End Select
-						Case "Level 3 Key Card"
+						Case "key3"
 							Select SelectedDifficulty\otherFactors
 								Case EASY
 									If Rand(10)=1 Then
-										it2 = CreateItem("Level 4 Key Card", "key4", x, y, z)
+										it2 = CreateItem("key4", x, y, z)
 									Else
-										it2 = CreateItem("Playing Card", "misc", x, y, z)	
+										it2 = CreateItem("playingcard", x, y, z)	
 									EndIf
 								Case NORMAL
 									If Rand(15)=1 Then
-										it2 = CreateItem("Level 4 Key Card", "key4", x, y, z)
+										it2 = CreateItem("key4", x, y, z)
 									Else
-										it2 = CreateItem("Playing Card", "misc", x, y, z)	
+										it2 = CreateItem("playingcard", x, y, z)	
 									EndIf
 								Case HARD
 									If Rand(20)=1 Then
-										it2 = CreateItem("Level 4 Key Card", "key4", x, y, z)
+										it2 = CreateItem("key4", x, y, z)
 									Else
-										it2 = CreateItem("Playing Card", "misc", x, y, z)	
+										it2 = CreateItem("playingcard", x, y, z)	
 									EndIf
 							End Select
-						Case "Level 4 Key Card"
+						Case "key4"
 							Select SelectedDifficulty\otherFactors
 								Case EASY
-									it2 = CreateItem("Level 5 Key Card", "key5", x, y, z)
+									it2 = CreateItem("key5", x, y, z)
 								Case NORMAL
 									If Rand(4)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 5 Key Card", "key5", x, y, z)
+										it2 = CreateItem("key5", x, y, z)
 									EndIf
 								Case HARD
 									If Rand(3)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 5 Key Card", "key5", x, y, z)
+										it2 = CreateItem("key5", x, y, z)
 									EndIf
 							End Select
-						Case "Level 5 Key Card"	
+						Case "key5"	
 							Local CurrAchvAmount%=0
 							For i = 0 To MAXACHIEVEMENTS-1
 								If Achievements(i)=True
@@ -9982,21 +9949,21 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 							Select SelectedDifficulty\otherFactors
 								Case EASY
 									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*3)-((CurrAchvAmount-1)*3))=0
-										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+										it2 = CreateItem("key6", x, y, z)
 									Else
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									EndIf
 								Case NORMAL
 									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*4)-((CurrAchvAmount-1)*3))=0
-										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+										it2 = CreateItem("key6", x, y, z)
 									Else
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									EndIf
 								Case HARD
 									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*5)-((CurrAchvAmount-1)*3))=0
-										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+										it2 = CreateItem("key6", x, y, z)
 									Else
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									EndIf
 							End Select		
 					End Select
@@ -10013,106 +9980,106 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					Select SelectedDifficulty\otherFactors
 						Case EASY
 							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*3)-((CurrAchvAmount-1)*3))=0
-								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+								it2 = CreateItem("key6", x, y, z)
 							Else
-								it2 = CreateItem("Mastercard", "misc", x, y, z)
+								it2 = CreateItem("mastercard", x, y, z)
 							EndIf
 						Case NORMAL
 							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*4)-((CurrAchvAmount-1)*3))=0
-								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+								it2 = CreateItem("key6", x, y, z)
 							Else
-								it2 = CreateItem("Mastercard", "misc", x, y, z)
+								it2 = CreateItem("mastercard", x, y, z)
 							EndIf
 						Case HARD
 							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*5)-((CurrAchvAmount-1)*3))=0
-								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+								it2 = CreateItem("key6", x, y, z)
 							Else
-								it2 = CreateItem("Mastercard", "misc", x, y, z)
+								it2 = CreateItem("mastercard", x, y, z)
 							EndIf
 					End Select
 			End Select
 			
 			RemoveItem(item)
-		Case "Key Card Omni"
+		Case "key6"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
 					If Rand(2)=1 Then
-						it2 = CreateItem("Mastercard", "misc", x, y, z)
+						it2 = CreateItem("mastercard", x, y, z)
 					Else
-						it2 = CreateItem("Playing Card", "misc", x, y, z)			
+						it2 = CreateItem("playingcard", x, y, z)			
 					EndIf	
 				Case "fine", "very fine"
-					it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+					it2 = CreateItem("key6", x, y, z)
 			End Select			
 			
 			RemoveItem(item)
-		Case "Playing Card", "Coin", "Quarter"
+		Case "playingcard", "coin", "25ct"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Level 1 Key Card", "key1", x, y, z)	
+					it2 = CreateItem("key1", x, y, z)	
 			    Case "fine", "very fine"
-					it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+					it2 = CreateItem("key2", x, y, z)
 			End Select
 			RemoveItem(item)
-		Case "Mastercard"
+		Case "mastercard"
 			Select setting
 				Case "rough"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "coarse"
-					it2 = CreateItem("Quarter", "25ct", x, y, z)
+					it2 = CreateItem("25ct", x, y, z)
 					Local it3.Items,it4.Items,it5.Items
-					it3 = CreateItem("Quarter", "25ct", x, y, z)
-					it4 = CreateItem("Quarter", "25ct", x, y, z)
-					it5 = CreateItem("Quarter", "25ct", x, y, z)
+					it3 = CreateItem("25ct", x, y, z)
+					it4 = CreateItem("25ct", x, y, z)
+					it5 = CreateItem("25ct", x, y, z)
 					EntityType (it3\collider, HIT_ITEM)
 					EntityType (it4\collider, HIT_ITEM)
 					EntityType (it5\collider, HIT_ITEM)
 				Case "1:1"
-					it2 = CreateItem("Level 1 Key Card", "key1", x, y, z)	
+					it2 = CreateItem("key1", x, y, z)	
 			    Case "fine", "very fine"
-					it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+					it2 = CreateItem("key2", x, y, z)
 			End Select
 			RemoveItem(item)
-		Case "S-NAV 300 Navigator", "S-NAV 310 Navigator", "S-NAV Navigator", "S-NAV Navigator Ultimate"
+		Case "snav300", "snav310", "snav", "snavulti"
 			Select setting
 				Case "rough", "coarse"
-					it2 = CreateItem("Electronical components", "misc", x, y, z)
+					it2 = CreateItem("electronics", x, y, z)
 				Case "1:1"
-					it2 = CreateItem("S-NAV Navigator", "nav", x, y, z)
+					it2 = CreateItem("snav", x, y, z)
 					it2\state = 100
 				Case "fine"
-					it2 = CreateItem("S-NAV 310 Navigator", "nav", x, y, z)
+					it2 = CreateItem("snav310", x, y, z)
 					it2\state = 100
 				Case "very fine"
-					it2 = CreateItem("S-NAV Navigator Ultimate", "nav", x, y, z)
+					it2 = CreateItem("snavulti", x, y, z)
 					it2\state = 101
 			End Select
 			
 			RemoveItem(item)
-		Case "Radio Transceiver"
+		Case "radio", "fineradio", "veryfineradio", "18vradio"
 			Select setting
 				Case "rough", "coarse"
-					it2 = CreateItem("Electronical components", "misc", x, y, z)
+					it2 = CreateItem("electronics", x, y, z)
 				Case "1:1"
-					it2 = CreateItem("Radio Transceiver", "18vradio", x, y, z)
+					it2 = CreateItem("18vradio", x, y, z)
 					it2\state = 100
 				Case "fine"
-					it2 = CreateItem("Radio Transceiver", "fineradio", x, y, z)
+					it2 = CreateItem("fineradio", x, y, z)
 					it2\state = 101
 				Case "very fine"
-					it2 = CreateItem("Radio Transceiver", "veryfineradio", x, y, z)
+					it2 = CreateItem("veryfineradio", x, y, z)
 					it2\state = 101
 			End Select
 			
 			RemoveItem(item)
-		Case "SCP-513"
+		Case "scp513"
 			Select setting
 				Case "rough", "coarse"
 					PlaySound_Strict LoadTempSound("SFX\SCP\513\914Refine.ogg")
@@ -10122,190 +10089,187 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					d.Decals = CreateDecal(0, x, 8*RoomScale+0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1", "fine", "very fine"
-					it2 = CreateItem("SCP-513", "scp513", x, y, z)
+					it2 = CreateItem("scp513", x, y, z)
 					
 			End Select
 			
 			RemoveItem(item)
-		Case "Some SCP-420-J", "Cigarette"
+		Case "scp420j", "cigarette"
 			Select setting
 				Case "rough", "coarse"			
 					d.Decals = CreateDecal(0, x, 8*RoomScale+0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Cigarette", "cigarette", x, y, z)
+					it2 = CreateItem("cigarette", x, y, z)
 				Case "fine"
-					it2 = CreateItem("Joint", "420s", x, y, z)
+					it2 = CreateItem("join", x, y, z)
 				Case "very fine"
-					it2 = CreateItem("Smelly Joint", "420s", x, y, z)
+					it2 = CreateItem("smellyjoint", x, y, z)
 			End Select
 			
 			RemoveItem(item)
-		Case "9V Battery", "18V Battery", "Strange Battery"
+		Case "bat", "18vbat", "killbat"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("18V Battery", "18vbat", x, y, z)
+					it2 = CreateItem("18vbat", x, y, z)
 				Case "fine"
-					it2 = CreateItem("Strange Battery", "killbat", x, y, z)
+					it2 = CreateItem("killbat", x, y, z)
 				Case "very fine"
-					it2 = CreateItem("Strange Battery", "killbat", x, y, z)
+					it2 = CreateItem("killbat", x, y, z)
 			End Select
 			
 			RemoveItem(item)
-		Case "ReVision Eyedrops", "RedVision Eyedrops", "Eyedrops"
+		Case "eyedrops", "fineeyedrops", "supereyedrops", "redeyedrops"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("RedVision Eyedrops", "eyedrops", x,y,z)
+					it2 = CreateItem("redeyedrops", x,y,z)
 				Case "fine"
-					it2 = CreateItem("Eyedrops", "fineeyedrops", x,y,z)
+					it2 = CreateItem("fineeyedrops", x,y,z)
 				Case "very fine"
-					it2 = CreateItem("Eyedrops", "supereyedrops", x,y,z)
+					it2 = CreateItem("supereyedrops", x,y,z)
 			End Select
 			
 			RemoveItem(item)		
-		Case "Hazmat Suit"
+		Case "hazmatsuit", "hazmatsuit2"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Hazmat Suit", "hazmatsuit", x,y,z)
+					it2 = CreateItem("hazmatsuit", x,y,z)
 				Case "fine"
-					it2 = CreateItem("Hazmat Suit", "hazmatsuit2", x,y,z)
+					it2 = CreateItem("hazmatsuit2", x,y,z)
 				Case "very fine"
-					it2 = CreateItem("Hazmat Suit", "hazmatsuit2", x,y,z)
+					it2 = CreateItem("hazmatsuit2", x,y,z)
 			End Select
 			
 			RemoveItem(item)
 			
-		Case "Syringe"
-			Select item\itemtemplate\tempname
-				Case "syringe"
-					Select setting
-						Case "rough", "coarse"
-							d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
-							d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
-						Case "1:1"
-							it2 = CreateItem("Small First Aid Kit", "finefirstaid", x, y, z)	
-						Case "fine"
-							it2 = CreateItem("Syringe", "finesyringe", x, y, z)
-						Case "very fine"
-							it2 = CreateItem("Syringe", "veryfinesyringe", x, y, z)
-					End Select
-					
-				Case "finesyringe"
-					Select setting
-						Case "rough"
-							d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
-							d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
-						Case "coarse"
-							it2 = CreateItem("First Aid Kit", "firstaid", x, y, z)
-						Case "1:1"
-							it2 = CreateItem("Blue First Aid Kit", "firstaid2", x, y, z)	
-						Case "fine", "very fine"
-							it2 = CreateItem("Syringe", "veryfinesyringe", x, y, z)
-					End Select
-					
-				Case "veryfinesyringe"
-					Select setting
-						Case "rough", "coarse", "1:1", "fine"
-							it2 = CreateItem("Electronical components", "misc", x, y, z)	
-						Case "very fine"
-							n.NPCs = CreateNPC(NPCtype008,x,y,z)
-							n\State = 2
-					End Select
+		Case "syringe"
+			Select setting
+				Case "rough", "coarse"
+					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
+					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
+				Case "1:1"
+					it2 = CreateItem("finefirstaid", x, y, z)	
+				Case "fine"
+					it2 = CreateItem("finesyringe", x, y, z)
+				Case "very fine"
+					it2 = CreateItem("veryfinesyringe", x, y, z)
+			End Select
+
+			RemoveItem(item)
+		Case "finesyringe"
+			Select setting
+				Case "rough"
+					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
+					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
+				Case "coarse"
+					it2 = CreateItem("firstaid", x, y, z)
+				Case "1:1"
+					it2 = CreateItem("firstaid2", x, y, z)	
+				Case "fine", "very fine"
+					it2 = CreateItem("veryfinesyringe", x, y, z)
+			End Select
+
+			RemoveItem(item)
+		Case "veryfinesyringe"
+			Select setting
+				Case "rough", "coarse", "1:1", "fine"
+					it2 = CreateItem("electronics", x, y, z)	
+				Case "very fine"
+					n.NPCs = CreateNPC(NPCtype008,x,y,z)
+					n\State = 2
 			End Select
 			
 			RemoveItem(item)
-			
-		Case "SCP-500-01", "Upgraded pill", "Pill"
+		Case "scp500", "scp500death", "pill"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Pill", "pill", x, y, z)
+					it2 = CreateItem("pill", x, y, z)
 					RemoveItem(item)
 				Case "fine"
 					Local no427Spawn% = False
 					For it3.Items = Each Items
-						If it3\itemtemplate\tempname = "scp427" Then
+						If it3\itemtemplate\name = "scp427" Then
 							no427Spawn = True
 							Exit
 						EndIf
 					Next
 					If (Not no427Spawn) Then
-						it2 = CreateItem("SCP-427", "scp427", x, y, z)
+						it2 = CreateItem("scp427", x, y, z)
 					Else
-						it2 = CreateItem("Upgraded pill", "scp500death", x, y, z)
+						it2 = CreateItem("scp500death", x, y, z)
 					EndIf
 					RemoveItem(item)
 				Case "very fine"
-					it2 = CreateItem("Upgraded pill", "scp500death", x, y, z)
+					it2 = CreateItem("scp500death", x, y, z)
 					RemoveItem(item)
 			End Select
 			
+		Case "cup"
+			Select setting
+				Case "rough", "coarse"
+					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
+					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
+				Case "1:1"
+					it2 = CreateItem("cup", x,y,z, 255-item\r,255-item\g,255-item\b,item\a)
+					it2\displayname = item\displayname
+					it2\state = item\state
+				Case "fine"
+					it2 = CreateItem("cup", x,y,z, Min(item\r*Rnd(0.9,1.1),255),Min(item\g*Rnd(0.9,1.1),255),Min(item\b*Rnd(0.9,1.1),255),item\a)
+					it2\displayname = item\displayname
+					it2\state = item\state+1.0
+				Case "very fine"
+					it2 = CreateItem("cup", x,y,z, Min(item\r*Rnd(0.5,1.5),255),Min(item\g*Rnd(0.5,1.5),255),Min(item\b*Rnd(0.5,1.5),255),item\a)
+					it2\displayname = item\displayname
+					it2\state = item\state*2
+					If Rand(5)=1 Then
+						ExplosionTimer = 135
+					EndIf
+			End Select	
+			
+			RemoveItem(item)
 		Default
 			
-			Select item\itemtemplate\tempname
-				Case "cup"
-					Select setting
-						Case "rough", "coarse"
-							d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
-							d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
-						Case "1:1"
-							it2 = CreateItem("cup", "cup", x,y,z, 255-item\r,255-item\g,255-item\b,item\a)
-							it2\name = item\name
-							it2\state = item\state
-						Case "fine"
-							it2 = CreateItem("cup", "cup", x,y,z, Min(item\r*Rnd(0.9,1.1),255),Min(item\g*Rnd(0.9,1.1),255),Min(item\b*Rnd(0.9,1.1),255),item\a)
-							it2\name = item\name
-							it2\state = item\state+1.0
-						Case "very fine"
-							it2 = CreateItem("cup", "cup", x,y,z, Min(item\r*Rnd(0.5,1.5),255),Min(item\g*Rnd(0.5,1.5),255),Min(item\b*Rnd(0.5,1.5),255),item\a)
-							it2\name = item\name
-							it2\state = item\state*2
-							If Rand(5)=1 Then
-								ExplosionTimer = 135
-							EndIf
-					End Select	
-					
-					RemoveItem(item)
-				Case "paper"
-					Select setting
-						Case "rough", "coarse"
-							d.Decals = CreateDecal(7, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
-							d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
-						Case "1:1"
-							Select Rand(6)
-								Case 1
-									it2 = CreateItem("Document SCP-106", "paper", x, y, z)
-								Case 2
-									it2 = CreateItem("Document SCP-079", "paper", x, y, z)
-								Case 3
-									it2 = CreateItem("Document SCP-173", "paper", x, y, z)
-								Case 4
-									it2 = CreateItem("Document SCP-895", "paper", x, y, z)
-								Case 5
-									it2 = CreateItem("Document SCP-682", "paper", x, y, z)
-								Case 6
-									it2 = CreateItem("Document SCP-860", "paper", x, y, z)
-							End Select
-						Case "fine", "very fine"
-							it2 = CreateItem("Origami", "misc", x, y, z)
-					End Select
-					
-					RemoveItem(item)
-				Default
-					PositionEntity(item\collider, x, y, z)
-					ResetEntity(item\collider)	
-			End Select
+			If item\itemtemplate\group = "paper" Then
+				Select setting
+					Case "rough", "coarse"
+						d.Decals = CreateDecal(7, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
+						d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
+					Case "1:1"
+						Select Rand(6)
+							Case 1
+								it2 = CreateItem("doc106", x, y, z)
+							Case 2
+								it2 = CreateItem("doc079", x, y, z)
+							Case 3
+								it2 = CreateItem("doc173", x, y, z)
+							Case 4
+								it2 = CreateItem("doc895", x, y, z)
+							Case 5
+								it2 = CreateItem("doc682", x, y, z)
+							Case 6
+								it2 = CreateItem("doc860", x, y, z)
+						End Select
+					Case "fine", "very fine"
+						it2 = CreateItem("origami", x, y, z)
+				End Select
+				
+				RemoveItem(item)
+			Else
+				PositionEntity(item\collider, x, y, z)
+				ResetEntity(item\collider)	
+			EndIf
 			
 	End Select
 	
@@ -10480,8 +10444,8 @@ Function Use294()
 					;If alpha = 0 Then alpha = 1.0
 					If glow Then alpha = -alpha
 					
-					it.items = CreateItem("Cup", "cup", EntityX(PlayerRoom\Objects[1],True),EntityY(PlayerRoom\Objects[1],True),EntityZ(PlayerRoom\Objects[1],True), r,g,b,alpha)
-					it\name = "Cup of "+Input294
+					it.items = CreateItem("cup", EntityX(PlayerRoom\Objects[1],True),EntityY(PlayerRoom\Objects[1],True),EntityZ(PlayerRoom\Objects[1],True), r,g,b,alpha)
+					it\displayname = "Cup of "+Input294
 					EntityType (it\collider, HIT_ITEM)
 					
 				Else
@@ -10680,7 +10644,7 @@ Function UpdateMTF%()
 				;If the player has an SCP in their inventory play special voice line.
 				For i = 0 To MaxItemAmount-1
 					If Inventory(i) <> Null Then
-						If (Left(Inventory(i)\itemtemplate\name, 4) = "SCP-") And (Left(Inventory(i)\itemtemplate\name, 7) <> "SCP-035") And (Left(Inventory(i)\itemtemplate\name, 7) <> "SCP-093")
+						If Instr(Inventory(i)\itemtemplate\name, "scp") = 1 Then
 							PlayAnnouncement("SFX\Character\MTF\ThreatAnnouncPossession.ogg")
 							MTFtimer = 25000
 							Return
@@ -11514,7 +11478,7 @@ Function RenderWorld2()
 	If (WearingNightVision=1) Or (WearingNightVision=2)
 		For i% = 0 To MaxItemAmount - 1
 			If (Inventory(i)<>Null) Then
-				If (WearingNightVision = 1 And Inventory(i)\itemtemplate\tempname = "nvgoggles") Or (WearingNightVision = 2 And Inventory(i)\itemtemplate\tempname = "supernv") Then
+				If (WearingNightVision = 1 And Inventory(i)\itemtemplate\name = "nvgoggles") Or (WearingNightVision = 2 And Inventory(i)\itemtemplate\name = "supernv") Then
 					Inventory(i)\state = Inventory(i)\state - (FPSfactor * (0.02 * WearingNightVision))
 					power%=Int(Inventory(i)\state)
 					If Inventory(i)\state<=0.0 Then ;this nvg can't be used
@@ -11757,7 +11721,7 @@ Function UpdateLeave1499()
 				Next
 				For it.Items = Each Items
 					it\disttimer = 0
-					If it\itemtemplate\tempname = "scp1499" Or it\itemtemplate\tempname = "super1499"
+					If it\itemtemplate\name = "scp1499" Or it\itemtemplate\name = "super1499"
 						If EntityY(it\collider) >= EntityY(r1499\obj)-5
 							PositionEntity it\collider,NTF_1499PrevX#,NTF_1499PrevY#+(EntityY(it\collider)-EntityY(r1499\obj)),NTF_1499PrevZ#
 							ResetEntity it\collider
@@ -11798,34 +11762,28 @@ Function CheckForPlayerInFacility()
 End Function
 
 Function IsItemGoodFor1162(itt.ItemTemplates)
-	Local IN$ = itt\tempname$
-	
-	Select itt\tempname
+	If itt\group = "paper" Then
+		;if the item is a paper, only allow spawning it if the name contains the word "note" or "log"
+		;(because those are items created recently, which D-9341 has most likely never seen)
+		Return ((Not Instr(itt\name, "note")) And (Not Instr(itt\name, "log"))) And (Not Instr(itt\name, "docL")) And itt\name <> "docDan" And itt\name <> "docStrange" And itt\name <> "doc106_2" And itt\name <> "leaflet"
+	EndIf
+	Select itt\name
 		Case "key1", "key2", "key3"
 			Return True
-		Case "misc", "420", "cigarette"
+		Case "misc", "scp420j", "cigarette"
 			Return True
 		Case "vest", "finevest","gasmask"
 			Return True
 		Case "radio","18vradio"
 			Return True
-		Case "clipboard","eyedrops","nvgoggles"
+		Case "clipboard","eyedrops","redeyedrops","nvgoggles"
 			Return True
 		Case "drawing"
 			If itt\img<>0 Then FreeImage itt\img	
 			itt\img = LoadImage_Strict("GFX\items\1048\1048_"+Rand(1,20)+".jpg") ;Gives a random drawing.
 			Return True
-		Default
-			If itt\tempname <> "paper" Then
-				Return False
-			Else If Instr(itt\name, "Leaflet")
-				Return False
-			Else
-				;if the item is a paper, only allow spawning it if the name contains the word "note" or "log"
-				;(because those are items created recently, which D-9341 has most likely never seen)
-				Return ((Not Instr(itt\name, "Note")) And (Not Instr(itt\name, "Log")))
-			EndIf
 	End Select
+	Return False
 End Function
 
 Function ControlSoundVolume()
