@@ -5004,6 +5004,11 @@ Function DrawGUI()
 			x = GraphicWidth/2-317*scale/2
 			y = GraphicHeight/2-462*scale/2
 			
+			Select True
+				Case WearingNightVision=1 Color 0,255,0
+				Case WearingNightVision=2 Color 0,0,255
+				Case WearingNightVision=3 Color 255,0,0
+			End Select
 			SetFont Font3
 			If KeypadMSG <> "" Then 
 				KeypadTimer = KeypadTimer-FPSfactor2
@@ -10235,6 +10240,7 @@ Function Use294()
 	temp = True
 	If PlayerRoom\SoundCHN<>0 Then temp = False
 	
+	Color 255, 255, 255
 	Text x+903*HUDScale, y+185*HUDScale, Right(Input294,10), True,True
 	
 	If temp Then
