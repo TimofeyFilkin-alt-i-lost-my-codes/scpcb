@@ -1839,6 +1839,7 @@ Function DrawLoading(percent%, shortloading=False)
 			If ls\id = temp Then
 				If ls\img=0 Then
 					ls\img = LoadImage_Strict("Loadingscreens\"+ls\imgpath)
+					ScaleImage(ls\img, MenuScale, MenuScale)
 					MaskImage(ls\img, 0, 0, 0)
 				EndIf
 				SelectedLoadingScreen = ls 
