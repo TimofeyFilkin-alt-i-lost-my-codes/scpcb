@@ -31,20 +31,26 @@ End Function
 Include "StrictLoads.bb"
 Include "KeyName.bb"
 
-Global OptionFile$ = InitOptionsDir()
+Global DataDir$ = InitDataDir()
+Global OptionFile$ = InitOptionsFile()
+Global ModsFile$ = DataDir + "\mods.ini"
 Const OptionDefaultFile$ = "defaults.ini"
 
-Function InitOptionsDir$()
+Function InitDataDir$()
 	Local dir$ = GetEnv("AppData") + "\Undertow Games"
 	If FileType(dir) <> 2 Then CreateDir(dir)
 	dir = dir + "\SCP - Containment Breach"
 	If FileType(dir) <> 2 Then CreateDir(dir)
-	dir = dir + "\options.ini"
-	If FileType(dir) <> 1 Then
-		Local f% = WriteFile(dir)
+	Return dir
+End Function
+
+Function InitOptionsFile$()
+	Local file$ = DataDir + "\options.ini"
+	If FileType(file) <> 1 Then
+		Local f% = WriteFile(file)
 		CloseFile(f)
 	EndIf
-	Return dir
+	Return file
 End Function
 
 Function GetOptionString$(section$, key$)
