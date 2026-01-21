@@ -11548,6 +11548,8 @@ Function RenderWorld2()
 				EndIf
 			Next
 			
+			SetFont Font1
+			
 			FreeEntity (temp) : FreeEntity (temp2)
 			
 			Color 0,0,55
@@ -11587,6 +11589,7 @@ Function RenderWorld2()
 			
 			Text GraphicWidth/2,20*MenuScale,"WARNING: LOW BATTERY",True,False
 			Color 255,255,255
+			SetFont Font1
 		EndIf
 	EndIf
 End Function
