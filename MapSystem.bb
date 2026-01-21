@@ -5043,6 +5043,8 @@ Function FillRoom(r.Rooms)
 			PositionEntity(d\buttons[1], r\x + 304.0 * RoomScale, EntityY(d\buttons[1],True), r\z + 840.0 * RoomScale, True)	
 			TurnEntity d\buttons[1],0,0,0,True
 			d.Doors = CreateDoor(r\zone, r\x -512.0 * RoomScale, -768.0*RoomScale, r\z -336.0 * RoomScale, 0, r, False, False, 3)
+			MoveEntity(d\buttons[0], 0, 0, 10)
+			MoveEntity(d\buttons[1], 0, 0, 10)
 			d.Doors = CreateDoor(r\zone, r\x -509.0 * RoomScale, -768.0*RoomScale, r\z -1037.0 * RoomScale, 0, r, False, False, 3)
 			d.Doors\locked = True
 			d.Doors\DisableWaypoint = True
