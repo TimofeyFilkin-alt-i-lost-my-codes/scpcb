@@ -1819,6 +1819,7 @@ Global NVGImages = LoadAnimImage("GFX\battery.png",64,64,0,2)
 MaskImage NVGImages,255,0,255
 
 Global Wearing1499% = False
+Global AmbientLight%, AmbientLightNVG%
 Global AmbientLightRoomTex%, AmbientLightRoomVal%
 
 Global EnableUserTracks% = GetOptionInt("audio", "enable user tracks")
@@ -4627,17 +4628,17 @@ Function MouseLook()
 		ShowEntity(NVOverlay)
 		If WearingNightVision=2 Then
 			EntityColor(NVOverlay, 0,100,255)
-			AmbientLightRooms(15)
+			AmbientLightRooms(AmbientLightNVG)
 		ElseIf WearingNightVision=3 Then
 			EntityColor(NVOverlay, 255,0,0)
-			AmbientLightRooms(15)
+			AmbientLightRooms(AmbientLightNVG)
 		Else
 			EntityColor(NVOverlay, 0,255,0)
-			AmbientLightRooms(15)
+			AmbientLightRooms(AmbientLightNVG)
 		EndIf
 		EntityTexture(Fog, FogNVTexture)
 	Else
-		AmbientLightRooms(0)
+		AmbientLightRooms(AmbientLight)
 		HideEntity(NVOverlay)
 		EntityTexture(Fog, FogTexture)
 	EndIf
@@ -8017,6 +8018,9 @@ Function LoadEntities()
 	;TextureLodBias
 	
 	AmbientLightRoomTex% = CreateTexture(2,2,257)
+	AmbientLight = GetModdedINIInt(MapOptions, "facility", "ambient light")
+	AmbientLightNVG = GetModdedINIInt(MapOptions, "facility", "ambient light nvg")
+
 	TextureBlend AmbientLightRoomTex,5
 	SetBuffer(TextureBuffer(AmbientLightRoomTex))
 	ClsColor 0,0,0
