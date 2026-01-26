@@ -73,6 +73,7 @@ Include "DevilParticleSystem.bb"
 
 Global SteamActive% = GetOptionInt("general", "enable steam")
 If SteamActive Then
+	If Steam_RestartAppIfNecessary(2178380) Then Return
 	If Steam_Init() <> 0 Then RuntimeErrorExt("Steam failed to initialize")
 EndIf
 
