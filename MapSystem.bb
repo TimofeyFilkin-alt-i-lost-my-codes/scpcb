@@ -2686,7 +2686,6 @@ Function FillRoom(r.Rooms)
 			PositionEntity(r\Objects[2], r\x - 632.0 * RoomScale, 224.0*RoomScale, r\z - 208.0 * RoomScale)
 			TurnEntity(r\Objects[2],0,180,0)			
 			EntityParent(r\Objects[2], r\obj)
-			HideEntity (r\Objects[2])
 			
 			FreeTexture Glasstex
 			

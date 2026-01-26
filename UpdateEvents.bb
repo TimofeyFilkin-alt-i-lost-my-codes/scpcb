@@ -2689,7 +2689,6 @@ Function UpdateEvents()
 				If PlayerRoom = e\room Then
 					If e\EventState = 0 And Curr173\Idle = 0 Then
 						If (Not EntityInView(Curr173\obj, Camera)) Then
-							e\EventState = 1
 							PositionEntity(Curr173\Collider, EntityX(e\room\Objects[0], True), 0.5, EntityZ(e\room\Objects[0], True))
 							ResetEntity(Curr173\Collider)
 							RemoveEvent(e)
@@ -7043,29 +7042,15 @@ Function UpdateEvents()
 					If Curr173\Idle = 0 Then 
 						If e\EventState = 0 Then
 							If e\room\RoomDoors[0]\open = True
-							PositionEntity(Curr173\Collider, EntityX(e\room\Objects[0], True), 0.5, EntityZ(e\room\Objects[0], True))
-							ResetEntity(Curr173\Collider)
-							e\EventState = 1
+								If EntityDistance(Collider, Curr173\Collider) < 8 Then ; Must be at least one room size away
+									RemoveEvent(e)
+								Else
+									PositionEntity(Curr173\Collider, EntityX(e\room\Objects[0], True), 0.5, EntityZ(e\room\Objects[0], True))
+									ResetEntity(Curr173\Collider)
+									e\EventState = 1
+								EndIf
 							EndIf
 						Else
-							If e\room\Objects[2]=0
-								Local Glasstex = LoadTexture_Strict("GFX\map\glass.png",1+2)
-								e\room\Objects[2] = CreateSprite()
-								EntityTexture(e\room\Objects[2],Glasstex)
-								SpriteViewMode(e\room\Objects[2],2)
-								ScaleSprite(e\room\Objects[2],182.0*RoomScale*0.5, 192.0*RoomScale*0.5)
-								pvt% = CreatePivot(e\room\obj)
-								;PositionEntity pvt%,-595.0,224.0,-208.0,False
-								PositionEntity pvt%,-632.0,224.0,-208.0,False
-								PositionEntity(e\room\Objects[2], EntityX(pvt,True), EntityY(pvt,True), EntityZ(pvt,True))
-								FreeEntity pvt
-								RotateEntity e\room\Objects[2],0,e\room\angle,0
-								TurnEntity(e\room\Objects[2],0,180,0)
-								EntityParent(e\room\Objects[2], e\room\obj)
-								FreeTexture Glasstex
-							EndIf
-							
-							ShowEntity (e\room\Objects[2])
 							;start a timer for 173 breaking through the window
 							e\EventState = e\EventState + 1
 							dist# = EntityDistance(Collider, e\room\Objects[1])
