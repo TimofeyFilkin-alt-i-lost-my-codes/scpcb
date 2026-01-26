@@ -2604,6 +2604,7 @@ Function InitEvents()
 	;there's a 30% chance that it appears in the later lockrooms
 	If Rand(3)<3 Then CreateEvent("lockroom173", "lockroom", 0)
 	CreateEvent("lockroom173", "lockroom", 0, 0.3 + (0.5*SelectedDifficulty\aggressiveNPCs))
+	CreateEvent("lockroom173", "lockroom_ez", 0, 0.3 + (0.5*SelectedDifficulty\aggressiveNPCs))
 	
 	CreateEvent("room2trick", "room2", 0, 0.15)	
 	

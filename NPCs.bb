@@ -830,7 +830,7 @@ Function UpdateNPCs()
 											If KillTimer >= 0 And (Not GodMode) Then
 												
 												Select PlayerRoom\RoomTemplate\Name
-													Case "lockroom", "room2closets", "coffin"
+													Case "lockroom", "lockroom_ez", "room2closets", "coffin"
 														DeathMSG = "Subject D-9341. Cause of death: Fatal cervical fracture. The surveillance tapes confirm that the subject was killed by SCP-173."	
 													Case "173"
 														DeathMSG = "Subject D-9341. Cause of death: Fatal cervical fracture. According to Security Chief Franklin who was present at SCP-173's containment "

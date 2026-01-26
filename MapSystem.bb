@@ -2166,7 +2166,7 @@ Function FillRoom(r.Rooms)
 			RotateEntity it\collider, 0, r\angle+170, 0
 			EntityParent(it\collider, r\obj)
 			;[End Block]
-		Case "lockroom"
+		Case "lockroom", "lockroom_ez"
 			;[Block]
 			d = CreateDoor(r\zone, r\x - 736.0 * RoomScale, 0, r\z - 104.0 * RoomScale, 0, r, True)
 			d\timer = 70 * 5 : d\AutoClose = False : d\open = False
