@@ -4392,7 +4392,7 @@ Function UpdateNPCs()
 				If n\State3 > 0 And EntityDistance(Collider, n\obj) >= 4 Then
 					n\State3 = n\State3 + FPSfactor
 
-					If n\State3>70*25 Then
+					If n\State3>70*25 And (n\SoundChn = 0 Lor (Not ChannelPlaying(n\SoundChn))) Then
 						RemoveNPC(n)
 						Return
 					EndIf
