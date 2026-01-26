@@ -4498,6 +4498,8 @@ Function FillRoom(r.Rooms)
 		Case "room2ccont"
 			;[Block]
 			d = CreateDoor(r\zone, r\x + 64.0 * RoomScale, 0.0, r\z + 368.0 * RoomScale, 180, r, False, False, 2)
+			MoveEntity(d\buttons[0], 0, 0, 10)
+			MoveEntity(d\buttons[1], 0, 0, 10)
 			d\AutoClose = False : d\open = False
 			
 			it = CreateItem("Note from Daniel", "paper", r\x-400.0*RoomScale,1040.0*RoomScale,r\z+115.0*RoomScale)
