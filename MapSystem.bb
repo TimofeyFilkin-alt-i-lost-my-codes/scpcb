@@ -2902,7 +2902,7 @@ Function FillRoom(r.Rooms)
 			EntityParent(it\collider, r\obj) : it\displayname = "Cup of Orange Juice"
 			
 			it = CreateItem("cup", r\x+1412 * RoomScale, -187*RoomScale, r\z-716.0 * RoomScale, 87,62,45)
-			EntityParent(it\collider, r\obj) : it\displayname = "Cup of Coffee" ; TODO
+			EntityParent(it\collider, r\obj) : it\displayname = "Cup of Coffee"
 			
 			it = CreateItem("emptycup", r\x-540*RoomScale, -187*RoomScale, r\z+124.0*RoomScale)
 			EntityParent(it\collider, r\obj)

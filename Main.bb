@@ -274,6 +274,7 @@ ScaleImage(BlinkMeterIMG, HUDScale, HUDScale)
 DrawLoading(0, True)
 
 Const StringsFile$ = "Data\strings.ini"
+Include "Localization.bb"
 
 DrawLoading(5, True)
 

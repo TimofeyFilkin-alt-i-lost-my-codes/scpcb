@@ -6970,7 +6970,7 @@ Function Shoot(x#, y#, z#, hitProb# = 1.0, particles% = True, instaKill% = False
 						Injuries = Injuries + Rnd(0.8,1.2)	
 					Case 6
 						BlurTimer = 500
-						ShotMessageUpdate = "A bullet hit your right shoulder."
+						ShotMessageUpdate = "A bullet hit your right shoulder." ; Duplicate?
 						Injuries = Injuries + Rnd(2.5,4.0)
 				End Select
 			EndIf
