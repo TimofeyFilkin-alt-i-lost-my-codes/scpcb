@@ -27,6 +27,7 @@ Type LocalizationTable
     Field Menu_Achievements$
     Field Menu_AchievementsUpper$
     Field Menu_Mods$
+    Field Menu_ModsUpper$
     Field Menu_Options$
     Field Menu_OptionsUpper$
     Field Menu_Resume$
@@ -103,6 +104,17 @@ Type LocalizationTable
     Field OptionName_Mousesensitivity$
     Field OptionName_Mouseinvert$
     Field OptionName_Mousesmoothing$
+    Field OptionName_Binds$
+    Field OptionName_BindMoveForward$
+    Field OptionName_BindMoveLeft$
+    Field OptionName_BindMoveBack$
+    Field OptionName_BindMoveRight$
+    Field OptionName_BindSave$
+    Field OptionName_BindBlink$
+    Field OptionName_BindSprint$
+    Field OptionName_BindInv$
+    Field OptionName_BindCrouch$
+    Field OptionName_BindConsole$
     Field OptionName_Showhud$
     Field OptionName_Console$
     Field OptionName_Consoleerror$
@@ -459,6 +471,7 @@ I_Loc\Menu_LoadUpper = GetModdedINIString(StringsFile, "Menu", "load.upper")
 I_Loc\Menu_Achievements = GetModdedINIString(StringsFile, "Menu", "achievements")
 I_Loc\Menu_AchievementsUpper = GetModdedINIString(StringsFile, "Menu", "achievements.upper")
 I_Loc\Menu_Mods = GetModdedINIString(StringsFile, "Menu", "mods")
+I_Loc\Menu_ModsUpper = GetModdedINIString(StringsFile, "Menu", "mods.upper")
 I_Loc\Menu_Options = GetModdedINIString(StringsFile, "Menu", "options")
 I_Loc\Menu_OptionsUpper = GetModdedINIString(StringsFile, "Menu", "options.upper")
 I_Loc\Menu_Resume = GetModdedINIString(StringsFile, "Menu", "resume")
@@ -535,6 +548,17 @@ I_Loc\OptionName_Usertrackscan = GetModdedINIString(StringsFile, "Option Name", 
 I_Loc\OptionName_Mousesensitivity = GetModdedINIString(StringsFile, "Option Name", "mousesensitivity")
 I_Loc\OptionName_Mouseinvert = GetModdedINIString(StringsFile, "Option Name", "mouseinvert")
 I_Loc\OptionName_Mousesmoothing = GetModdedINIString(StringsFile, "Option Name", "mousesmoothing")
+I_Loc\OptionName_Binds = GetModdedINIString(StringsFile, "Option Name", "binds")
+I_Loc\OptionName_BindMoveForward = GetModdedINIString(StringsFile, "Option Name", "bind.move.forward")
+I_Loc\OptionName_BindMoveLeft = GetModdedINIString(StringsFile, "Option Name", "bind.move.left")
+I_Loc\OptionName_BindMoveBack = GetModdedINIString(StringsFile, "Option Name", "bind.move.back")
+I_Loc\OptionName_BindMoveRight = GetModdedINIString(StringsFile, "Option Name", "bind.move.right")
+I_Loc\OptionName_BindSave = GetModdedINIString(StringsFile, "Option Name", "bind.save")
+I_Loc\OptionName_BindBlink = GetModdedINIString(StringsFile, "Option Name", "bind.blink")
+I_Loc\OptionName_BindSprint = GetModdedINIString(StringsFile, "Option Name", "bind.sprint")
+I_Loc\OptionName_BindInv = GetModdedINIString(StringsFile, "Option Name", "bind.inv")
+I_Loc\OptionName_BindCrouch = GetModdedINIString(StringsFile, "Option Name", "bind.crouch")
+I_Loc\OptionName_BindConsole = GetModdedINIString(StringsFile, "Option Name", "bind.console")
 I_Loc\OptionName_Showhud = GetModdedINIString(StringsFile, "Option Name", "showhud")
 I_Loc\OptionName_Console = GetModdedINIString(StringsFile, "Option Name", "console")
 I_Loc\OptionName_Consoleerror = GetModdedINIString(StringsFile, "Option Name", "consoleerror")

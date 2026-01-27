@@ -218,7 +218,7 @@ Function UpdateMainMenu()
 						MainMenuTab = 2
 					EndIf
 				Case 2
-					txt = I_Loc\Menu_Mods
+					txt = I_Loc\Menu_ModsUpper
 					If temp Then MainMenuTab = 8
 				Case 3
 					txt = I_Loc\Menu_OptionsUpper
@@ -887,29 +887,29 @@ Function UpdateMainMenu()
 					Color(255, 255, 255)
 					
 					y = y + 30*MenuScale
-					Text(x + 20 * MenuScale, y, "Control configuration:")
+					Text(x + 20 * MenuScale, y, I_Loc\OptionName_Binds)
 					y = y + 10*MenuScale
 					
-					Text(x + 20 * MenuScale, y + 20 * MenuScale, "Move Forward")
+					Text(x + 20 * MenuScale, y + 20 * MenuScale, I_Loc\OptionName_BindMoveForward)
 					InputBox(x + 160 * MenuScale, y + 20 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_UP,210)),5)		
-					Text(x + 20 * MenuScale, y + 40 * MenuScale, "Strafe Left")
+					Text(x + 20 * MenuScale, y + 40 * MenuScale, I_Loc\OptionName_BindMoveLeft)
 					InputBox(x + 160 * MenuScale, y + 40 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_LEFT,210)),3)	
-					Text(x + 20 * MenuScale, y + 60 * MenuScale, "Move Backward")
+					Text(x + 20 * MenuScale, y + 60 * MenuScale, I_Loc\OptionName_BindMoveBack)
 					InputBox(x + 160 * MenuScale, y + 60 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_DOWN,210)),6)				
-					Text(x + 20 * MenuScale, y + 80 * MenuScale, "Strafe Right")
+					Text(x + 20 * MenuScale, y + 80 * MenuScale, I_Loc\OptionName_BindMoveRight)
 					InputBox(x + 160 * MenuScale, y + 80 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_RIGHT,210)),4)	
-					Text(x + 20 * MenuScale, y + 100 * MenuScale, "Quick Save")
+					Text(x + 20 * MenuScale, y + 100 * MenuScale, I_Loc\OptionName_BindSave)
 					InputBox(x + 160 * MenuScale, y + 100 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_SAVE,210)),11)
 
-					Text(x + 280 * MenuScale, y + 20 * MenuScale, "Manual Blink")
+					Text(x + 280 * MenuScale, y + 20 * MenuScale, I_Loc\OptionName_BindBlink)
 					InputBox(x + 470 * MenuScale, y + 20 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_BLINK,210)),7)				
-					Text(x + 280 * MenuScale, y + 40 * MenuScale, "Sprint")
+					Text(x + 280 * MenuScale, y + 40 * MenuScale, I_Loc\OptionName_BindSprint)
 					InputBox(x + 470 * MenuScale, y + 40 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_SPRINT,210)),8)
-					Text(x + 280 * MenuScale, y + 60 * MenuScale, "Open/Close Inventory")
+					Text(x + 280 * MenuScale, y + 60 * MenuScale, I_Loc\OptionName_BindInv)
 					InputBox(x + 470 * MenuScale, y + 60 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_INV,210)),9)
-					Text(x + 280 * MenuScale, y + 80 * MenuScale, "Crouch")
+					Text(x + 280 * MenuScale, y + 80 * MenuScale, I_Loc\OptionName_BindCrouch)
 					InputBox(x + 470 * MenuScale, y + 80 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_CROUCH,210)),10)	
-					Text(x + 280 * MenuScale, y + 100 * MenuScale, "Open/Close Console")
+					Text(x + 280 * MenuScale, y + 100 * MenuScale, I_Loc\OptionName_BindConsole)
 					InputBox(x + 470 * MenuScale, y + 100 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_CONSOLE,210)),12)
 					
 					If MouseOn(x+20*MenuScale,y,width-40*MenuScale,120*MenuScale) And OnSliderID=0
@@ -1153,7 +1153,7 @@ Function UpdateMainMenu()
 				
 				Color(255, 255, 255)
 				SetFont Font2
-				Text(x + width / 2, y + height / 2, I_Loc\Menu_Mods, True, True)
+				Text(x + width / 2, y + height / 2, I_Loc\Menu_ModsUpper, True, True)
 				
 				x = 160 * MenuScale
 				y = y + height + 20 * MenuScale
