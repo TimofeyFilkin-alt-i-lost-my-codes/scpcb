@@ -6618,6 +6618,7 @@ Function DrawGUI()
 					;[Block]
 					If CanUseItem(False,False,True)
 						If SelectedItem\state = 0 Then
+							SelectedItem\state = 1
 							Select Rand(6)
 								Case 1
 									Msg = Chr(34)+"I don't have anything to light it with. Umm, what about that... Nevermind."+Chr(34)
@@ -6634,7 +6635,6 @@ Function DrawGUI()
 									Msg = Chr(34)+"Don't plan on starting, even at a time like this."+Chr(34)
 									RemoveItem(SelectedItem)
 							End Select
-							SelectedItem\state = 1 
 						Else
 							Msg = "You are unable to get lit."
 						EndIf
