@@ -70,7 +70,7 @@ Function SaveGame(file$)
 	WriteFloat f, Infect
 	
 	For i = 0 To CUSTOM
-		If (SelectedDifficulty = difficulties(i)) Then
+		If (SelectedDifficulty = Difficulties[i]) Then
 			WriteByte f, i
 			
 			If (i = CUSTOM) Then
@@ -551,7 +551,7 @@ Function LoadGame(file$)
 	Infect = ReadFloat(f)
 	
 	Local difficultyIndex = ReadByte(f)
-	SelectedDifficulty = difficulties(difficultyIndex)
+	SelectedDifficulty = Difficulties[difficultyIndex]
 	If (difficultyIndex = CUSTOM) Then
 		SelectedDifficulty\aggressiveNPCs = ReadByte(f)
 		SelectedDifficulty\permaDeath = ReadByte(f)
@@ -1380,7 +1380,7 @@ Function LoadGameQuick(file$)
 	Infect = ReadFloat(f)
 	
 	Local difficultyIndex = ReadByte(f)
-	SelectedDifficulty = difficulties(difficultyIndex)
+	SelectedDifficulty = Difficulties[difficultyIndex]
 	If (difficultyIndex = CUSTOM) Then
 		SelectedDifficulty\aggressiveNPCs = ReadByte(f)
 		SelectedDifficulty\permaDeath = ReadByte(f)

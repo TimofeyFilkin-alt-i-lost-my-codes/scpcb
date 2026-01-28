@@ -3863,7 +3863,7 @@ Function DrawEnding()
 	
 	GiveAchievement(Achv055)
 	If (Not UsedConsole) Then GiveAchievement(AchvConsole)
-	If SelectedDifficulty\name = "Keter" Then GiveAchievement(AchvKeter)
+	If SelectedDifficulty = difficulties[KETER] Then GiveAchievement(AchvKeter)
 	Local x,y,width,height, temp
 	Local itt.ItemTemplates, r.Rooms
 	
@@ -7373,7 +7373,7 @@ Function DrawMenu()
 		
 		If AchievementsMenu <= 0 And OptionsMenu <= 0 And QuitMSG <= 0
 			SetFont Font1
-			Text x, y, I_Loc\Menu_Difficulty+" "+SelectedDifficulty\name
+			Text x, y, I_Loc\Menu_Difficulty+" "+SelectedDifficulty\localName
 			Text x, y+20*MenuScale, I_Loc\Menu_Save+" "+CurrSave
 			Text x, y+40*MenuScale, GetSeedString()
 		ElseIf AchievementsMenu <= 0 And OptionsMenu > 0 And QuitMSG <= 0 And KillTimer >= 0

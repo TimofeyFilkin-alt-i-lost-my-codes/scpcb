@@ -358,9 +358,10 @@ Function UpdateMainMenu()
 				;Local modeName$, modeDescription$, selectedDescription$
 				Text (x + 20 * MenuScale, y + 150 * MenuScale, I_Loc\Menu_Difficulty)				
 				For i = SAFE To CUSTOM
-					If DrawTick(x + 20 * MenuScale, y + (180+30*i) * MenuScale, (SelectedDifficulty = difficulties(i))) Then SelectedDifficulty = difficulties(i)
-					Color(difficulties(i)\r,difficulties(i)\g,difficulties(i)\b)
-					Text(x + 50 * MenuScale, y + (185+30*i) * MenuScale, difficulties(i)\name)
+					Local dif.Difficulty = Difficulties[i]
+					If DrawTick(x + 20 * MenuScale, y + (180+30*i) * MenuScale, (SelectedDifficulty = dif)) Then SelectedDifficulty = dif
+					Color(dif\r,dif\g,dif\b)
+					Text(x + 50 * MenuScale, y + (185+30*i) * MenuScale, dif\localName)
 				Next
 				
 				Color(255, 255, 255)
