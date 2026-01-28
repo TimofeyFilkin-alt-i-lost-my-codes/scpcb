@@ -510,7 +510,7 @@ Function UpdateMainMenu()
 				EndIf
 				
 				If SaveGameAmount = 0 Then
-					Text (x + 20 * MenuScale, y + 20 * MenuScale, "No saved games.")
+					Text (x + 20 * MenuScale, y + 20 * MenuScale, I_Loc\LoadGame_Nosaved)
 				Else
 					x = x + 20 * MenuScale
 					y = y + 20 * MenuScale
@@ -577,7 +577,6 @@ Function UpdateMainMenu()
 						y = 376 * MenuScale
 						DrawFrame(x, y, 420 * MenuScale, 200 * MenuScale)
 						RowText(I_Loc\LoadGame_DeleteConfirm, x + 20 * MenuScale, y + 15 * MenuScale, 400 * MenuScale, 200 * MenuScale)
-						;Text(x + 20 * MenuScale, y + 15 * MenuScale, "Are you sure you want to delete this save?")
 						If DrawButton(x + 50 * MenuScale, y + 150 * MenuScale, 100 * MenuScale, 30 * MenuScale, I_Loc\Menu_Yes, False) Then
 							DeleteFile(CurrentDir() + SavePath + SaveMSG + ".cbsav")
 							SaveMSG = ""
@@ -663,7 +662,6 @@ Function UpdateMainMenu()
 					Color 255,255,255
 					Text(x + 20 * MenuScale, y, I_Loc\OptionName_Antialias)
 					Opt_AntiAlias = DrawTick(x + 310 * MenuScale, y + MenuScale, Opt_AntiAlias%)
-					;Text(x + 20 * MenuScale, y + 15 * MenuScale, "(fullscreen mode only)")
 					If MouseOn(x+310*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"antialias")
 					EndIf
@@ -812,9 +810,9 @@ Function UpdateMainMenu()
 						Text x + 20 * MenuScale, y, I_Loc\OptionName_Usertrackmode
 						UserTrackMode = DrawTick(x + 310 * MenuScale, y + MenuScale, UserTrackMode)
 						If UserTrackMode
-							Text x + 350 * MenuScale, y + MenuScale, "Repeat"
+							Text x + 350 * MenuScale, y + MenuScale, I_Loc\OptionName_UsertrackmodeRepeat
 						Else
-							Text x + 350 * MenuScale, y + MenuScale, "Random"
+							Text x + 350 * MenuScale, y + MenuScale, I_Loc\OptionName_UsertrackmodeRandom
 						EndIf
 						If MouseOn(x+310*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 							DrawOptionsTooltip(tx,ty,tw,th,"usertrackmode")
@@ -846,7 +844,7 @@ Function UpdateMainMenu()
 							DrawOptionsTooltip(tx,ty,tw,th,"usertrackscan")
 						EndIf
 						If UserTrackCheck%>0
-							Text x + 20 * MenuScale, y + 100 * MenuScale, "User tracks found ("+UserTrackCheck2+"/"+UserTrackCheck+" successfully loaded)"
+							Text x + 20 * MenuScale, y + 100 * MenuScale, Format(I_Loc\OptionName_UsertrackscanFound, UserTrackCheck2, UserTrackCheck)
 						EndIf
 					Else
 						UserTrackCheck%=0
@@ -1035,7 +1033,7 @@ Function UpdateMainMenu()
 						CurrFrameLimit# = Max(CurrFrameLimit, 0.01)
 						Framelimit% = 19+(CurrFrameLimit*100.0)
 						Color 255,255,0
-						Text(x + 25 * MenuScale, y + 25 * MenuScale, Framelimit%+" FPS")
+						Text(x + 25 * MenuScale, y + 25 * MenuScale, Format(I_Loc\OptionName_FramelimitFps, Framelimit%))
 						If (MouseOn(x+150*MenuScale,y+30*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 							DrawOptionsTooltip(tx,ty,tw,th,"framelimit",Framelimit)
 						EndIf
@@ -1065,7 +1063,7 @@ Function UpdateMainMenu()
 				
 				Color(255, 255, 255)
 				SetFont Font2
-				Text(x + width / 2, y + height / 2, "LOAD MAP", True, True)
+				Text(x + width / 2, y + height / 2, I_Loc\NewGame_LoadmapUpper, True, True)
 				
 				x = 160 * MenuScale
 				y = y + height + 20 * MenuScale
@@ -1111,7 +1109,7 @@ Function UpdateMainMenu()
 				SetFont Font1
 				
 				If SavedMaps(0)="" Then 
-					Text (x + 20 * MenuScale, y + 20 * MenuScale, "No saved maps. Use the Map Creator to create new maps.")
+					Text (x + 20 * MenuScale, y + 20 * MenuScale, I_Loc\LoadMap_Nomaps)
 				Else
 					x = x + 20 * MenuScale
 					y = y + 20 * MenuScale
@@ -1192,7 +1190,7 @@ Function UpdateMainMenu()
 				EndIf
 
 				If ModCount = 0 Then
-					Text (x + 20 * MenuScale, y + 20 * MenuScale, "No mods.")
+					Text (x + 20 * MenuScale, y + 20 * MenuScale, I_Loc\Mods_Nomods)
 				Else
 					x = x + 10 * MenuScale
 					y = y + (20 + 5 * 80) * MenuScale
@@ -1633,9 +1631,9 @@ Function UpdateLauncher()
 		gfxWidth% = GfxModeWidthsByAspectRatio(SelectedAspectRatio, SelectedGfxMode) : gfxHeight% = GfxModeHeightsByAspectRatio(SelectedAspectRatio, SelectedGfxMode)
 
 		If Fullscreen
-			Text(260 + 15, 262 - 55 + 140, I_Loc\Launcher_ResolutionCurrent+gfxWidth + "x" + gfxHeight + "," + (16+(16*(Not Bit16Mode))))
+			Text(260 + 15, 262 - 55 + 140, I_Loc\Launcher_ResolutionCurrent+" "+gfxWidth + "x" + gfxHeight + "," + (16+(16*(Not Bit16Mode))))
 		Else
-			Text(260 + 15, 262 - 55 + 140, I_Loc\Launcher_ResolutionCurrent+gfxWidth + "x" + gfxHeight + ",32")
+			Text(260 + 15, 262 - 55 + 140, I_Loc\Launcher_ResolutionCurrent+" "+gfxWidth + "x" + gfxHeight + ",32")
 		EndIf
 
 		If DrawButton(LauncherWidth - 30 - 90 - 130 - 15, LauncherHeight - 50 - 55, 130, 30, I_Loc\Launcher_Mapcreator, False, False) Then
