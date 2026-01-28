@@ -394,6 +394,9 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 		Next
 	EndIf
 	
+	Local lastItem.TempItems
+	Local lastDoor.TempDoors
+
 	count=ReadInt(f) ;point entities
 	For i%=1 To count
 		temp1s=ReadString(f)
@@ -535,10 +538,6 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 					;Stop
 				EndIf
 			Case "item"
-				If rt\TempItemAmount = MaxRoomItems Then
-					RuntimeErrorExt("Too many items in room "+Chr(34)+file+Chr(34)+".")
-				EndIf
-
 				it.TempItems = New TempItems
 				
 				it\X = ReadFloat(f) * RoomScale
@@ -566,13 +565,15 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 
 				it\Chance = ReadFloat(f)
 
-				rt\TempItem[rt\TempItemAmount] = it
-				rt\TempItemAmount = rt\TempItemAmount + 1
-			Case "door"
-				If rt\TempDoorAmount = MaxRoomDoors Then
-					RuntimeErrorExt("Too many doors in room "+Chr(34)+file+Chr(34)+".")
+				If lastItem = Null Then
+					rt\FirstTempItem = it
+					lastItem = it
+				Else
+					lastItem\Successor = it
+					lastItem = it
 				EndIf
 
+			Case "door"
 				d.TempDoors = New TempDoors
 
 				d\X = ReadFloat(f) * RoomScale
@@ -586,8 +587,13 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 				d\SpawnOpen = ReadByte(f)
 				d\AllowRemoteControl = ReadByte(f)
 
-				rt\TempDoor[rt\TempDoorAmount] = d
-				rt\TempDoorAmount = rt\TempDoorAmount + 1
+				If lastDoor = Null Then
+					rt\FirstTempDoor = d
+					lastDoor = d
+				Else
+					lastDoor\Successor = d
+					lastDoor = d
+				EndIf
 		End Select
 	Next
 	
@@ -633,9 +639,10 @@ Function ResetAllRMeshes()
 	Delete Each TempWayPoints
 	Delete Each TempScreens
 	Delete Each TempItems
+	Delete Each TempDoors
 	For rt.RoomTemplates = Each RoomTemplates
-		rt\TempItemAmount = 0
-		rt\TempDoorAmount = 0
+		rt\FirstTempItem = Null
+		rt\FirstTempDoor = Null
 		If rt\obj <> 0 Then FreeEntity(rt\obj) : rt\obj = 0
 	Next
 End Function
@@ -1505,7 +1512,6 @@ Const MaxRoomLights% = 32
 Const MaxRoomEmitters% = 8
 Const MaxRoomObjects% = 30
 COnst MaxRoomItems% = 32
-Const MaxRoomDoors% = 32
 
 
 Const ROOM1% = 1, ROOM2% = 2, ROOM2C% = 3, ROOM3% = 4, ROOM4% = 5
@@ -1532,11 +1538,9 @@ Type RoomTemplates
 	Field TempTriggerbox[128]
 	Field TempTriggerboxName$[128]
 
-	Field TempItemAmount
-	Field TempItem.TempItems[MaxRoomItems]
+	Field FirstTempItem.TempItems
 
-	Field TempDoorAmount
-	Field TempDoor.TempDoors[MaxRoomDoors]
+	Field FirstTempDoor.TempDoors
 	
 	Field UseLightCones%
 	
@@ -1552,6 +1556,7 @@ Type TempItems
 	Field HasCustomAngle%, AngleX#, AngleY#, AngleZ#
 	Field State#, State2#
 	Field Chance#
+	Field Successor.TempItems
 End Type
 
 Type TempDoors
@@ -1562,6 +1567,7 @@ Type TempDoors
 	Field Angle#
 	Field SpawnOpen%
 	Field AllowRemoteControl%
+	Field Successor.TempDoors
 End Type
 
 Function CreateRoomTemplate.RoomTemplates(name$)
@@ -5546,8 +5552,8 @@ Function FillRoom(r.Rooms)
 		EndIf
 	Next
 
-	For i = 0 To r\RoomTemplate\TempItemAmount-1
-		Local tempIt.TempItems = r\RoomTemplate\TempItem[i]
+	Local tempIt.TempItems = r\RoomTemplate\FirstTempItem
+	While tempIt <> Null
 		If tempIt\Chance = 1.0 Or Rnd(1.0) < tempIt\Chance Then
 			it.Items = CreateItem(tempIt\Name, tempit\TempName, r\x + tempIt\X, r\y + tempIt\Y, r\z + tempIt\Z)
 			If tempIt\HasCustomAngle Then
@@ -5558,17 +5564,19 @@ Function FillRoom(r.Rooms)
 			EntityType(it\collider, HIT_ITEM)
 			EntityParent(it\collider, r\obj)
 		EndIf
-	Next
+		tempIt = tempIt\Successor
+	Wend
 
-	For i = 0 To r\RoomTemplate\TempDoorAmount-1
-		Local dt.TempDoors = r\RoomTemplate\TempDoor[i]
+	Local dt.TempDoors = r\RoomTemplate\FirstTempDoor
+	While dt <> Null
 		Local door.Doors = CreateDoor(r\zone, r\x + dt\X, r\y + dt\Y, r\z + dt\Z, dt\Angle, r, dt\SpawnOpen, dt\Dir, dt\KeyCard, dt\Code)
 		If Not dt\AllowRemoteControl Then
 			door\AutoClose = False
 		EndIf
 		SnapForward(door\buttons[0], 10)
 		SnapForward(door\buttons[1], 10)
-	Next
+		dt = dt\Successor
+	Wend
 	
 	CatchErrors("FillRoom ("+r\RoomTemplate\Name+")")
 End Function
