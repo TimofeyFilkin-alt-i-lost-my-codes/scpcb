@@ -158,17 +158,26 @@ Global Bit16Mode = GetOptionInt("graphics", "16bit")
 
 Global HUDScaleFactor# = GetOptionFloat("graphics", "hud scale factor")
 
-If LauncherEnabled And (Not IsRestart) Then 
-	AspectRatioRatio = 1.0
-	UpdateLauncher()
-Else If Fullscreen And (Not GfxMode3DExists(GraphicWidth, GraphicHeight, 32-16*Bit16Mode)) Then
-	; Exclusive fullscreen ONLY supports the reported resolutions
-	AspectRatioRatio = 1.0
+Const StringsFile$ = "Data\strings.ini"
+Include "Localization.bb"
+
+Global I_Loc.LocalizationTable
+If I_Loc <> Null Then Delete I_Loc ; Happens on reload
+I_Loc = New LocalizationTable
+For m.ActiveMods = Each ActiveMods
+	Local modPath$ = m\Path + StringsFile
+	If FileType(modPath) = 1 Then LoadLocalization(I_Loc, modPath)
+Next
+LoadLocalization(I_Loc, StringsFile)
+
+; Exclusive fullscreen ONLY supports the reported resolutions
+If LauncherEnabled And (Not IsRestart) Lor Fullscreen And (Not GfxMode3DExists(GraphicWidth, GraphicHeight, 32-16*Bit16Mode)) Then
 	UpdateLauncher()
 EndIf
+
 SetGfxDriver(SelectedGFXDriver)
 Global GFXDriverName$ = GFXDriverName(SelectedGFXDriver)
-	
+
 ;New "fake fullscreen" - ENDSHN Psst, it's called borderless windowed mode --Love Mark,
 If BorderlessWindowed
 	DebugLog "Using Faked Fullscreen"
@@ -965,11 +974,11 @@ Function UpdateConsole()
 					If itt = Null Then
 						CreateConsoleMsg("Item not found.",255,150,0)
 					Else
-						CreateConsoleMsg(itt\name + " spawned.")
-						it.Items = CreateItem(itt\name, itt\tempname, EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
+						CreateConsoleMsg(itt\displayname + " spawned.")
+						it.Items = CreateItem(itt\name, EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 						EntityType(it\collider, HIT_ITEM)
 
-						If itt\name = "S-NAV Navigator Ultimate" Lor itt\tempname = "fineradio" Then
+						If itt\name = "snavulti" Lor itt\name = "fineradio" Lor itt\name = "veryfineradio" Then
 							it\state = 101
 						EndIf
 					End If
@@ -977,7 +986,7 @@ Function UpdateConsole()
 				Case "itemlist", "items"
 					CreateConsoleMsg("Listing items:")
 					For itt.ItemTemplates = Each ItemTemplates
-						CreateConsoleMsg("- " + itt\name + "(" + itt\tempname + ")")
+						CreateConsoleMsg("- " + itt\displayname + "(" + itt\name + ")")
 					Next
 				Case "wireframe"
 					;[Block]
@@ -1094,9 +1103,9 @@ Function UpdateConsole()
 					;[Block]
 					For i = 1 To 20
 						If Rand(2)=1 Then
-							it.Items = CreateItem("Some SCP-420-J","420", EntityX(Collider,True)+Cos((360.0/20.0)*i)*Rnd(0.3,0.5), EntityY(Camera,True), EntityZ(Collider,True)+Sin((360.0/20.0)*i)*Rnd(0.3,0.5))
+							it.Items = CreateItem("scp420j", EntityX(Collider,True)+Cos((360.0/20.0)*i)*Rnd(0.3,0.5), EntityY(Camera,True), EntityZ(Collider,True)+Sin((360.0/20.0)*i)*Rnd(0.3,0.5))
 						Else
-							it.Items = CreateItem("Joint","420s", EntityX(Collider,True)+Cos((360.0/20.0)*i)*Rnd(0.3,0.5), EntityY(Camera,True), EntityZ(Collider,True)+Sin((360.0/20.0)*i)*Rnd(0.3,0.5))
+							it.Items = CreateItem("joint", EntityX(Collider,True)+Cos((360.0/20.0)*i)*Rnd(0.3,0.5), EntityY(Camera,True), EntityZ(Collider,True)+Sin((360.0/20.0)*i)*Rnd(0.3,0.5))
 						EndIf
 						EntityType (it\collider, HIT_ITEM)
 					Next
@@ -1337,20 +1346,7 @@ Function UpdateConsole()
 				Case "kill","suicide"
 					;[Block]
 					KillTimer = -1
-					Select Rand(4)
-						Case 1
-							DeathMSG = "[REDACTED]"
-						Case 2
-							DeathMSG = "Subject D-9341 found dead in Sector [REDACTED]. "
-							DeathMSG = DeathMSG + "The subject appears to have attained no physical damage, and there is no visible indication as to what killed him. "
-							DeathMSG = DeathMSG + "Body was sent for autopsy."
-						Case 3
-							DeathMSG = "EXCP_ACCESS_VIOLATION"
-						Case 4
-							DeathMSG = "Subject D-9341 found dead in Sector [REDACTED]. "
-							DeathMSG = DeathMSG + "The subject appears to have scribbled the letters "+Chr(34)+"kys"+Chr(34)+" in his own blood beside him. "
-							DeathMSG = DeathMSG + "No other signs of physical trauma or struggle can be observed. Body was sent for autopsy."
-					End Select
+					DeathMSG = I_Loc\DeathMessage_Suicide[Rand(4)]
 					;[End Block]
 				Case "playmusic"
 					;[Block]
@@ -1420,13 +1416,13 @@ Function UpdateConsole()
 					;[End Block]
 				Case "spawnradio"
 					;[Block]
-					it.Items = CreateItem("Radio Transceiver", "fineradio", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
+					it.Items = CreateItem("fineradio", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 					EntityType(it\collider, HIT_ITEM)
 					it\state = 101
 					;[End Block]
 				Case "spawnnvg"
 					;[Block]
-					it.Items = CreateItem("Night Vision Goggles", "nvgoggles", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
+					it.Items = CreateItem("nvgoggles", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 					EntityType(it\collider, HIT_ITEM)
 					it\state = 1000
 					;[End Block]
@@ -1436,7 +1432,7 @@ Function UpdateConsole()
 					;[End Block]
 				Case "spawnnav"
 					;[Block]
-					it.Items = CreateItem("S-NAV Navigator Ultimate", "nav", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
+					it.Items = CreateItem("snavulti", EntityX(Collider), EntityY(Camera,True), EntityZ(Collider))
 					EntityType(it\collider, HIT_ITEM)
 					it\state = 101
 					;[End Block]
@@ -2337,14 +2333,15 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 	If d\KeyCard > 0 Then
 		If SelectedItem = Null Then
 			If showmsg = True Then
-				If (Instr(Msg,"The keycard")=0 And Instr(Msg,"A keycard with")=0) Or (MsgTimer<70*3) Then
-					Msg = "A keycard is required to operate this door."
+				If Not HasKeyCardMsg() Then
+					Msg = I_Loc\MessageButton_KeyRequired
 					MsgTimer = 70 * 7
+					ActiveKeyCardMsgCooldown()
 				EndIf
 			EndIf
 			Return
 		Else
-			Select SelectedItem\itemtemplate\tempname
+			Select SelectedItem\itemtemplate\name
 				Case "key1"
 					temp = 1
 				Case "key2"
@@ -2363,9 +2360,10 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 			
 			If temp =-1 Then 
 				If showmsg = True Then
-					If (Instr(Msg,"The keycard")=0 And Instr(Msg,"A keycard with")=0) Or (MsgTimer<70*3) Then
-						Msg = "A keycard is required to operate this door."
+					If Not HasKeyCardMsg() Then
+						Msg = I_Loc\MessageButton_KeyRequired
 						MsgTimer = 70 * 7
+						ActiveKeyCardMsgCooldown()
 					EndIf
 				EndIf
 				Return				
@@ -2374,25 +2372,27 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 				If showmsg = True Then
 					If d\locked Then
 						PlaySound_Strict KeyCardSFX2
-						Msg = "The keycard was inserted into the slot but nothing happened."
+						Msg = I_Loc\MessageButton_KeyNothing
 						MsgTimer = 70 * 7
 						Return
 					Else
 						PlaySound_Strict KeyCardSFX1
-						Msg = "The keycard was inserted into the slot."
+						Msg = I_Loc\MessageButton_KeyInserted
 						MsgTimer = 70 * 7	
 					EndIf
+					ActiveKeyCardMsgCooldown()
 				EndIf
 			Else
 				SelectedItem = Null
 				If showmsg = True Then 
 					PlaySound_Strict KeyCardSFX2					
 					If d\locked Then
-						Msg = "The keycard was inserted into the slot but nothing happened."
+						Msg = I_Loc\MessageButton_KeyNothing
 					Else
-						Msg = "A keycard with security clearance "+d\KeyCard+" or higher is required to operate this door."
+						Msg = Format(I_Loc\MessageButton_KeyRequiredLevel, d\KeyCard)
 					EndIf
 					MsgTimer = 70 * 7					
+					ActiveKeyCardMsgCooldown()
 				EndIf
 				Return
 			End If
@@ -2400,19 +2400,18 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 	ElseIf d\KeyCard < 0
 		;I can't find any way to produce short circuited boolean expressions so work around this by using a temporary variable - risingstar64
 		If SelectedItem <> Null Then
-			temp = (SelectedItem\itemtemplate\tempname = "hand" And d\KeyCard=-1) Or (SelectedItem\itemtemplate\tempname = "hand2" And d\KeyCard=-2)
+			temp = (SelectedItem\itemtemplate\name = "hand" And d\KeyCard=-1) Or (SelectedItem\itemtemplate\name = "hand2" And d\KeyCard=-2)
 		EndIf
 		SelectedItem = Null
 		If temp <> 0 Then
 			PlaySound_Strict ScannerSFX1
-			If (Instr(Msg,"You placed your")=0) Or (MsgTimer < 70*3) Then
-				Msg = "You place the palm of the hand onto the scanner. The scanner reads: "+Chr(34)+"DNA verified. Access granted."+Chr(34)
-			EndIf
+			Msg = I_Loc\MessageButton_DnaSuccess
 			MsgTimer = 70 * 10
+			ActivateScannerMsgCooldown()
 		Else
-			If showmsg = True Then 
+			If showmsg = True And (Not HasScannerMsg()) Then 
 				PlaySound_Strict ScannerSFX2
-				Msg = "You placed your palm onto the scanner. The scanner reads: "+Chr(34)+"DNA does not match known sample. Access denied."+Chr(34)
+				Msg = I_Loc\MessageButton_DnaSelf
 				MsgTimer = 70 * 10
 			EndIf
 			Return			
@@ -2424,12 +2423,12 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 					PlaySound_Strict ButtonSFX2
 					If PlayerRoom\RoomTemplate\Name <> "room2elevator" Then
                         If d\open Then
-                            Msg = "You pushed the button but nothing happened."
+                            Msg = I_Loc\MessageButton_Nothing
                         Else    
-                            Msg = "The door appears to be locked."
+                            Msg = I_Loc\MessageButton_DoorLocked
                         EndIf    
                     Else
-                        Msg = "The elevator appears to be broken."
+                        Msg = I_Loc\MessageButton_ElevatorBroken
                     EndIf
 					MsgTimer = 70 * 5
 				Else
@@ -2445,13 +2444,13 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 					EndIf
 
 					If d\IsElevatorDoor = 1 Then
-						Msg = "You called the elevator."
+						Msg = I_Loc\MessageButton_ElevatorCall
 						MsgTimer = 70 * 5
 					ElseIf d\IsElevatorDoor = 3 Then
-						Msg = "The elevator is already on this floor."
+						Msg = I_Loc\MessageButton_ElevatorFloor
 						MsgTimer = 70 * 5
-					ElseIf (Msg<>"You called the elevator.")
-						If (Msg="You already called the elevator.") Or (MsgTimer<70*3) Or (ElevatorButtonSpamCount > 20 And Msg <> "If you continue pressing this button I will generate a Memory Access Violation.")
+					ElseIf (Msg<>I_Loc\MessageButton_ElevatorCall)
+						If (Msg=I_Loc\MessageButton_ElevatorAlready) Or (MsgTimer<70*3) Or (ElevatorButtonSpamCount > 20 And Msg <> I_Loc\MessageButton_ElevatorMav)
 							Local rnd%
 							If ElevatorButtonSpamCount > 20 Then
 								rnd = 3
@@ -2460,21 +2459,21 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 							EndIf
 							Select rnd
 								Case 1
-									Msg = "Stop spamming the button."
+									Msg = I_Loc\MessageButton_ElevatorStop
 									MsgTimer = 70 * 7
 								Case 2
-									Msg = "Pressing it harder does not make the elevator come faster."
+									Msg = I_Loc\MessageButton_ElevatorFaster
 									MsgTimer = 70 * 7
 								Case 3
-									Msg = "If you continue pressing this button I will generate a Memory Access Violation."
+									Msg = I_Loc\MessageButton_ElevatorMav
 									MsgTimer = 70 * 7
 								Default
-									Msg = "You already called the elevator."
+									Msg = I_Loc\MessageButton_ElevatorAlready
 									MsgTimer = 70 * 7
 							End Select
 						EndIf
 					Else
-						Msg = "You already called the elevator."
+						Msg = I_Loc\MessageButton_ElevatorAlready
 						MsgTimer = 70 * 7
 					EndIf
 				EndIf
@@ -2507,6 +2506,25 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 		EndIf
 	EndIf
 	
+End Function
+
+
+Global KeyCardMsgCooldown% = 0
+Function ActiveKeyCardMsgCooldown()
+	KeyCardMsgCooldown = MilliSecs() + 4000
+End Function
+
+Function HasKeyCardMsg()
+	Return MilliSecs() <= KeyCardMsgCooldown
+End Function
+
+Global ScannerMsgCooldown% = 0
+Function ActivateScannerMsgCooldown()
+	ScannerMsgCooldown = MilliSecs() + 7000
+End Function
+
+Function HasScannerMsg()
+	Return MilliSecs() <= ScannerMsgCooldown
 End Function
 
 Function RemoveDoor(d.Doors)
@@ -3127,7 +3145,7 @@ While IsRunning
 				If EyeStuck < 9000 Then BlurTimer = Max(BlurTimer, (9000-EyeStuck)*0.5)
 				If EyeStuck < 6000 Then darkA = Min(Max(darkA, (6000-EyeStuck)/5000.0),1.0)
 				If EyeStuck < 9000 And EyeStuck+FPSfactor =>9000 Then 
-					Msg = "The eyedrops are causing your eyes to tear up."
+					Msg = I_Loc\MessageItem_EyedropsTear
 					MsgTimer = 70*6
 				EndIf
 			EndIf
@@ -3193,7 +3211,7 @@ While IsRunning
 			
 			If FallTimer < 0 Then
 				If SelectedItem <> Null Then
-					If Instr(SelectedItem\itemtemplate\tempname,"hazmatsuit") Or Instr(SelectedItem\itemtemplate\tempname,"vest") Then
+					If SelectedItem\itemtemplate\group = "hazmat" Or SelectedItem\itemtemplate\group = "vest" Then
 						If WearingHazmat=0 And WearingVest=0 Then
 							DropItem(SelectedItem)
 						EndIf
@@ -3208,7 +3226,7 @@ While IsRunning
 				darkA = Max(darkA, Min(Abs(FallTimer / 400.0), 1.0))				
 			EndIf
 			
-			If SelectedScreen <> Null Lor (Not InvOpen) And SelectedItem <> Null And (SelectedItem\itemtemplate\tempname = "navigator" Lor SelectedItem\itemtemplate\tempname = "nav") Then darkA = Max(darkA, 0.5)
+			If SelectedScreen <> Null Lor (Not InvOpen) And SelectedItem <> Null And SelectedItem\itemtemplate\group = "nav" Then darkA = Max(darkA, 0.5)
 			
 			EntityAlpha(Dark, darkA)	
 		EndIf
@@ -3232,10 +3250,10 @@ While IsRunning
 			Local W$ = ""
 			Local V# = 0
 			If SelectedItem<>Null
-				W$ = SelectedItem\itemtemplate\tempname
+				W$ = SelectedItem\itemtemplate\group
 				V# = SelectedItem\state
 			EndIf
-			If (W<>"vest" And W<>"finevest" And W<>"hazmatsuit" And W<>"hazmatsuit2" And W<>"hazmatsuit3") Or V=0 Or V=100
+			If (W<>"vest" And W<>"hazmat") Or V=0 Or V=100
 				InvOpen = Not InvOpen
 				If OtherOpen<>Null Then OtherOpen=Null
 				SelectedItem = Null
@@ -3248,39 +3266,34 @@ While IsRunning
 			If SelectedDifficulty\saveType = SAVEANYWHERE Then
 				RN$ = PlayerRoom\RoomTemplate\Name$
 				If RN$ = "173" Or (RN$ = "exit1" And EntityY(Collider)>1040.0*RoomScale) Or RN$ = "gatea"
-					Msg = "You cannot save in this location."
+					Msg = I_Loc\MessageSave_DisabledLocation
 					MsgTimer = 70 * 4
-					;SetSaveMSG("You cannot save in this location.")
 				ElseIf (Not CanSave) Or QuickLoadPercent > -1
-					Msg = "You cannot save at this moment."
-					MsgTimer = 70 * 4
-					;SetSaveMSG("You cannot save at this moment.")
 					If QuickLoadPercent > -1
-						Msg = Msg + " (game is loading)"
-						;Save_MSG = Save_MSG + " (game is loading)"
+						Msg = I_Loc\MessageSave_DisabledLoading
+					Else
+						Msg = I_Loc\MessageSave_DisabledMoment
 					EndIf
+					MsgTimer = 70 * 4
 				Else
 					SaveGame(SavePath + CurrSave)
 				EndIf
 			ElseIf SelectedDifficulty\saveType = SAVEONSCREENS
 				If SelectedScreen=Null And SelectedMonitor=Null Then
-					Msg = "Saving is only permitted on clickable monitors scattered throughout the facility."
+					Msg = I_Loc\MessageSave_Screens
 					MsgTimer = 70 * 4
-					;SetSaveMSG("Saving is only permitted on clickable monitors scattered throughout the facility.")
 				Else
 					RN$ = PlayerRoom\RoomTemplate\Name$
 					If RN$ = "173" Or (RN$ = "exit1" And EntityY(Collider)>1040.0*RoomScale) Or RN$ = "gatea"
-						Msg = "You cannot save in this location."
+						Msg = I_Loc\MessageSave_DisabledLocation
 						MsgTimer = 70 * 4
-						;SetSaveMSG("You cannot save in this location.")
 					ElseIf (Not CanSave) Or QuickLoadPercent > -1
-						Msg = "You cannot save at this moment."
-						MsgTimer = 70 * 4
-						;SetSaveMSG("You cannot save at this moment.")
 						If QuickLoadPercent > -1
-							Msg = Msg + " (game is loading)"
-							;Save_MSG = Save_MSG + " (game is loading)"
+							Msg = I_Loc\MessageSave_DisabledLoading
+						Else
+							Msg = I_Loc\MessageSave_DisabledMoment
 						EndIf
+						MsgTimer = 70 * 4
 					Else
 						If SelectedScreen<>Null
 							GameSaved = False
@@ -3291,15 +3304,13 @@ While IsRunning
 					EndIf
 				EndIf
 			Else
-				Msg = "Quick saving is disabled."
+				Msg = I_Loc\MessageSave_Disabled
 				MsgTimer = 70 * 4
-				;SetSaveMSG("Quick saving is disabled.")
 			EndIf
 		Else If SelectedDifficulty\saveType = SAVEONSCREENS And (SelectedScreen<>Null Or SelectedMonitor<>Null)
-			If (Msg<>"Game progress saved." And Msg<>"You cannot save in this location."And Msg<>"You cannot save at this moment.") Or MsgTimer<=0 Then
-				Msg = "Press "+KeyName(KEY_SAVE)+" to save."
+			If (Msg<>I_Loc\MessageSave_Saved And Msg<>I_Loc\MessageSave_DisabledLocation And Msg<>I_Loc\MessageSave_DisabledMoment) Or MsgTimer<=0 Then
+				Msg = Format(I_Loc\MessageSave_Anywhere, KeyName(KEY_SAVE))
 				MsgTimer = 70*4
-				;SetSaveMSG("Press "+KeyName(KEY_SAVE)+" to save.")
 			EndIf
 			
 			If MouseHit2 Then SelectedMonitor = Null
@@ -3322,7 +3333,7 @@ While IsRunning
 					If e\EventName = "173" Then
 						If e\EventState3 => 40 And e\EventState3 < 50 Then
 							If InvOpen Then
-								Msg = "Double click on the document to view it."
+								Msg = I_Loc\MessageHelp_View
 								MsgTimer=70*7
 								e\EventState3 = 50
 								Exit
@@ -3338,7 +3349,7 @@ While IsRunning
 			Local temp% = False
 			If (Not InvOpen And OtherOpen = Null) Then
 				If SelectedItem <> Null
-					If SelectedItem\itemtemplate\tempname = "paper" Or SelectedItem\itemtemplate\tempname = "oldpaper"
+					If SelectedItem\itemtemplate\group = "paper" Or SelectedItem\itemtemplate\name = "oldpaper"
 						temp% = True
 					EndIf
 				EndIf
@@ -3360,7 +3371,7 @@ While IsRunning
 		End If
 		
 		Color 255, 255, 255
-		If ShowFPS Then SetFont ConsoleFont : Text 20, 20, "FPS: " + FPS : SetFont Font1
+		If ShowFPS Then SetFont ConsoleFont : Text 20, 20, Format(I_Loc\HUD_Fps, FPS) : SetFont Font1
 		
 		If EndingTimer < 0 Then
 			If SelectedEnding <> "" Then DrawEnding()
@@ -3841,7 +3852,7 @@ Function DrawEnding()
 	
 	GiveAchievement(Achv055)
 	If (Not UsedConsole) Then GiveAchievement(AchvConsole)
-	If SelectedDifficulty\name = "Keter" Then GiveAchievement(AchvKeter)
+	If SelectedDifficulty = difficulties[KETER] Then GiveAchievement(AchvKeter)
 	Local x,y,width,height, temp
 	Local itt.ItemTemplates, r.Rooms
 	
@@ -3916,7 +3927,7 @@ Function DrawEnding()
 				
 				Color(255, 255, 255)
 				SetFont Font2
-				Text(x + width / 2 + 40*MenuScale, y + 20*MenuScale, "THE END", True)
+				Text(x + width / 2 + 40*MenuScale, y + 20*MenuScale, I_Loc\Menu_End, True)
 				SetFont Font1
 				
 				If AchievementsMenu=0 Then 
@@ -3934,7 +3945,7 @@ Function DrawEnding()
 					
 					Local docamount=0, docsfound=0
 					For itt.ItemTemplates = Each ItemTemplates
-						If itt\tempname = "paper" Then
+						If itt\group = "paper" Then
 							docamount=docamount+1
 							docsfound=docsfound+itt\found
 						EndIf
@@ -3950,13 +3961,13 @@ Function DrawEnding()
 						achievementsUnlocked = achievementsUnlocked + Achievements(i)
 					Next
 					
-					Text x, y, "Ending: " + Upper(SelectedEnding)
-					Text x, y+20*MenuScale, "Time played: " +FormatDuration(PlayTime, SpeedRunMode)
-					Text x, y+40*MenuScale, "SCPs encountered: " +scpsEncountered
-					Text x, y+60*MenuScale, "Achievements unlocked: " + achievementsUnlocked+"/"+(MAXACHIEVEMENTS)
-					Text x, y+80*MenuScale, "Rooms found: " + roomsfound+"/"+roomamount
-					Text x, y+100*MenuScale, "Documents discovered: " +docsfound+"/"+docamount
-					Text x, y+120*MenuScale, "Items refined in SCP-914: " +RefinedItems			
+					Text x, y, I_Loc\Menu_EndEnding+" " + Upper(SelectedEnding)
+					Text x, y+20*MenuScale, I_Loc\Menu_EndTime+" " + FormatDuration(PlayTime, SpeedRunMode)
+					Text x, y+40*MenuScale, I_Loc\Menu_EndScps+" " + scpsEncountered
+					Text x, y+60*MenuScale, I_Loc\Menu_EndAchv+" " + achievementsUnlocked+"/"+(MAXACHIEVEMENTS)
+					Text x, y+80*MenuScale, I_Loc\Menu_EndRooms+" " + roomsfound+"/"+roomamount
+					Text x, y+100*MenuScale, I_Loc\Menu_EndDocs+" " +docsfound+"/"+docamount
+					Text x, y+120*MenuScale, I_Loc\Menu_End914+" " +RefinedItems			
 					
 					x = GraphicWidth / 2 - width / 2
 					y = GraphicHeight / 2 - height / 2
@@ -4158,49 +4169,6 @@ Function DrawCredits()
     
 End Function
 
-;[Block]
-;Function SetSaveMSG(txt$)
-;	
-;	Save_MSG = txt
-;	Save_MSG_Timer = 0.0
-;	Save_MSG_Y = 0.0
-;	
-;End Function
-;
-;Function UpdateSaveMSG()
-;	Local scale# = GraphicHeight/768.0
-;	;Local width% = 200*scale
-;	Local width = StringWidth(Save_MSG)+20*scale
-;	Local height% = 30*scale
-;	Local x% = (GraphicWidth/2)-(width/2)
-;	Local y% = (-height)+Save_MSG_Y
-;	
-;	If Save_MSG <> ""
-;		If Save_MSG_Timer < 70*5
-;			If Save_MSG_Y < height
-;				Save_MSG_Y = Min(Save_MSG_Y+2*FPSfactor2,height)
-;			Else
-;				Save_MSG_Y = height
-;			EndIf
-;			Save_MSG_Timer = Save_MSG_Timer + FPSfactor2
-;		Else
-;			If Save_MSG_Y > 0
-;				Save_MSG_Y = Max(Save_MSG_Y-2*FPSfactor2,0)
-;			Else
-;				Save_MSG = ""
-;				Save_MSG_Timer = 0.0
-;				Save_MSG_Y = 0.0
-;			EndIf
-;		EndIf
-;		DrawFrame(x,y,width,height)
-;		Color 255,255,255
-;		SetFont Font1
-;		Text(GraphicWidth/2,y+(height/2),Save_MSG,True,True)
-;	EndIf
-;	
-;End Function
-;[End Block]
-
 ;--------------------------------------- player controls -------------------------------------------
 
 Global MoveX%, MoveZ%
@@ -4217,8 +4185,7 @@ Function MovePlayer()
 		CameraShake = Sin(SuperManTimer / 5.0) * (SuperManTimer / 1500.0)
 		
 		If SuperManTimer > 70 * 50 Then
-			DeathMSG = "A Class D jumpsuit found in [DATA REDACTED]. Upon further examination, the jumpsuit was found to be filled with 12.5 kilograms of blue ash-like substance. "
-			DeathMSG = DeathMSG + "Chemical analysis of the substance remains non-conclusive. Most likely related to SCP-914."
+			DeathMSG = I_Loc\DeathMessage_914Superman
 			Kill()
 			ShowEntity Fog
 		Else
@@ -4274,7 +4241,7 @@ Function MovePlayer()
 	
 	For i = 0 To MaxItemAmount-1
 		If Inventory(i)<>Null Then
-			If Inventory(i)\itemtemplate\tempname = "finevest" Then
+			If Inventory(i)\itemtemplate\name = "finevest" Then
 				Stamina = Min(Stamina, 60)
 				Exit
 			EndIf
@@ -4313,7 +4280,7 @@ Function MovePlayer()
 			If ForceMove>0 Then Speed=Speed*ForceMove
 			
 			If SelectedItem<>Null Then
-				If SelectedItem\itemtemplate\tempname = "firstaid" Or SelectedItem\itemtemplate\tempname = "finefirstaid" Or SelectedItem\itemtemplate\tempname = "firstaid2" Then 
+				If SelectedItem\itemtemplate\name = "firstaid" Or SelectedItem\itemtemplate\name = "finefirstaid" Or SelectedItem\itemtemplate\name = "firstaid2" Then 
 					Sprint = 0
 				EndIf
 			EndIf
@@ -4489,7 +4456,7 @@ Function MovePlayer()
 		EndIf
 		
 		If temp2 <= 60 And Bloodloss > 60 Then
-			Msg = "You are feeling faint from the amount of blood you have lost."
+			Msg = I_Loc\Message_BloodlossFaint
 			MsgTimer = 70*4
 		EndIf
 	EndIf
@@ -4727,7 +4694,7 @@ Function MouseLook()
 					Stamina = Stamina - FPSfactor * 0.3
 				Case 1 ;chicken pox
 					If Rand(9000)=1 And Msg="" Then
-						Msg="Your skin is feeling itchy."
+						Msg=I_Loc\Message_1025ChickenpoxItchy
 						MsgTimer =70*4
 					EndIf
 				Case 2 ;cancer of the lungs
@@ -4747,10 +4714,10 @@ Function MouseLook()
 						SCP1025state[i]=SCP1025state[i]+FPSfactor*0.0005
 					EndIf
 					If SCP1025state[i]>20.0 Then
-						If SCP1025state[i]-FPSfactor<=20.0 Then Msg="The pain in your stomach is becoming unbearable." : MsgTimer = 70*4
+						If SCP1025state[i]-FPSfactor<=20.0 Then Msg=I_Loc\Message_1025Appendicitis2 : MsgTimer = 70*4
 						Stamina = Stamina - FPSfactor * 0.3
 					ElseIf SCP1025state[i]>10.0
-						If SCP1025state[i]-FPSfactor<=10.0 Then Msg="Your stomach is aching." : MsgTimer = 70*4
+						If SCP1025state[i]-FPSfactor<=10.0 Then Msg=I_Loc\Message_1025Appendicitis1 : MsgTimer = 70*4
 					EndIf
 				Case 4 ;asthma
 					If Stamina < 35 Then
@@ -4772,8 +4739,7 @@ Function MouseLook()
 						HeartBeatRate=0
 						BlurTimer = Max(BlurTimer, 500)
 						If SCP1025state[i]>140 Then 
-							DeathMSG = Chr(34)+"He died of a cardiac arrest after reading SCP-1025, that's for sure. Is there such a thing as psychosomatic cardiac arrest, or does SCP-1025 have some "
-							DeathMSG = DeathMSG + "anomalous properties we are not yet aware of?"+Chr(34)
+							DeathMSG = I_Loc\DeathMessage_1025Cardiacarrest
 							Kill()
 						EndIf
 					Else
@@ -5089,7 +5055,7 @@ Function DrawGUI()
 					MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
 				EndIf
 			Else
-				Text GraphicWidth/2, y+70*scale, "ACCESS CODE: ",True,True	
+				Text GraphicWidth/2, y+70*scale, I_Loc\HUD_KeypadCode,True,True	
 				SetFont Font4
 				Text GraphicWidth/2, y+124*scale, KeypadInput,True,True	
 			EndIf
@@ -5132,7 +5098,7 @@ Function DrawGUI()
 										MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
 									Else
 										PlaySound_Strict ScannerSFX2
-										KeypadMSG = "ACCESS DENIED"
+										KeypadMSG = I_Loc\HUD_KeypadDenied
 										KeypadTimer = 210
 										KeypadInput = ""	
 									EndIf
@@ -5180,7 +5146,7 @@ Function DrawGUI()
 		SelectedScreen = Null
 		SelectedMonitor = Null
 		If SelectedItem <> Null Then
-			If Instr(SelectedItem\itemtemplate\tempname,"vest") Or Instr(SelectedItem\itemtemplate\tempname,"hazmatsuit") Then
+			If SelectedItem\itemtemplate\group = "vest" Or SelectedItem\itemtemplate\group = "hazmat" Then
 				If (Not WearingVest) And (Not WearingHazmat) Then
 					DropItem(SelectedItem)
 				EndIf
@@ -5254,9 +5220,9 @@ Function DrawGUI()
 				If isMouseOn Then
 					SetFont Font1
 					Color 0,0,0
-					Text(x + width / 2 + 1, y + height + spacing - 15 + 1, OtherOpen\SecondInv[n]\itemtemplate\name, True)
+					Text(x + width / 2 + 1, y + height + spacing - 15 + 1, OtherOpen\SecondInv[n]\itemtemplate\displayname, True)
 					Color 255, 255, 255	
-					Text(x + width / 2, y + height + spacing - 15, OtherOpen\SecondInv[n]\itemtemplate\name, True)				
+					Text(x + width / 2, y + height + spacing - 15, OtherOpen\SecondInv[n]\itemtemplate\displayname, True)
 					If SelectedItem = Null Then
 						If MouseHit1 Then
 							SelectedItem = OtherOpen\SecondInv[n]
@@ -5344,11 +5310,11 @@ Function DrawGUI()
 					Next
 					
 					isEmpty=True
-					If OtherOpen\itemtemplate\tempname = "wallet" Then
+					If OtherOpen\itemtemplate\name = "wallet" Then
 						If (Not isEmpty) Then
 							For z% = 0 To OtherSize - 1
 								If OtherOpen\SecondInv[z]<>Null
-									Local name$=OtherOpen\SecondInv[z]\itemtemplate\tempname
+									Local name$=OtherOpen\SecondInv[z]\itemtemplate\name
 									If name$<>"25ct" And name$<>"coin" And name$<>"key" And name$<>"scp860" And name$<>"scp714" Then
 										isEmpty=False
 										Exit
@@ -5366,7 +5332,7 @@ Function DrawGUI()
 					EndIf
 					
 					If isEmpty Then
-						Select OtherOpen\itemtemplate\tempname
+						Select OtherOpen\itemtemplate\name
 							Case "clipboard"
 								OtherOpen\invimg = OtherOpen\itemtemplate\invimg2
 								SetAnimTime OtherOpen\model,17.0
@@ -5392,11 +5358,8 @@ Function DrawGUI()
 						PrevOtherOpen\SecondInv[MouseSlot] = SelectedItem
 						SelectedItem = Null
 					ElseIf PrevOtherOpen\SecondInv[MouseSlot] <> SelectedItem
-						Select SelectedItem\itemtemplate\tempname
-							Default
-								Msg = "You cannot combine these two items."
-								MsgTimer = 70 * 5
-						End Select					
+						Msg = I_Loc\MessageItem_Cantcombine
+						MsgTimer = 70 * 5
 					EndIf
 					
 				EndIf
@@ -5432,7 +5395,7 @@ Function DrawGUI()
 			
 			If Inventory(n) <> Null Then
 				Color 200, 200, 200
-				Select Inventory(n)\itemtemplate\tempname 
+				Select Inventory(n)\itemtemplate\name 
 					Case "gasmask"
 						If WearingGasMask=1 Then Rect(x - 3, y - 3, width + 6, height + 6)
 					Case "supergasmask"
@@ -5497,8 +5460,8 @@ Function DrawGUI()
 							MouseHit1 = False
 							
 							If DoubleClick Then
-								If WearingHazmat > 0 And Instr(SelectedItem\itemtemplate\tempname,"hazmatsuit")=0 Then
-									Msg = "You cannot use any items while wearing a hazmat suit."
+								If WearingHazmat > 0 And SelectedItem\itemtemplate\group <> "hazmat" Then
+									Msg = I_Loc\MessageItem_HazmatNouseAny
 									MsgTimer = 70*5
 									SelectedItem = Null
 									Return
@@ -5512,9 +5475,9 @@ Function DrawGUI()
 						
 						SetFont Font1
 						Color 0,0,0
-						Text(x + width / 2 + 1, y + height + spacing - 15 + 1, Inventory(n)\name, True)							
+						Text(x + width / 2 + 1, y + height + spacing - 15 + 1, Inventory(n)\displayname, True)							
 						Color 255, 255, 255	
-						Text(x + width / 2, y + height + spacing - 15, Inventory(n)\name, True)	
+						Text(x + width / 2, y + height + spacing - 15, Inventory(n)\displayname, True)	
 						
 					EndIf
 				EndIf
@@ -5549,13 +5512,13 @@ Function DrawGUI()
 				EndIf
 			Else
 				If MouseSlot = 66 Then
-					Select SelectedItem\itemtemplate\tempname
+					Select SelectedItem\itemtemplate\name
 						Case "vest","finevest","hazmatsuit","hazmatsuit2","hazmatsuit3"
-							Msg = "Double click on this item to take it off."
+							Msg = I_Loc\MessageHelp_Remove
 							MsgTimer = 70*5
 						Case "scp1499","super1499"
 							If Wearing1499>0 Then
-								Msg = "Double click on this item to take it off."
+								Msg = I_Loc\MessageHelp_Remove
 								MsgTimer = 70*5
 							Else
 								DropItem(SelectedItem)
@@ -5580,15 +5543,17 @@ Function DrawGUI()
 						Inventory(MouseSlot) = SelectedItem
 						SelectedItem = Null
 					ElseIf Inventory(MouseSlot) <> SelectedItem
-						Select SelectedItem\itemtemplate\tempname
-							Case "paper","key1","key2","key3","key4","key5","key6","misc","oldpaper","badge","ticket","25ct","coin","key","scp860"
+						Local groupSelector$ = ""
+						If SelectedItem\itemtemplate\group = "paper" Lor SelectedItem\itemtemplate\group = "misc" Then groupSelector = SelectedItem\itemtemplate\name
+						Select SelectedItem\itemtemplate\name
+							Case groupSelector,"key1","key2","key3","key4","key5","key6","oldpaper","badge","oldbadge","ticket","25ct","coin","key","scp860"
 								;[Block]
-								If Inventory(MouseSlot)\itemtemplate\tempname = "clipboard" Then
+								If Inventory(MouseSlot)\itemtemplate\name = "clipboard" Then
 									;Add an item to clipboard
 									Local added.Items = Null
-									Local b$ = SelectedItem\itemtemplate\tempname
+									Local b$ = SelectedItem\itemtemplate\group
 									Local b2$ = SelectedItem\itemtemplate\name
-									If (b<>"misc" And b<>"25ct" And b<>"coin" And b<>"key" And b<>"scp860" And b<>"scp714") Or (b2="Playing Card" Or b2="Mastercard") Then
+									If (b<>"misc" And b2<>"25ct" And b2<>"coin" And b2<>"key" And b2<>"scp860" And b2<>"scp714") Or (b2="playingcard" Or b2="mastercard") Then
 										For c% = 0 To Inventory(MouseSlot)\invSlots-1
 											If (Inventory(MouseSlot)\SecondInv[c] = Null)
 												If SelectedItem <> Null Then
@@ -5610,34 +5575,34 @@ Function DrawGUI()
 											EndIf
 										Next
 										If SelectedItem <> Null Then
-											Msg = "The paperclip is not strong enough to hold any more items."
+											Msg = I_Loc\MessageItem_ClipboardFull
 										Else
-											If added\itemtemplate\tempname = "paper" Or added\itemtemplate\tempname = "oldpaper" Then
-												Msg = "This document was added to the clipboard."
-											ElseIf added\itemtemplate\tempname = "badge"
-												Msg = added\itemtemplate\name + " was added to the clipboard."
+											If added\itemtemplate\group = "paper" Or added\itemtemplate\name = "oldpaper" Then
+												Msg = I_Loc\MessageItem_ClipboardAddPaper
+											ElseIf added\itemtemplate\name = "badge" Lor added\itemtemplate\name = "oldbadge"
+												Msg = Format(I_Loc\MessageItem_ClipboardAddBadge, added\itemtemplate\displayname)
 											Else
-												Msg = "The " + added\itemtemplate\name + " was added to the clipboard."
+												Msg = Format(I_Loc\MessageItem_ClipboardAdd, added\itemtemplate\displayname)
 											EndIf
 											
 										EndIf
 										MsgTimer = 70 * 5
 									Else
-										Msg = "You cannot combine these two items."
+										Msg = I_Loc\MessageItem_Cantcombine
 										MsgTimer = 70 * 5
 									EndIf
-								ElseIf Inventory(MouseSlot)\itemtemplate\tempname = "wallet" Then
+								ElseIf Inventory(MouseSlot)\itemtemplate\name = "wallet" Then
 									;Add an item to clipboard
 									added.Items = Null
-									b$ = SelectedItem\itemtemplate\tempname
+									b$ = SelectedItem\itemtemplate\group
 									b2$ = SelectedItem\itemtemplate\name
-									If (b<>"misc" And b<>"paper" And b<>"oldpaper") Or (b2="Playing Card" Or b2="Mastercard") Then
+									If (b<>"misc" And b<>"paper" And b2<>"oldpaper") Or (b2="playingcard" Or b2="mastercard") Then
 										For c% = 0 To Inventory(MouseSlot)\invSlots-1
 											If (Inventory(MouseSlot)\SecondInv[c] = Null)
 												If SelectedItem <> Null Then
 													Inventory(MouseSlot)\SecondInv[c] = SelectedItem
 													Inventory(MouseSlot)\state = 1.0
-													If b<>"25ct" And b<>"coin" And b<>"key" And b<>"scp860"
+													If b2<>"25ct" And b2<>"coin" And b2<>"key" And b2<>"scp860"
 														SetAnimTime Inventory(MouseSlot)\model,3.0
 													EndIf
 													Inventory(MouseSlot)\invimg = Inventory(MouseSlot)\itemtemplate\invimg
@@ -5655,100 +5620,94 @@ Function DrawGUI()
 											EndIf
 										Next
 										If SelectedItem <> Null Then
-											Msg = "The wallet is full."
+											Msg = I_Loc\MessageItem_WalletFull
 										Else
-											Msg = "You put "+added\itemtemplate\name+" into the wallet."
+											Msg = Format(I_Loc\MessageItem_WalletAdd, added\itemtemplate\displayname)
 										EndIf
 										
 										MsgTimer = 70 * 5
 									Else
-										Msg = "You cannot combine these two items."
+										Msg = I_Loc\MessageItem_Cantcombine
 										MsgTimer = 70 * 5
 									EndIf
 								Else
-									Msg = "You cannot combine these two items."
+									Msg = I_Loc\MessageItem_Cantcombine
 									MsgTimer = 70 * 5
 								EndIf
 								SelectedItem = Null
 								
 								;[End Block]
-							Case "battery", "bat"
+							Case "bat"
 								;[Block]
 								Select Inventory(MouseSlot)\itemtemplate\name
-									Case "S-NAV Navigator", "S-NAV 300 Navigator", "S-NAV 310 Navigator"
+									Case "snav", "snav300", "snav310"
 										If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
 										RemoveItem (SelectedItem)
 										SelectedItem = Null
 										Inventory(MouseSlot)\state = 100.0
-										Msg = "You replaced the navigator's battery."
+										Msg = I_Loc\MessageItem_NavBatReplace
 										MsgTimer = 70 * 5
-									Case "S-NAV Navigator Ultimate"
-										Msg = "There seems to be no place for batteries in this navigator."
+									Case "snavulti"
+										Msg = I_Loc\MessageItem_NavBatNoplace
 										MsgTimer = 70 * 5
-									Case "Radio Transceiver"
-										Select Inventory(MouseSlot)\itemtemplate\tempname 
-											Case "fineradio", "veryfineradio"
-												Msg = "There seems to be no place for batteries in this radio."
-												MsgTimer = 70 * 5
-											Case "18vradio"
-												Msg = "The battery does not fit inside this radio."
-												MsgTimer = 70 * 5
-											Case "radio"
-												If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
-												RemoveItem (SelectedItem)
-												SelectedItem = Null
-												Inventory(MouseSlot)\state = 100.0
-												Msg = "You replaced the radio's battery."
-												MsgTimer = 70 * 5
-										End Select
-									Case "Night Vision Goggles"
-										Local nvname$ = Inventory(MouseSlot)\itemtemplate\tempname
-										If nvname$="nvgoggles" Or nvname$="supernv" Then
-											If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
-											RemoveItem (SelectedItem)
-											SelectedItem = Null
-											Inventory(MouseSlot)\state = 1000.0
-											Msg = "You replaced the goggles' battery."
-											MsgTimer = 70 * 5
-										Else
-											Msg = "There seems to be no place for batteries in these night vision goggles."
-											MsgTimer = 70 * 5
-										EndIf
+									Case "radio"
+										If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
+										RemoveItem (SelectedItem)
+										SelectedItem = Null
+										Inventory(MouseSlot)\state = 100.0
+										Msg = I_Loc\MessageItem_RadioBatReplace
+										MsgTimer = 70 * 5
+									Case "fineradio", "veryfineradio"
+										Msg = I_Loc\MessageItem_RadioBatNoplace
+										MsgTimer = 70 * 5
+									Case "18vradio"
+										Msg = I_Loc\MessageItem_RadioBatNofit
+										MsgTimer = 70 * 5
+									Case "supernv", "nvgoggles"
+										If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
+										RemoveItem (SelectedItem)
+										SelectedItem = Null
+										Inventory(MouseSlot)\state = 1000.0
+										Msg = I_Loc\MessageItem_NvgBatReplace
+										MsgTimer = 70 * 5
+									Case "finenvgoggles"
+										Msg = I_Loc\MessageItem_NvgBatNoplace
+										MsgTimer = 70 * 5
 									Default
-										Msg = "You cannot combine these two items."
+										Msg = I_Loc\MessageItem_Cantcombine
 										MsgTimer = 70 * 5	
 								End Select
 								;[End Block]
 							Case "18vbat"
 								;[Block]
 								Select Inventory(MouseSlot)\itemtemplate\name
-									Case "S-NAV Navigator", "S-NAV 300 Navigator", "S-NAV 310 Navigator"
-										Msg = "The battery does not fit inside this navigator."
+									Case "snav", "snav300", "snav310"
+										Msg = I_Loc\MessageItem_NavBatNofit
 										MsgTimer = 70 * 5
-									Case "S-NAV Navigator Ultimate"
-										Msg = "There seems to be no place for batteries in this navigator."
+									Case "snavulti"
+										Msg = I_Loc\MessageItem_NavBatNoplace
 										MsgTimer = 70 * 5
-									Case "Radio Transceiver"
-										Select Inventory(MouseSlot)\itemtemplate\tempname 
-											Case "fineradio", "veryfineradio"
-												Msg = "There seems to be no place for batteries in this radio."
-												MsgTimer = 70 * 5		
-											Case "18vradio"
-												If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
-												RemoveItem (SelectedItem)
-												SelectedItem = Null
-												Inventory(MouseSlot)\state = 100.0
-												Msg = "You replaced the radio's battery."
-												MsgTimer = 70 * 5
-										End Select 
+									Case "radio"
+										Msg = I_Loc\MessageItem_RadioBatNofit
+										MsgTimer = 70 * 5
+									Case "fineradio", "veryfineradio"
+										Msg = I_Loc\MessageItem_RadioBatNoplace
+										MsgTimer = 70 * 5
+									Case "18vradio"
+										If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))	
+										RemoveItem (SelectedItem)
+										SelectedItem = Null
+										Inventory(MouseSlot)\state = 100.0
+										Msg = I_Loc\MessageItem_RadioBatReplace
+										MsgTimer = 70 * 5
 									Default
-										Msg = "You cannot combine these two items."
-										MsgTimer = 70 * 5	
+										Msg = I_Loc\MessageItem_Cantcombine
+										MsgTimer = 70 * 5
 								End Select
 								;[End Block]
 							Default
 								;[Block]
-								Msg = "You cannot combine these two items."
+								Msg = I_Loc\MessageItem_Cantcombine
 								MsgTimer = 70 * 5
 								;[End Block]
 						End Select					
@@ -5767,15 +5726,15 @@ Function DrawGUI()
 	Else ;invopen = False
 		
 		If SelectedItem <> Null Then
-			Select SelectedItem\itemtemplate\tempname
+			Select SelectedItem\itemtemplate\name
 				Case "nvgoggles"
 					;[Block]
 					If Wearing1499 = 0 And WearingHazmat=0 Then
 						If WearingNightVision = 1 Then
-							Msg = "You removed the goggles."
+							Msg = I_Loc\MessageItem_NvgOff
 							CameraFogFar = StoredCameraFogFar
 						Else
-							Msg = "You put on the goggles."
+							Msg = I_Loc\MessageItem_NvgOn
 							WearingGasMask = 0
 							WearingNightVision = 0
 							StoredCameraFogFar = CameraFogFar
@@ -5784,9 +5743,9 @@ Function DrawGUI()
 						
 						WearingNightVision = (Not WearingNightVision)
 					ElseIf Wearing1499 > 0 Then
-						Msg = "You need to take off SCP-1499 in order to put on the goggles."
+						Msg = I_Loc\MessageItem_NvgConflictScp1499
 					Else
-						Msg = "You need to take off the hazmat suit in order to put on the goggles."
+						Msg = I_Loc\MessageItem_NvgConflictHazmat
 					EndIf
 					SelectedItem = Null
 					MsgTimer = 70 * 5
@@ -5795,10 +5754,10 @@ Function DrawGUI()
 					;[Block]
 					If Wearing1499 = 0 And WearingHazmat=0 Then
 						If WearingNightVision = 2 Then
-							Msg = "You removed the goggles."
+							Msg = I_Loc\MessageItem_NvgOff
 							CameraFogFar = StoredCameraFogFar
 						Else
-							Msg = "You put on the goggles."
+							Msg = I_Loc\MessageItem_NvgOn
 							WearingGasMask = 0
 							WearingNightVision = 0
 							StoredCameraFogFar = CameraFogFar
@@ -5807,9 +5766,9 @@ Function DrawGUI()
 						
 						WearingNightVision = (Not WearingNightVision) * 2
 					ElseIf Wearing1499 > 0 Then
-						Msg = "You need to take off SCP-1499 in order to put on the goggles."
+						Msg = I_Loc\MessageItem_NvgConflictScp1499
 					Else
-						Msg = "You need to take off the hazmat suit in order to put on the goggles."
+						Msg = I_Loc\MessageItem_NvgConflictHazmat
 					EndIf
 					SelectedItem = Null
 					MsgTimer = 70 * 5
@@ -5818,10 +5777,10 @@ Function DrawGUI()
 					;[Block]
 					If Wearing1499 = 0 And WearingHazmat = 0 Then
 						If WearingNightVision = 3 Then
-							Msg = "You removed the goggles."
+							Msg = I_Loc\MessageItem_NvgOff
 							CameraFogFar = StoredCameraFogFar
 						Else
-							Msg = "You put on the goggles."
+							Msg = I_Loc\MessageItem_NvgOn
 							WearingGasMask = 0
 							WearingNightVision = 0
 							StoredCameraFogFar = CameraFogFar
@@ -5830,37 +5789,21 @@ Function DrawGUI()
 						
 						WearingNightVision = (Not WearingNightVision) * 3
 					ElseIf Wearing1499 > 0 Then
-						Msg = "You need to take off SCP-1499 in order to put on the goggles."
+						Msg = I_Loc\MessageItem_NvgConflictScp1499
 					Else
-						Msg = "You need to take off the hazmat suit in order to put on the goggles."
+						Msg = I_Loc\MessageItem_NvgConflictHazmat
 					EndIf
 					SelectedItem = Null
 					MsgTimer = 70 * 5
 					;[End Block]
-				Case "ring"
-					;[Block]
-					If Wearing714=2 Then
-						Msg = "You removed the ring."
-						Wearing714 = False
-					Else
-						;Achievements(Achv714)=True
-						Msg = "You put on the ring."
-						Wearing714 = 2
-					EndIf
-					MsgTimer = 70 * 5
-					SelectedItem = Null
-					;[End Block]
-				Case "1123"
+				Case "scp1123"
 					;[Block]
 					If Not (Wearing714 = 1) Then
 						If PlayerRoom\RoomTemplate\Name <> "room1123" Then
 							ShowEntity Light
 							LightFlash = 7
 							PlaySound_Strict(LoadTempSound("SFX\SCP\1123\Touch.ogg"))		
-							DeathMSG = "Subject D-9341 was shot dead after attempting to attack a member of Nine-Tailed Fox. Surveillance tapes show that the subject had been "
-							DeathMSG = DeathMSG + "wandering around the site approximately 9 minutes prior, shouting the phrase " + Chr(34) + "get rid of the four pests" + Chr(34)
-							DeathMSG = DeathMSG + " in chinese. SCP-1123 was found in [REDACTED] nearby, suggesting the subject had come into physical contact with it. How "
-							DeathMSG = DeathMSG + "exactly SCP-1123 was removed from its containment chamber is still unknown."
+							DeathMSG = I_Loc\DeathMessage_1123
 							Kill()
 							Return
 						EndIf
@@ -5876,10 +5819,6 @@ Function DrawGUI()
 							EndIf
 						Next
 					EndIf
-					;[End Block]
-				Case "battery"
-					;[Block]
-					;InvOpen = True
 					;[End Block]
 				Case "key1", "key2", "key3", "key4", "key5", "key6", "keyomni", "scp860", "hand", "hand2", "25ct"
 					;[Block]
@@ -5900,9 +5839,9 @@ Function DrawGUI()
 						GiveAchievement(Achv500)
 						
 						If Infect > 0 Then
-							Msg = "You swallowed the pill. Your nausea is fading."
+							Msg = I_Loc\MessageItem_PillUseHealnausea
 						Else
-							Msg = "You swallowed the pill."
+							Msg = I_Loc\MessageItem_PillUse
 						EndIf
 						MsgTimer = 70*7
 						
@@ -5918,29 +5857,29 @@ Function DrawGUI()
 						Select Rand(5)
 							Case 1
 								Injuries = 3.5
-								Msg = "You started bleeding heavily."
+								Msg = I_Loc\MessageItem_VeryfinefirstaidUseHurt
 								MsgTimer = 70*7
 							Case 2
 								Injuries = 0
 								Bloodloss = 0
-								Msg = "Your wounds are healing up rapidly."
+								Msg = I_Loc\MessageItem_VeryfinefirstaidUseFullheal
 								MsgTimer = 70*7
 							Case 3
 								Injuries = Max(0, Injuries - Rnd(0.5,3.5))
 								Bloodloss = Max(0, Bloodloss - Rnd(10,100))
-								Msg = "You feel much better."
+								Msg = I_Loc\MessageItem_VeryfinefirstaidUseHeal
 								MsgTimer = 70*7
 							Case 4
 								BlurTimer = 10000
 								Bloodloss = 0
-								Msg = "You feel nauseated."
+								Msg = I_Loc\MessageItem_VeryfinefirstaidUseNausea
 								MsgTimer = 70*7
 							Case 5
 								BlinkTimer = -10
 								Local roomname$ = PlayerRoom\RoomTemplate\Name
 								If roomname = "dimension1499" Or roomname = "gatea" Or (roomname="exit1" And EntityY(Collider)>1040.0*RoomScale)
 									Injuries = 2.5
-									Msg = "You started bleeding heavily."
+									Msg = I_Loc\MessageItem_VeryfinefirstaidUseHurt
 									MsgTimer = 70*7
 								Else
 									For r.Rooms = Each Rooms
@@ -5955,7 +5894,7 @@ Function DrawGUI()
 											Exit
 										EndIf
 									Next
-									Msg = "For some inexplicable reason, you find yourself inside the pocket dimension."
+									Msg = I_Loc\MessageItem_VeryfinefirstaidUsePocketdimension
 									MsgTimer = 70*8
 								EndIf
 						End Select
@@ -5966,7 +5905,7 @@ Function DrawGUI()
 				Case "firstaid", "finefirstaid", "firstaid2"
 					;[Block]
 					If Bloodloss = 0 And Injuries = 0 Then
-						Msg = "You do not need to use a first aid kit right now."
+						Msg = I_Loc\MessageItem_FirstaidUseFull
 						MsgTimer = 70*5
 						SelectedItem = Null
 					Else
@@ -5981,60 +5920,60 @@ Function DrawGUI()
 							SelectedItem\state = Min(SelectedItem\state+(FPSfactor/5.0),100)			
 							
 							If SelectedItem\state = 100 Then
-								If SelectedItem\itemtemplate\tempname = "finefirstaid" Then
+								If SelectedItem\itemtemplate\name = "finefirstaid" Then
 									Bloodloss = 0
 									Injuries = Max(0, Injuries - 2.0)
 									If Injuries = 0 Then
-										Msg = "You bandaged the wounds and took a painkiller. You feel fine."
+										Msg = I_Loc\MessageItem_FinefirstaidUse1
 									ElseIf Injuries > 1.0
-										Msg = "You bandaged the wounds and took a painkiller, but you were not able to stop the bleeding."
+										Msg = I_Loc\MessageItem_FinefirstaidUse2
 									Else
-										Msg = "You bandaged the wounds and took a painkiller, but you still feel sore."
+										Msg = I_Loc\MessageItem_FinefirstaidUse3
 									EndIf
 									MsgTimer = 70*5
 									RemoveItem(SelectedItem)
 								Else
 									Bloodloss = Max(0, Bloodloss - Rand(10,20))
 									If Injuries => 2.5 Then
-										Msg = "The wounds were way too severe to staunch the bleeding completely."
+										Msg = I_Loc\MessageItem_FirstaidUse5
 										Injuries = Max(2.5, Injuries-Rnd(0.3,0.7))
 									ElseIf Injuries > 1.0
 										Injuries = Max(0.5, Injuries-Rnd(0.5,1.0))
 										If Injuries > 1.0 Then
-											Msg = "You bandaged the wounds but were unable to staunch the bleeding completely."
+											Msg = I_Loc\MessageItem_FirstaidUse4
 										Else
-											Msg = "You managed to stop the bleeding."
+											Msg = I_Loc\MessageItem_FirstaidUse3
 										EndIf
 									Else
 										If Injuries > 0.5 Then
 											Injuries = 0.5
-											Msg = "You took a painkiller, easing the pain slightly."
+											Msg = I_Loc\MessageItem_FirstaidUse2
 										Else
 											Injuries = 0.5
-											Msg = "You took a painkiller, but it still hurts to walk."
+											Msg = I_Loc\MessageItem_FirstaidUse1
 										EndIf
 									EndIf
 									
-									If SelectedItem\itemtemplate\tempname = "firstaid2" Then 
+									If SelectedItem\itemtemplate\name = "firstaid2" Then 
 										Select Rand(6)
 											Case 1
 												SuperMan = True
-												Msg = "You have becomed overwhelmedwithadrenalineholyshitWOOOOOO~!"
+												Msg = I_Loc\MessageItem_BluefirstaidUseSuperman
 											Case 2
 												InvertMouse = (Not InvertMouse)
-												Msg = "You suddenly find it very difficult to turn your head."
+												Msg = I_Loc\MessageItem_BluefirstaidUseInvert
 											Case 3
 												BlurTimer = 5000
-												Msg = "You feel nauseated."
+												Msg = I_Loc\MessageItem_BluefirstaidUseNausea
 											Case 4
 												BlinkEffect = 0.6
 												BlinkEffectTimer = Rand(20,30)
 											Case 5
 												Bloodloss = 0
 												Injuries = 0
-												Msg = "You bandaged the wounds. The bleeding stopped completely and you feel fine."
+												Msg = I_Loc\MessageItem_BluefirstaidUseHeal
 											Case 6
-												Msg = "You bandaged the wounds and blood started pouring heavily through the bandages."
+												Msg = I_Loc\MessageItem_BluefirstaidUseHurt
 												Injuries = 3.5
 										End Select
 									EndIf
@@ -6046,7 +5985,7 @@ Function DrawGUI()
 						EndIf
 					EndIf
 					;[End Block]
-				Case "eyedrops"
+				Case "eyedrops","redeyedrops"
 					;[Block]
 					If CanUseItem(False,False,False)
 						If (Not (Wearing714=1)) Then ;wtf is this
@@ -6081,53 +6020,6 @@ Function DrawGUI()
 						RemoveItem(SelectedItem)
 					EndIf
 					;[End Block]
-				Case "paper", "ticket"
-					;[Block]
-					If SelectedItem\itemtemplate\img = 0 Then
-						Select SelectedItem\itemtemplate\name
-							Case "Burnt Note" 
-								SelectedItem\itemtemplate\img = LoadImage_Strict("GFX\items\bn.it")
-								SetBuffer ImageBuffer(SelectedItem\itemtemplate\img)
-								Color 0,0,0
-								SetFont Font1
-								Text 277, 469, AccessCode, True, True
-								Color 255,255,255
-								SetBuffer BackBuffer()
-							Case "Document SCP-372"
-								SelectedItem\itemtemplate\img = LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
-								SelectedItem\itemtemplate\img = ResizeImage2(SelectedItem\itemtemplate\img, ImageWidth(SelectedItem\itemtemplate\img) * MenuScale, ImageHeight(SelectedItem\itemtemplate\img) * MenuScale)
-								
-								SetBuffer ImageBuffer(SelectedItem\itemtemplate\img)
-								Color 37,45,137
-								SetFont Font5
-								temp = ((Int(AccessCode)*3) Mod 10000)
-								If temp < 1000 Then temp = temp+1000
-								Text 383*MenuScale, 734*MenuScale, temp, True, True
-								Color 255,255,255
-								SetBuffer BackBuffer()
-							Case "Movie Ticket"
-								;don't resize because it messes up the masking
-								SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
-								
-								If (SelectedItem\state = 0) Then
-									Msg = Chr(34)+"Hey, I remember this movie!"+Chr(34)
-									MsgTimer = 70*10
-									PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(1,5)+".ogg")
-									SelectedItem\state = 1
-								EndIf
-							Case "Leaflet"
-								;don't resize because it messes up the masking
-								SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
-							Default 
-								SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
-								SelectedItem\itemtemplate\img = ResizeImage2(SelectedItem\itemtemplate\img, ImageWidth(SelectedItem\itemtemplate\img) * MenuScale, ImageHeight(SelectedItem\itemtemplate\img) * MenuScale)
-						End Select
-						
-						MaskImage(SelectedItem\itemtemplate\img, 255, 0, 255)
-					EndIf
-					
-					DrawImage(SelectedItem\itemtemplate\img, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\img) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\img) / 2)
-					;[End Block]
 				Case "scp1025"
 					;[Block]
 					GiveAchievement(Achv1025) 
@@ -6146,12 +6038,7 @@ Function DrawGUI()
 				Case "cup"
 					;[Block]
 					If CanUseItem(False,False,True)
-						strtemp = Trim(Lower(SelectedItem\name))
-						If Left(strtemp, 6) = "cup of" Then
-							strtemp = Right(strtemp, Len(strtemp)-7)
-						ElseIf Left(strtemp, 8) = "a cup of"
-							strtemp = Right(strtemp, Len(strtemp)-9)
-						EndIf
+						strtemp = SelectedItem\drinkName
 
 						Local iniStr$ = "DATA\SCP-294.ini"
 						Local loc% = -1
@@ -6230,7 +6117,7 @@ Function DrawGUI()
 							Msg = strtemp 
 							MsgTimer = 70*6		
 						Else
-							it.Items = CreateItem("Empty Cup", "emptycup", 0,0,0)
+							it.Items = CreateItem("emptycup", 0,0,0)
 							it\Picked = True
 							For i = 0 To MaxItemAmount-1
 								If Inventory(i)=SelectedItem Then Inventory(i) = it : Exit
@@ -6250,7 +6137,7 @@ Function DrawGUI()
 						StaminaEffect = 0.5
 						StaminaEffectTimer = 20
 						
-						Msg = "You injected yourself with the syringe and feel a slight adrenaline rush."
+						Msg = I_Loc\MessageItem_SyringeUse
 						MsgTimer = 70 * 8
 						
 						RemoveItem(SelectedItem)
@@ -6263,7 +6150,7 @@ Function DrawGUI()
 						StaminaEffect = Rnd(0.5, 0.8)
 						StaminaEffectTimer = Rnd(20, 30)
 						
-						Msg = "You injected yourself with the syringe and feel an adrenaline rush."
+						Msg = I_Loc\MessageItem_FinesyringeUse
 						MsgTimer = 70 * 8
 						
 						RemoveItem(SelectedItem)
@@ -6277,13 +6164,13 @@ Function DrawGUI()
 								HealTimer = Rnd(40, 60)
 								StaminaEffect = 0.1
 								StaminaEffectTimer = 30
-								Msg = "You injected yourself with the syringe and feel a huge adrenaline rush."
+								Msg = I_Loc\MessageItem_VeryfinesyringeUseHuge
 							Case 2
 								SuperMan = True
-								Msg = "You injected yourself with the syringe and feel a humongous adrenaline rush."
+								Msg = I_Loc\MessageItem_VeryfinesyringeUseVeryhuge
 							Case 3
 								VomitTimer = 30
-								Msg = "You injected yourself with the syringe and feel a pain in your stomach."
+								Msg = I_Loc\MessageItem_VeryfinesyringeUseStomacheache
 						End Select
 						
 						MsgTimer = 70 * 8
@@ -6303,8 +6190,8 @@ Function DrawGUI()
 					;radiostate(6) = a timer for the "code channel"
 					;RadioState(7) = another timer for the "code channel"
 					
-					If RadioState(5) = 0 Then 
-						Msg = "Use the numbered keys 1 through 5 to cycle between various channels."
+					If RadioState(5) = 0 And SelectedItem\state > 0 And SelectedItem\itemtemplate\name <> "veryfineradio" Then 
+						Msg = I_Loc\MessageItem_RadioUse
 						MsgTimer = 70 * 5
 						RadioState(5) = 1
 						RadioState(0) = -1
@@ -6325,13 +6212,13 @@ Function DrawGUI()
 							Select Int(SelectedItem\state2)
 								Case 0 ;randomkanava
 									ResumeChannel(RadioCHN(0))
-									strtemp = "        USER TRACK PLAYER - "
+									strtemp = "        " + I_Loc\HUD_RadioUsertrack + " - "
 									If (Not EnableUserTracks)
 										If ChannelPlaying(RadioCHN(0)) = False Then RadioCHN(0) = PlaySound_Strict(RadioStatic)
-										strtemp = strtemp + "NOT ENABLED     "
+										strtemp = strtemp + I_Loc\HUD_RadioUsertrackDisabled + "     "
 									ElseIf UserTrackMusicAmount<1
 										If ChannelPlaying(RadioCHN(0)) = False Then RadioCHN(0) = PlaySound_Strict(RadioStatic)
-										strtemp = strtemp + "NO TRACKS FOUND     "
+										strtemp = strtemp + I_Loc\HUD_RadioUsertrackNotracks + "     "
 									Else
 										If (Not ChannelPlaying(RadioCHN(0)))
 											If (Not UserTrackFlag%)
@@ -6381,7 +6268,7 @@ Function DrawGUI()
 									DebugLog RadioState(1) 
 									
 									ResumeChannel(RadioCHN(1))
-									strtemp = "        WARNING - CONTAINMENT BREACH          "
+									strtemp = "        " + I_Loc\HUD_RadioCb + "          "
 									If ChannelPlaying(RadioCHN(1)) = False Then
 										
 										If RadioState(1) => 5 Then
@@ -6396,7 +6283,7 @@ Function DrawGUI()
 									
 								Case 2 ;scp-radio
 									ResumeChannel(RadioCHN(2))
-									strtemp = "        SCP Foundation On-Site Radio          "
+									strtemp = "        " + I_Loc\HUD_RadioRadio + "          "
 									If ChannelPlaying(RadioCHN(2)) = False Then
 										RadioState(2)=RadioState(2)+1
 										If RadioState(2) = 17 Then RadioState(2) = 1
@@ -6408,7 +6295,7 @@ Function DrawGUI()
 									EndIf 
 								Case 3
 									ResumeChannel(RadioCHN(3))
-									strtemp = "             EMERGENCY CHANNEL - RESERVED FOR COMMUNICATION IN THE EVENT OF A CONTAINMENT BREACH         "
+									strtemp = "             " + I_Loc\HUD_RadioEmergency + "         "
 									If ChannelPlaying(RadioCHN(3)) = False Then RadioCHN(3) = PlaySound_Strict(RadioStatic)
 									
 									If MTFtimer > 0 Then 
@@ -6549,16 +6436,15 @@ Function DrawGUI()
 							Color (30,30,30)
 							
 							If SelectedItem\state <= 100 Then
-								;Text (x - 60, y - 20, "BATTERY")
 								For i = 0 To 4
 									Rect(x, y+8*i, 43 - i * 6, 4, Ceil(SelectedItem\state / 20.0) > 4 - i )
 								Next
 							EndIf	
 							
 							SetFont Font3
-							Text(x+60, y, "CHN")						
+							Text(x+60, y, I_Loc\HUD_RadioChannel)						
 							
-							If SelectedItem\itemtemplate\tempname = "veryfineradio" Then ;"KOODIKANAVA"
+							If SelectedItem\itemtemplate\name = "veryfineradio" Then ;"KOODIKANAVA"
 								ResumeChannel(RadioCHN(0))
 								If ChannelPlaying(RadioCHN(0)) = False Then RadioCHN(0) = PlaySound_Strict(RadioStatic)
 								
@@ -6621,34 +6507,34 @@ Function DrawGUI()
 							SelectedItem\state = 1
 							Select Rand(6)
 								Case 1
-									Msg = Chr(34)+"I don't have anything to light it with. Umm, what about that... Nevermind."+Chr(34)
+									Msg = I_Loc\MessageItem_CigaretteUse[1]
 								Case 2
-									Msg = "You are unable to get lit."
+									Msg = I_Loc\MessageItem_CigaretteUseUnable
 								Case 3
-									Msg = Chr(34)+"I quit that a long time ago."+Chr(34)
+									Msg = I_Loc\MessageItem_CigaretteUse[2]
 									RemoveItem(SelectedItem)
 								Case 4
-									Msg = Chr(34)+"Even if I wanted one, I have nothing to light it with."+Chr(34)
+									Msg = I_Loc\MessageItem_CigaretteUse[3]
 								Case 5
-									Msg = Chr(34)+"Could really go for one now... Wish I had a lighter."+Chr(34)
+									Msg = I_Loc\MessageItem_CigaretteUse[4]
 								Case 6
-									Msg = Chr(34)+"Don't plan on starting, even at a time like this."+Chr(34)
+									Msg = I_Loc\MessageItem_CigaretteUse[5]
 									RemoveItem(SelectedItem)
 							End Select
 						Else
-							Msg = "You are unable to get lit."
+							Msg = I_Loc\MessageItem_CigaretteUseUnable
 						EndIf
 						
 						MsgTimer = 70 * 5
 					EndIf
 					;[End Block]
-				Case "420"
+				Case "scp420j"
 					;[Block]
 					If CanUseItem(False,False,True)
 						If Wearing714=1 Then
-							Msg = Chr(34) + "DUDE WTF THIS SHIT DOESN'T EVEN WORK" + Chr(34)
+							Msg = I_Loc\MessageItem_420jUse714
 						Else
-							Msg = Chr(34) + "MAN DATS SUM GOOD ASS SHIT" + Chr(34)
+							Msg = I_Loc\MessageItem_420jUse
 							Injuries = Max(Injuries-0.5, 0)
 							BlurTimer = 500
 							GiveAchievement(Achv420)
@@ -6658,16 +6544,14 @@ Function DrawGUI()
 						RemoveItem(SelectedItem)
 					EndIf
 					;[End Block]
-				Case "420s"
+				Case "smellyjoint", "joint"
 					;[Block]
 					If CanUseItem(False,False,True)
 						If Wearing714=1 Then
-							Msg = Chr(34) + "DUDE WTF THIS SHIT DOESN'T EVEN WORK" + Chr(34)
+							Msg = I_Loc\MessageItem_420jUse714
 						Else
-							DeathMSG = "Subject D-9341 found in a comatose state in [DATA REDACTED]. The subject was holding what appears to be a cigarette while smiling widely. "
-							DeathMSG = DeathMSG+"Chemical analysis of the cigarette has been inconclusive, although it seems to contain a high concentration of an unidentified chemical "
-							DeathMSG = DeathMSG+"whose molecular structure is remarkably similar to that of tetrahydrocannabinol."
-							Msg = Chr(34) + "UH WHERE... WHAT WAS I DOING AGAIN... MAN I NEED TO TAKE A NAP..." + Chr(34)
+							DeathMSG = I_Loc\DeathMessage_420js
+							Msg = I_Loc\MessageItem_420jUseNap
 							KillTimer = -1						
 						EndIf
 						MsgTimer = 70 * 6
@@ -6677,11 +6561,11 @@ Function DrawGUI()
 				Case "scp714"
 					;[Block]
 					If Wearing714=1 Then
-						Msg = "You removed the ring."
+						Msg = I_Loc\MessageItem_Scp714Off
 						Wearing714 = False
 					Else
 						GiveAchievement(Achv714)
-						Msg = "You put on the ring."
+						Msg = I_Loc\MessageItem_Scp714On
 						Wearing714 = True
 					EndIf
 					MsgTimer = 70 * 5
@@ -6700,22 +6584,19 @@ Function DrawGUI()
 						
 						If SelectedItem\state=100 Then
 							If WearingHazmat>0 Then
-								Msg = "You removed the hazmat suit."
+								Msg = I_Loc\MessageItem_HazmatOff
 								WearingHazmat = False
 								DropItem(SelectedItem)
 							Else
-								If SelectedItem\itemtemplate\tempname="hazmatsuit" Then
-									;Msg = "Hazmat1."
+								If SelectedItem\itemtemplate\name="hazmatsuit" Then
 									WearingHazmat = 1
-								ElseIf SelectedItem\itemtemplate\tempname="hazmatsuit2" Then
-									;Msg = "Hazmat2."
+								ElseIf SelectedItem\itemtemplate\name="hazmatsuit2" Then
 									WearingHazmat = 2
 								Else
-									;Msg = "Hazmat3."
 									WearingHazmat = 3
 								EndIf
 								If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))
-								Msg = "You put on the hazmat suit."
+								Msg = I_Loc\MessageItem_HazmatOn
 								If WearingNightVision Then CameraFogFar = StoredCameraFogFar
 								WearingGasMask = 0
 								WearingNightVision = 0
@@ -6734,19 +6615,19 @@ Function DrawGUI()
 					
 					DrawBar(BlinkMeterIMG, GraphicWidth / 2, GraphicHeight / 2 + 80 * HUDScale, 300 * HUDScale, SelectedItem\state / 100.0, True)
 
-					SelectedItem\state = Min(SelectedItem\state+(FPSfactor/(2.0+(0.5*(SelectedItem\itemtemplate\tempname="finevest")))),100)
+					SelectedItem\state = Min(SelectedItem\state+(FPSfactor/(2.0+(0.5*(SelectedItem\itemtemplate\name="finevest")))),100)
 					
 					If SelectedItem\state=100 Then
 						If WearingVest>0 Then
-							Msg = "You removed the vest."
+							Msg = I_Loc\MessageItem_VestOff
 							WearingVest = False
 							DropItem(SelectedItem)
 						Else
-							If SelectedItem\itemtemplate\tempname="vest" Then
-								Msg = "You put on the vest and feel slightly encumbered."
+							If SelectedItem\itemtemplate\name="vest" Then
+								Msg = I_Loc\MessageItem_VestOn
 								WearingVest = 1
 							Else
-								Msg = "You put on the vest and feel heavily encumbered."
+								Msg = I_Loc\MessageItem_VestOnHeavy
 								WearingVest = 2
 							EndIf
 							If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))
@@ -6760,33 +6641,33 @@ Function DrawGUI()
 					;[Block]
 					If Wearing1499 = 0 And WearingHazmat = 0 Then
 						If WearingGasMask Then
-							Msg = "You removed the gas mask."
+							Msg = I_Loc\MessageItem_GasmaskOff
 						Else
-							If SelectedItem\itemtemplate\tempname = "supergasmask"
-								Msg = "You put on the gas mask and you can breathe easier."
+							If SelectedItem\itemtemplate\name = "supergasmask"
+								Msg = I_Loc\MessageItem_GasmaskOnEasy
 							Else
-								Msg = "You put on the gas mask."
+								Msg = I_Loc\MessageItem_GasmaskOn
 							EndIf
 							If WearingNightVision Then CameraFogFar = StoredCameraFogFar
 							WearingNightVision = 0
 							WearingGasMask = 0
 						EndIf
-						If SelectedItem\itemtemplate\tempname="gasmask3" Then
+						If SelectedItem\itemtemplate\name="gasmask3" Then
 							If WearingGasMask = 0 Then WearingGasMask = 3 Else WearingGasMask=0
-						ElseIf SelectedItem\itemtemplate\tempname="supergasmask"
+						ElseIf SelectedItem\itemtemplate\name="supergasmask"
 							If WearingGasMask = 0 Then WearingGasMask = 2 Else WearingGasMask=0
 						Else
 							WearingGasMask = (Not WearingGasMask)
 						EndIf
 					ElseIf Wearing1499 > 0 Then
-						Msg = "You need to take off SCP-1499 in order to put on the gas mask."
+						Msg = I_Loc\MessageItem_GasmaskConflictScp1499
 					Else
-						Msg = "You need to take off the hazmat suit in order to put on the gas mask."
+						Msg = I_Loc\MessageItem_GasmaskConflictHazmat
 					EndIf
 					SelectedItem = Null
 					MsgTimer = 70 * 5
 					;[End Block]
-				Case "navigator", "nav"
+				Case "snav", "snav300", "snav310", "snavulti"
 					;[Block]
 					
 					If SelectedItem\itemtemplate\img=0 Then
@@ -6824,8 +6705,8 @@ Function DrawGUI()
 					If (Not NavWorks) Then
 						If (MilliSecs() Mod 1000) > 300 Then
 							Color(200, 0, 0)
-							Text(x, y + height / 2 - 80, "ERROR 06", True)
-							Text(x, y + height / 2 - 60, "LOCATION UNKNOWN", True)						
+							Text(x, y + height / 2 - 80, I_Loc\HUD_NavError, True)
+							Text(x, y + height / 2 - 60, I_Loc\HUD_NavErrorLocation, True)						
 						EndIf
 					Else
 						
@@ -6845,7 +6726,7 @@ Function DrawGUI()
 								For z2 = Max(0, PlayerZ - 6) To Min(MapHeight, PlayerZ + 6)
 									
 									If CoffinDistance > 16.0 Or Rnd(16.0)<CoffinDistance Then 
-										If MapTemp(x2, z2)>0 And (MapFound(x2, z2) > 0 Or SelectedItem\itemtemplate\name = "S-NAV 310 Navigator" Or SelectedItem\itemtemplate\name = "S-NAV Navigator Ultimate") Then
+										If MapTemp(x2, z2)>0 And (MapFound(x2, z2) > 0 Or SelectedItem\itemtemplate\name = "snav310" Or SelectedItem\itemtemplate\name = "snavulti") Then
 											Local drawx% = x + (PlayerX - 1 - x2) * 24 , drawy% = y - (PlayerZ - 1 - z2) * 24
 											
 											If x2+1<=MapWidth Then
@@ -6885,20 +6766,20 @@ Function DrawGUI()
 							SetBuffer BackBuffer()
 							DrawImageRect NavBG,xx+80,yy+70,xx+80,yy+70,270,230
 							Color 30,30,30
-							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then Color(100, 0, 0)
+							If SelectedItem\itemtemplate\name = "snav" Then Color(100, 0, 0)
 							Rect xx+80,yy+70,270,230,False
 							
 							x = HUDEndX - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
 							y = HUDEndY - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
 							
-							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then 
+							If SelectedItem\itemtemplate\name = "snav" Then 
 								Color(100, 0, 0)
 							Else
 								Color (30,30,30)
 							EndIf
 							If (MilliSecs() Mod 1000) > 300 Then
-								If SelectedItem\itemtemplate\name <> "S-NAV 310 Navigator" And SelectedItem\itemtemplate\name <> "S-NAV Navigator Ultimate" Then
-									Text(x - width/2 + 10, y - height/2 + 10, "MAP DATABASE OFFLINE")
+								If SelectedItem\itemtemplate\name <> "snav310" And SelectedItem\itemtemplate\name <> "snavulti" Then
+									Text(x - width/2 + 10, y - height/2 + 10, I_Loc\HUD_NavDatabase)
 								EndIf
 								
 								yawvalue = EntityYaw(Collider)-90
@@ -6912,14 +6793,14 @@ Function DrawGUI()
 							EndIf
 							
 							Local SCPs_found% = 0
-							If SelectedItem\itemtemplate\name = "S-NAV Navigator Ultimate" And (MilliSecs() Mod 600) < 400 Then
+							If SelectedItem\itemtemplate\name = "snavulti" And (MilliSecs() Mod 600) < 400 Then
 								If Curr173<>Null Then
 									Local dist# = EntityDistance(Camera, Curr173\obj)
 									dist = Ceil(dist / 8.0) * 8.0
 									If dist < 8.0 * 4 Then
 										Color 100, 0, 0
 										Oval(x - dist * 3, y - 7 - dist * 3, dist * 3 * 2, dist * 3 * 2, False)
-										Text(x - width / 2 + 10, y - height / 2 + 30, "SCP-173")
+										Text(x - width / 2 + 10, y - height / 2 + 30, I_Loc\NPC_173)
 										SCPs_found% = SCPs_found% + 1
 									EndIf
 								EndIf
@@ -6928,7 +6809,7 @@ Function DrawGUI()
 									If dist < 8.0 * 4 Then
 										Color 100, 0, 0
 										Oval(x - dist * 1.5, y - 7 - dist * 1.5, dist * 3, dist * 3, False)
-										Text(x - width / 2 + 10, y - height / 2 + 30 + (20*SCPs_found), "SCP-106")
+										Text(x - width / 2 + 10, y - height / 2 + 30 + (20*SCPs_found), I_Loc\NPC_106)
 										SCPs_found% = SCPs_found% + 1
 									EndIf
 								EndIf
@@ -6937,7 +6818,7 @@ Function DrawGUI()
 									If dist < 8.0 * 4 Then
 										Color 100, 0, 0
 										Oval(x - dist * 1.5, y - 7 - dist * 1.5, dist * 3, dist * 3, False)
-										Text(x - width / 2 + 10, y - height / 2 + 30 + (20*SCPs_found), "SCP-096")
+										Text(x - width / 2 + 10, y - height / 2 + 30 + (20*SCPs_found), I_Loc\NPC_096)
 										SCPs_found% = SCPs_found% + 1
 									EndIf
 								EndIf
@@ -6948,7 +6829,7 @@ Function DrawGUI()
 											If (Not np\HideFromNVG) Then
 												Color 100, 0, 0
 												Oval(x - dist * 1.5, y - 7 - dist * 1.5, dist * 3, dist * 3, False)
-												Text(x - width / 2 + 10, y - height / 2 + 30 + (20*SCPs_found), "SCP-049")
+												Text(x - width / 2 + 10, y - height / 2 + 30 + (20*SCPs_found), I_Loc\NPC_049)
 												SCPs_found% = SCPs_found% + 1
 											EndIf
 										EndIf
@@ -6960,13 +6841,13 @@ Function DrawGUI()
 										dist = Rnd(4.0, 8.0)
 										Color 100, 0, 0
 										Oval(x - dist * 1.5, y - 7 - dist * 1.5, dist * 3, dist * 3, False)
-										Text(x - width / 2 + 10, y - height / 2 + 30 + (20*SCPs_found), "SCP-895")
+										Text(x - width / 2 + 10, y - height / 2 + 30 + (20*SCPs_found), I_Loc\NPC_895)
 									EndIf
 								EndIf
 							End If
 							
 							Color (30,30,30)
-							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then Color(100, 0, 0)
+							If SelectedItem\itemtemplate\name = "snav" Then Color(100, 0, 0)
 							If SelectedItem\state <= 100 Then
 								;Text (x - width/2 + 10, y - height/2 + 10, "BATTERY")
 								;xtemp = x - width/2 + 10
@@ -7000,7 +6881,7 @@ Function DrawGUI()
 				Case "scp1499","super1499"
 					;[Block]
 					If WearingHazmat>0
-						Msg = "You are not able to wear SCP-1499 and a hazmat suit at the same time."
+						Msg = I_Loc\MessageItem_Scp1499ConflictHazmat
 						MsgTimer = 70 * 5
 						SelectedItem=Null
 						Return
@@ -7016,17 +6897,14 @@ Function DrawGUI()
 					
 					If SelectedItem\state=100 Then
 						If Wearing1499>0 Then
-							;Msg = "1499remove."
 							SecondaryLightOn = PrevSecondaryLightOn
 							Wearing1499 = False
 							;DropItem(SelectedItem)
 							If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))
 						Else
-							If SelectedItem\itemtemplate\tempname="scp1499" Then
-								;Msg = "scp1499."
+							If SelectedItem\itemtemplate\name="scp1499" Then
 								Wearing1499 = 1
 							Else
-								;Msg = "super1499."
 								Wearing1499 = 2
 							EndIf
 							If SelectedItem\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(SelectedItem\itemtemplate\sound))
@@ -7085,7 +6963,7 @@ Function DrawGUI()
 						SelectedItem = Null
 					EndIf
 					;[End Block]
-				Case "badge"
+				Case "badge", "oldbadge"
 					;[Block]
 					If SelectedItem\itemtemplate\img=0 Then
 						SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)	
@@ -7098,11 +6976,10 @@ Function DrawGUI()
 					
 					If SelectedItem\state = 0 Then
 						PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(6,10)+".ogg")
-						Select SelectedItem\itemtemplate\name
-							Case "Old Badge"
-								Msg = Chr(34)+"Huh? This guy looks just like me!"+Chr(34)
-								MsgTimer = 70*10
-						End Select
+						If SelectedItem\itemtemplate\name = "oldbadge"
+							Msg = I_Loc\MessageItem_1162UseBadge
+							MsgTimer = 70*10
+						EndIf
 						
 						SelectedItem\state = 1
 					EndIf
@@ -7112,7 +6989,7 @@ Function DrawGUI()
 					If SelectedItem\state = 0 Then
 						PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(6,10)+".ogg")
 						
-						Msg = Chr(34)+"Isn't this the key to that old shack? The one where I... No, it can't be."+Chr(34)
+						Msg = I_Loc\MessageItem_1162UseKey
 						MsgTimer = 70*10						
 					EndIf
 					
@@ -7131,15 +7008,12 @@ Function DrawGUI()
 					DrawImage(SelectedItem\itemtemplate\img, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\img) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\img) / 2)
 					
 					If SelectedItem\state = 0
-						Select SelectedItem\itemtemplate\name
-							Case "Disciplinary Hearing DH-S-4137-17092"
-								BlurTimer = 1000
-								
-								Msg = Chr(34)+"Why does this seem so familiar?"+Chr(34)
-								MsgTimer = 70*10
-								PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(6,10)+".ogg")
-								SelectedItem\state = 1
-						End Select
+						BlurTimer = 1000
+						
+						Msg = I_Loc\MessageItem_1162UseHearing
+						MsgTimer = 70*10
+						PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(6,10)+".ogg")
+						SelectedItem\state = 1
 					EndIf
 					;[End Block]
 				Case "coin"
@@ -7156,11 +7030,11 @@ Function DrawGUI()
 				Case "scp427"
 					;[Block]
 					If I_427\Using=1 Then
-						Msg = "You closed the locket."
+						Msg = I_Loc\MessageItem_427Off
 						I_427\Using = False
 					Else
 						GiveAchievement(Achv427)
-						Msg = "You opened the locket."
+						Msg = I_Loc\MessageItem_427On
 						I_427\Using = True
 					EndIf
 					MsgTimer = 70 * 5
@@ -7169,7 +7043,7 @@ Function DrawGUI()
 				Case "pill"
 					;[Block]
 					If CanUseItem(False, False, True)
-						Msg = "You swallowed the pill."
+						Msg = I_Loc\MessageItem_PillUse
 						MsgTimer = 70*7
 						
 						RemoveItem(SelectedItem)
@@ -7179,7 +7053,7 @@ Function DrawGUI()
 				Case "scp500death"
 					;[Block]
 					If CanUseItem(False, False, True)
-						Msg = "You swallowed the pill."
+						Msg = I_Loc\MessageItem_PillUse
 						MsgTimer = 70*7
 						
 						If I_427\Timer < 70*360 Then
@@ -7191,25 +7065,76 @@ Function DrawGUI()
 					EndIf
 					;[End Block]
 				Default
-					;[Block]
-					;check if the item is an inventory-type object
-					DoubleClick = 0
-					MouseHit1 = 0
-					MouseDown1 = 0
-					LastMouseHit1 = 0
-					If SelectedItem\invSlots>0 Then OtherOpen = SelectedItem
-					SelectedItem = Null
-					;[End Block]
+					If SelectedItem\itemtemplate\group = "paper" Lor SelectedItem\itemtemplate\name = "ticket" Then
+						;[Block]
+						If SelectedItem\itemtemplate\img = 0 Then
+							Select SelectedItem\itemtemplate\name
+								Case "burntnote" 
+									SelectedItem\itemtemplate\img = LoadImage_Strict("GFX\items\bn.it")
+									SetBuffer ImageBuffer(SelectedItem\itemtemplate\img)
+									Color 0,0,0
+									SetFont Font1
+									Text 277, 469, AccessCode, True, True
+									Color 255,255,255
+									SetBuffer BackBuffer()
+								Case "doc372"
+									SelectedItem\itemtemplate\img = LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
+									SelectedItem\itemtemplate\img = ResizeImage2(SelectedItem\itemtemplate\img, ImageWidth(SelectedItem\itemtemplate\img) * MenuScale, ImageHeight(SelectedItem\itemtemplate\img) * MenuScale)
+									
+									SetBuffer ImageBuffer(SelectedItem\itemtemplate\img)
+									Color 37,45,137
+									SetFont Font5
+									temp = ((Int(AccessCode)*3) Mod 10000)
+									If temp < 1000 Then temp = temp+1000
+									Text 383*MenuScale, 734*MenuScale, temp, True, True
+									Color 255,255,255
+									SetBuffer BackBuffer()
+								Case "ticket"
+									;don't resize because it messes up the masking
+									SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
+									
+									If (SelectedItem\state = 0) Then
+										Msg = I_Loc\MessageItem_1162UseTicket
+										MsgTimer = 70*10
+										PlaySound_Strict LoadTempSound("SFX\SCP\1162\NostalgiaCancer"+Rand(1,5)+".ogg")
+										SelectedItem\state = 1
+									EndIf
+								Case "leaflet"
+									;don't resize because it messes up the masking
+									SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
+								Default 
+									SelectedItem\itemtemplate\img=LoadImage_Strict(SelectedItem\itemtemplate\imgpath)
+									SelectedItem\itemtemplate\img = ResizeImage2(SelectedItem\itemtemplate\img, ImageWidth(SelectedItem\itemtemplate\img) * MenuScale, ImageHeight(SelectedItem\itemtemplate\img) * MenuScale)
+							End Select
+							
+							MaskImage(SelectedItem\itemtemplate\img, 255, 0, 255)
+						EndIf
+						
+						DrawImage(SelectedItem\itemtemplate\img, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\img) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\img) / 2)
+						;[End Block]
+					Else
+						;[Block]
+						;check if the item is an inventory-type object
+						DoubleClick = 0
+						MouseHit1 = 0
+						MouseDown1 = 0
+						LastMouseHit1 = 0
+						If SelectedItem\invSlots>0 Then OtherOpen = SelectedItem
+						SelectedItem = Null
+						;[End Block]
+					EndIf
 			End Select
 			
 			If SelectedItem <> Null Then
 				If SelectedItem\itemtemplate\img <> 0
-					Local IN$ = SelectedItem\itemtemplate\tempname
-					If IN$ = "paper" Or IN$ = "badge" Or IN$ = "oldpaper" Or IN$ = "ticket" Then
+					Local IN$ = SelectedItem\itemtemplate\group
+					Local INN$ = SelectedItem\itemtemplate\name
+					If IN$ = "paper" Or INN$ = "badge" Or INN$ = "oldbadge" Or INN$ = "oldpaper" Or INN$ = "ticket" Then
 						For a_it.Items = Each Items
 							If a_it <> SelectedItem
-								Local IN2$ = a_it\itemtemplate\tempname
-								If IN2$ = "paper" Or IN2$ = "badge" Or IN2$ = "oldpaper" Or IN2$ = "ticket" Then
+								Local IN2$ = a_it\itemtemplate\group
+								Local INN2$ = a_it\itemtemplate\name
+								If IN2$ = "paper" Or INN2$ = "badge" Or INN2$ = "oldbadge" Or INN2$ = "oldpaper" Or INN2$ = "ticket" Then
 									If a_it\itemtemplate\img<>0
 										If a_it\itemtemplate\img <> SelectedItem\itemtemplate\img
 											FreeImage(a_it\itemtemplate\img) : a_it\itemtemplate\img = 0
@@ -7224,18 +7149,19 @@ Function DrawGUI()
 			EndIf
 			
 			If MouseHit2 Then
-				IN$ = SelectedItem\itemtemplate\tempname
+				IN$ = SelectedItem\itemtemplate\name
+				G$ = SelectedItem\itemtemplate\group
 				If IN$ = "scp1025" Then
 					If SelectedItem\itemtemplate\img<>0 Then FreeImage(SelectedItem\itemtemplate\img)
 					SelectedItem\itemtemplate\img=0
 				ElseIf IN$ = "firstaid" Or IN$="finefirstaid" Or IN$="firstaid2" Then
 					SelectedItem\state = 0
-				ElseIf IN$ = "vest" Or IN$="finevest"
+				ElseIf G$ = "vest"
 					SelectedItem\state = 0
 					If (Not WearingVest)
 						DropItem(SelectedItem,False)
 					EndIf
-				ElseIf IN$="hazmatsuit" Or IN$="hazmatsuit2" Or IN$="hazmatsuit3"
+				ElseIf G$="hazmat"
 					SelectedItem\state = 0
 					If (Not WearingHazmat)
 						DropItem(SelectedItem,False)
@@ -7263,7 +7189,7 @@ Function DrawGUI()
 	
 	For it.Items = Each Items
 		If it<>SelectedItem
-			Select it\itemtemplate\tempname
+			Select it\itemtemplate\name
 				Case "firstaid","finefirstaid","firstaid2","vest","finevest","hazmatsuit","hazmatsuit2","hazmatsuit3","scp1499","super1499"
 					it\state = 0
 			End Select
@@ -7294,9 +7220,9 @@ Function DrawTimer()
 	If Not TimerStopped Then
 		durText$ = FormatDuration(PlayTime)
 	Else If TimerStopped = 1 Then
-		durText = "Timer stopped"
+		durText = "Timer stopped" ; TODO Remove, never occurs
 	Else
-		durText$ = "Pre-made save loaded"
+		durText$ = I_Loc\HUD_SpeedrunSaveloaded
 	EndIf
 	Local x% = HUDEndX - StringWidth(durText) - 24 * HUDScale
 	Local y% = HUDStartY + 24 * HUDScale
@@ -7373,7 +7299,7 @@ Function DrawMenu()
 					
 					If StopHidingTimer => 40 Then
 						PlaySound_Strict(HorrorSFX(15))
-						Msg = "STOP HIDING"
+						Msg = I_Loc\Message_Stophiding
 						MsgTimer = 6*70
 						MenuOpen = False
 						Return
@@ -7404,23 +7330,23 @@ Function DrawMenu()
 		
 		If AchievementsMenu > 0 Then
 			SetFont Font2
-			Text(x, y-(122-45)*MenuScale, "ACHIEVEMENTS",False,True)
+			Text(x, y-(122-45)*MenuScale, I_Loc\Menu_AchievementsUpper,False,True)
 			SetFont Font1
 		ElseIf OptionsMenu > 0 Then
 			SetFont Font2
-			Text(x, y-(122-45)*MenuScale, "OPTIONS",False,True)
+			Text(x, y-(122-45)*MenuScale, I_Loc\Menu_OptionsUpper,False,True)
 			SetFont Font1
 		ElseIf QuitMSG > 0 Then
 			SetFont Font2
-			Text(x, y-(122-45)*MenuScale, "QUIT?",False,True)
+			Text(x, y-(122-45)*MenuScale, I_Loc\Menu_QuitQuestion,False,True)
 			SetFont Font1
 		ElseIf KillTimer >= 0 Then
 			SetFont Font2
-			Text(x, y-(122-45)*MenuScale, "PAUSED",False,True)
+			Text(x, y-(122-45)*MenuScale, I_Loc\Menu_Pause,False,True)
 			SetFont Font1
 		Else
 			SetFont Font2
-			Text(x, y-(122-45)*MenuScale, "YOU DIED",False,True)
+			Text(x, y-(122-45)*MenuScale, I_Loc\Menu_Dead,False,True)
 			SetFont Font1
 		End If		
 		
@@ -7431,11 +7357,11 @@ Function DrawMenu()
 		
 		If AchievementsMenu <= 0 And OptionsMenu <= 0 And QuitMSG <= 0
 			SetFont Font1
-			Text x, y, "Difficulty: "+SelectedDifficulty\name
-			Text x, y+20*MenuScale, "Save: "+CurrSave
+			Text x, y, I_Loc\Menu_Difficulty+" "+SelectedDifficulty\localName
+			Text x, y+20*MenuScale, I_Loc\Menu_Save+" "+CurrSave
 			Text x, y+40*MenuScale, GetSeedString()
 		ElseIf AchievementsMenu <= 0 And OptionsMenu > 0 And QuitMSG <= 0 And KillTimer >= 0
-			If DrawButton(x + 101 * MenuScale, y + 390 * MenuScale, 230 * MenuScale, 60 * MenuScale, "Back") Then
+			If DrawButton(x + 101 * MenuScale, y + 390 * MenuScale, 230 * MenuScale, 60 * MenuScale, I_Loc\Menu_Back) Then
 				AchievementsMenu = 0
 				OptionsMenu = 0
 				QuitMSG = 0
@@ -7457,10 +7383,10 @@ Function DrawMenu()
 				Rect(x+320*MenuScale,y-5*MenuScale,110*MenuScale,40*MenuScale,True)
 			EndIf
 			
-			If DrawButton(x-5*MenuScale,y,100*MenuScale,30*MenuScale,"GRAPHICS",False) Then OptionsMenu = 1
-			If DrawButton(x+105*MenuScale,y,100*MenuScale,30*MenuScale,"AUDIO",False) Then OptionsMenu = 2
-			If DrawButton(x+215*MenuScale,y,100*MenuScale,30*MenuScale,"CONTROLS",False) Then OptionsMenu = 3
-			If DrawButton(x+325*MenuScale,y,100*MenuScale,30*MenuScale,"ADVANCED",False) Then OptionsMenu = 4
+			If DrawButton(x-5*MenuScale,y,100*MenuScale,30*MenuScale,I_Loc\Option_Graphics,False) Then OptionsMenu = 1
+			If DrawButton(x+105*MenuScale,y,100*MenuScale,30*MenuScale,I_Loc\Option_Audio,False) Then OptionsMenu = 2
+			If DrawButton(x+215*MenuScale,y,100*MenuScale,30*MenuScale,I_Loc\Option_Controls,False) Then OptionsMenu = 3
+			If DrawButton(x+325*MenuScale,y,100*MenuScale,30*MenuScale,I_Loc\Option_Advanced,False) Then OptionsMenu = 4
 			
 			Local tx# = (GraphicWidth/2)+(width/2)
 			Local ty# = y
@@ -7475,7 +7401,7 @@ Function DrawMenu()
 					y=y+50*MenuScale
 					
 					Color 255,255,255
-					Text(x, y, "VSync:")
+					Text(x, y, I_Loc\OptionName_Vsync)
 					Vsync% = DrawTick(x + 270 * MenuScale, y + MenuScale, Vsync%)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"vsync")
@@ -7484,7 +7410,7 @@ Function DrawMenu()
 					y=y+30*MenuScale
 					
 					Color 255,255,255
-					Text(x, y, "Anti-aliasing:")
+					Text(x, y, I_Loc\OptionName_Antialias)
 					Opt_AntiAlias = DrawTick(x + 270 * MenuScale, y + MenuScale, Opt_AntiAlias%)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"antialias")
@@ -7494,7 +7420,7 @@ Function DrawMenu()
 					
 					ScreenGamma = (SlideBar(x + 270*MenuScale, y+6*MenuScale, 100*MenuScale, ScreenGamma*50.0, 1)/50.0)
 					Color 255,255,255
-					Text(x, y, "Screen gamma:")
+					Text(x, y, I_Loc\OptionName_Gamma)
 					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 						DrawOptionsTooltip(tx,ty,tw,th,"gamma",ScreenGamma)
 					EndIf
@@ -7502,7 +7428,7 @@ Function DrawMenu()
 					y=y+50*MenuScale
 					
 					Color 255,255,255
-					Text(x, y, "Texture LOD Bias:")
+					Text(x, y, I_Loc\OptionName_Texlod)
 					TextureDetails = Slider5(x+270*MenuScale,y+6*MenuScale,100*MenuScale,TextureDetails,3,"0.8","0.4","0.0","-0.4","-0.8")
 					Select TextureDetails%
 						Case 0
@@ -7523,7 +7449,7 @@ Function DrawMenu()
 					
 					y=y+50*MenuScale
 					Color 100,100,100
-					Text(x, y, "Save textures in the VRAM:")	
+					Text(x, y, I_Loc\OptionName_Vram)	
 					EnableVRam = DrawTick(x + 270 * MenuScale, y + MenuScale, EnableVRam, True)
 					If MouseOn(x + 270 * MenuScale, y + MenuScale, 20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"vram")
@@ -7533,7 +7459,7 @@ Function DrawMenu()
 
 					HUDOffsetScale = SlideBar(x + 270*MenuScale, y+6*MenuScale,100*MenuScale, HUDOffsetScale*100, 5)/100
 					Color 255,255,255
-					Text(x, y, "HUD offset:")
+					Text(x, y, I_Loc\OptionName_Hudoffset)
 					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=5
 						DrawOptionsTooltip(tx,ty,tw,th,"hudoffset")
 					EndIf
@@ -7545,9 +7471,9 @@ Function DrawMenu()
 					SlideBarFOV = SlideBar(x + 270*MenuScale, y+6*MenuScale,100*MenuScale, SlideBarFOV*2.0, 4)/2.0
 					FOV = Int(SlideBarFOV+40)
 					Color 255,255,255
-					Text(x, y, "Field of view:")
+					Text(x, y, I_Loc\OptionName_fov)
 					Color 255,255,0
-					Text(x + 5 * MenuScale, y + 25 * MenuScale, FOV+" FOV")
+					Text(x + 5 * MenuScale, y + 25 * MenuScale, FOV+"°")
 					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=4
 						DrawOptionsTooltip(tx,ty,tw,th,"fov")
 					EndIf
@@ -7560,7 +7486,7 @@ Function DrawMenu()
 					
 					MusicVolume = (SlideBar(x + 250*MenuScale, y-4*MenuScale, 100*MenuScale, MusicVolume*100.0, 1)/100.0)
 					Color 255,255,255
-					Text(x, y, "Music volume:")
+					Text(x, y, I_Loc\OptionName_Musicvol)
 					If (MouseOn(x+250*MenuScale,y-4*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 						DrawOptionsTooltip(tx,ty,tw,th,"musicvol",MusicVolume)
 					EndIf
@@ -7570,7 +7496,7 @@ Function DrawMenu()
 					PrevSFXVolume = (SlideBar(x + 250*MenuScale, y-4*MenuScale, 100*MenuScale, SFXVolume*100.0, 2)/100.0)
 					If (Not DeafPlayer) Then SFXVolume# = PrevSFXVolume#
 					Color 255,255,255
-					Text(x, y, "Sound volume:")
+					Text(x, y, I_Loc\OptionName_Soundvol)
 					If (MouseOn(x+250*MenuScale,y-4*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=2
 						DrawOptionsTooltip(tx,ty,tw,th,"soundvol",PrevSFXVolume)
 					EndIf
@@ -7578,7 +7504,7 @@ Function DrawMenu()
 					y = y + 30*MenuScale
 					
 					Color 100,100,100
-					Text x, y, "Sound auto-release:"
+					Text x, y, I_Loc\OptionName_Sfxautorelease
 					EnableSFXRelease = DrawTick(x + 270 * MenuScale, y + MenuScale, EnableSFXRelease,True)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th+220*MenuScale,"sfxautorelease")
@@ -7587,7 +7513,7 @@ Function DrawMenu()
 					y = y + 30*MenuScale
 					
 					Color 100,100,100
-					Text x, y, "Enable user tracks:"
+					Text x, y, I_Loc\OptionName_Usertrack
 					EnableUserTracks = DrawTick(x + 270 * MenuScale, y + MenuScale, EnableUserTracks,True)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"usertrack")
@@ -7596,17 +7522,17 @@ Function DrawMenu()
 					If EnableUserTracks
 						y = y + 30 * MenuScale
 						Color 255,255,255
-						Text x, y, "User track mode:"
+						Text x, y, I_Loc\OptionName_Usertrackmode
 						UserTrackMode = DrawTick(x + 270 * MenuScale, y + MenuScale, UserTrackMode)
 						If UserTrackMode
-							Text x, y + 20 * MenuScale, "Repeat"
+							Text x, y + 20 * MenuScale, I_Loc\OptionName_UsertrackmodeRepeat
 						Else
-							Text x, y + 20 * MenuScale, "Random"
+							Text x, y + 20 * MenuScale, I_Loc\OptionName_UsertrackmodeRandom
 						EndIf
 						If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 							DrawOptionsTooltip(tx,ty,tw,th,"usertrackmode")
 						EndIf
-						;DrawButton(x, y + 30 * MenuScale, 190 * MenuScale, 25 * MenuScale, "Scan for User Tracks",False)
+						;DrawButton(x, y + 30 * MenuScale, 190 * MenuScale, 25 * MenuScale, I_Loc\OptionName_Usertrackscan,False)
 						;If MouseOn(x,y+30*MenuScale,190*MenuScale,25*MenuScale) And OnSliderID=0
 						;	DrawOptionsTooltip(tx,ty,tw,th,"usertrackscan")
 						;EndIf
@@ -7619,7 +7545,7 @@ Function DrawMenu()
 					
 					MouseSens = (SlideBar(x + 270*MenuScale, y-4*MenuScale, 100*MenuScale, (MouseSens+0.5)*100.0, 1)/100.0)-0.5
 					Color(255, 255, 255)
-					Text(x, y, "Mouse sensitivity:")
+					Text(x, y, I_Loc\OptionName_Mousesensitivity)
 					If (MouseOn(x+270*MenuScale,y-4*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 						DrawOptionsTooltip(tx,ty,tw,th,"mousesensitivity",MouseSens)
 					EndIf
@@ -7627,7 +7553,7 @@ Function DrawMenu()
 					y = y + 30*MenuScale
 					
 					Color(255, 255, 255)
-					Text(x, y, "Invert mouse Y-axis:")
+					Text(x, y, I_Loc\OptionName_Mouseinvert)
 					InvertMouse = DrawTick(x + 270 * MenuScale, y + MenuScale, InvertMouse)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"mouseinvert")
@@ -7637,7 +7563,7 @@ Function DrawMenu()
 					
 					MouseSmooth = (SlideBar(x + 270*MenuScale, y-4*MenuScale, 100*MenuScale, (MouseSmooth)*50.0, 2)/50.0)
 					Color(255, 255, 255)
-					Text(x, y, "Mouse smoothing:")
+					Text(x, y, I_Loc\OptionName_Mousesmoothing)
 					If (MouseOn(x+270*MenuScale,y-4*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=2
 						DrawOptionsTooltip(tx,ty,tw,th,"mousesmoothing",MouseSmooth)
 					EndIf
@@ -7645,29 +7571,29 @@ Function DrawMenu()
 					Color(255, 255, 255)
 					
 					y = y + 30*MenuScale
-					Text(x, y, "Control configuration:")
+					Text(x, y, I_Loc\OptionName_Binds)
 					y = y + 10*MenuScale
 					
-					Text(x, y + 20 * MenuScale, "Move Forward")
+					Text(x, y + 20 * MenuScale, I_Loc\OptionName_BindMoveForward)
 					InputBox(x + 200 * MenuScale, y + 20 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_UP,210)),5)		
-					Text(x, y + 40 * MenuScale, "Strafe Left")
+					Text(x, y + 40 * MenuScale, I_Loc\OptionName_BindMoveLeft)
 					InputBox(x + 200 * MenuScale, y + 40 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_LEFT,210)),3)	
-					Text(x, y + 60 * MenuScale, "Move Backward")
+					Text(x, y + 60 * MenuScale, I_Loc\OptionName_BindMoveBack)
 					InputBox(x + 200 * MenuScale, y + 60 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_DOWN,210)),6)				
-					Text(x, y + 80 * MenuScale, "Strafe Right")
+					Text(x, y + 80 * MenuScale, I_Loc\OptionName_BindMoveRight)
 					InputBox(x + 200 * MenuScale, y + 80 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_RIGHT,210)),4)
 					
-					Text(x, y + 100 * MenuScale, "Manual Blink")
+					Text(x, y + 100 * MenuScale, I_Loc\OptionName_BindBlink)
 					InputBox(x + 200 * MenuScale, y + 100 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_BLINK,210)),7)				
-					Text(x, y + 120 * MenuScale, "Sprint")
+					Text(x, y + 120 * MenuScale, I_Loc\OptionName_BindSprint)
 					InputBox(x + 200 * MenuScale, y + 120 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_SPRINT,210)),8)
-					Text(x, y + 140 * MenuScale, "Open/Close Inventory")
+					Text(x, y + 140 * MenuScale, I_Loc\OptionName_BindInv)
 					InputBox(x + 200 * MenuScale, y + 140 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_INV,210)),9)
-					Text(x, y + 160 * MenuScale, "Crouch")
+					Text(x, y + 160 * MenuScale, I_Loc\OptionName_BindCrouch)
 					InputBox(x + 200 * MenuScale, y + 160 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_CROUCH,210)),10)
-					Text(x, y + 180 * MenuScale, "Quick Save")
+					Text(x, y + 180 * MenuScale, I_Loc\OptionName_BindSave)
 					InputBox(x + 200 * MenuScale, y + 180 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_SAVE,210)),11)	
-					Text(x, y + 200 * MenuScale, "Open/Close Console")
+					Text(x, y + 200 * MenuScale, I_Loc\OptionName_BindConsole)
 					InputBox(x + 200 * MenuScale, y + 200 * MenuScale,100*MenuScale,20*MenuScale,KeyName(Min(KEY_CONSOLE,210)),12)
 
 					If MouseOn(x,y,300*MenuScale,220*MenuScale) And OnSliderID=0
@@ -7709,7 +7635,7 @@ Function DrawMenu()
 					y = y + 50*MenuScale
 					
 					Color 255,255,255				
-					Text(x, y, "Show HUD:")	
+					Text(x, y, I_Loc\OptionName_Showhud)	
 					HUDenabled = DrawTick(x + 270 * MenuScale, y + MenuScale, HUDenabled)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"hud")
@@ -7718,7 +7644,7 @@ Function DrawMenu()
 					y = y + 30*MenuScale
 					
 					Color 255,255,255
-					Text(x, y, "Enable console:")
+					Text(x, y, I_Loc\OptionName_Console)
 					CanOpenConsole = DrawTick(x +270 * MenuScale, y + MenuScale, CanOpenConsole)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"consoleenable")
@@ -7727,7 +7653,7 @@ Function DrawMenu()
 					y = y + 30*MenuScale
 					
 					Color 255,255,255
-					Text(x, y, "Open console on error:")
+					Text(x, y, I_Loc\OptionName_Consoleerror)
 					ConsoleOpening = DrawTick(x + 270 * MenuScale, y + MenuScale, ConsoleOpening)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"consoleerror")
@@ -7736,7 +7662,7 @@ Function DrawMenu()
 					y = y + 30*MenuScale
 
 					Color 255,255,255
-					Text(x, y, "Speed run mode:")
+					Text(x, y, I_Loc\OptionName_Speedrunmode)
 					SpeedRunMode = DrawTick(x + 270 * MenuScale, y + MenuScale, SpeedRunMode)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"speedrunmode")
@@ -7745,7 +7671,7 @@ Function DrawMenu()
 					y = y + 30*MenuScale
 
 					Color 255,255,255
-					Text(x, y, "Use numeric seeds:")
+					Text(x, y, I_Loc\OptionName_Numericseeds)
 					UseNumericSeeds = DrawTick(x + 270 * MenuScale, y + MenuScale, UseNumericSeeds)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"numericseeds")
@@ -7754,7 +7680,7 @@ Function DrawMenu()
 					y = y + 50*MenuScale
 					
 					Color 255,255,255
-					Text(x, y, "Achievement popups:")
+					Text(x, y, I_Loc\OptionName_Achpopup)
 					AchvMSGenabled% = DrawTick(x + 270 * MenuScale, y, AchvMSGenabled%)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"achpopup")
@@ -7763,7 +7689,7 @@ Function DrawMenu()
 					y = y + 50*MenuScale
 
 					Color 255,255,255
-					Text(x, y, "Use launcher:")
+					Text(x, y, I_Loc\OptionName_Launcher)
 					LauncherEnabled% = DrawTick(x + 270 * MenuScale, y, LauncherEnabled%)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"launcher")
@@ -7772,7 +7698,7 @@ Function DrawMenu()
 					y = y + 50*MenuScale
 					
 					Color 255,255,255
-					Text(x, y, "Show FPS:")
+					Text(x, y, I_Loc\OptionName_Showfps)
 					ShowFPS% = DrawTick(x + 270 * MenuScale, y, ShowFPS%)
 					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"showfps")
@@ -7781,7 +7707,7 @@ Function DrawMenu()
 					y = y + 30*MenuScale
 					
 					Color 255,255,255
-					Text(x, y, "Framelimit:")
+					Text(x, y, I_Loc\OptionName_Framelimit)
 					
 					Color 255,255,255
 					If DrawTick(x + 270 * MenuScale, y, CurrFrameLimit > 0.0) Then
@@ -7792,7 +7718,7 @@ Function DrawMenu()
 						CurrFrameLimit# = Max(CurrFrameLimit, 0.01)
 						Framelimit% = 19+(CurrFrameLimit*100.0)
 						Color 255,255,0
-						Text(x + 5 * MenuScale, y + 25 * MenuScale, Framelimit%+" FPS")
+						Text(x + 5 * MenuScale, y + 25 * MenuScale, Format(I_Loc\OptionName_FramelimitFps, Framelimit%))
 						If (MouseOn(x+150*MenuScale,y+30*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 							DrawOptionsTooltip(tx,ty,tw,th,"framelimit",Framelimit)
 						EndIf
@@ -7814,7 +7740,7 @@ Function DrawMenu()
 				If (Not CanSave) Then AbleToSave = False
 				If AbleToSave
 					QuitButton = 140
-					If DrawButton(x, y + 60*MenuScale, 390*MenuScale, 60*MenuScale, "Save & Quit") Then
+					If DrawButton(x, y + 60*MenuScale, 390*MenuScale, 60*MenuScale, I_Loc\Menu_Savequit) Then
 						DropSpeed = 0
 						SaveGame(SavePath + CurrSave)
 						NullGame()
@@ -7829,7 +7755,7 @@ Function DrawMenu()
 				EndIf
 			EndIf
 			
-			If DrawButton(x, y + QuitButton*MenuScale, 390*MenuScale, 60*MenuScale, "Quit") Then
+			If DrawButton(x, y + QuitButton*MenuScale, 390*MenuScale, 60*MenuScale, I_Loc\Menu_Quit) Then
 				NullGame()
 				MenuOpen = False
 				MainMenuOpen = True
@@ -7840,14 +7766,14 @@ Function DrawMenu()
 				Return
 			EndIf
 			
-			If DrawButton(x+101*MenuScale, y + 344*MenuScale, 230*MenuScale, 60*MenuScale, "Back") Then
+			If DrawButton(x+101*MenuScale, y + 344*MenuScale, 230*MenuScale, 60*MenuScale, I_Loc\Menu_Back) Then
 				AchievementsMenu = 0
 				OptionsMenu = 0
 				QuitMSG = 0
 				MouseHit1 = False
 			EndIf
 		Else
-			If DrawButton(x+101*MenuScale, y + 344*MenuScale, 230*MenuScale, 60*MenuScale, "Back") Then
+			If DrawButton(x+101*MenuScale, y + 344*MenuScale, 230*MenuScale, 60*MenuScale, I_Loc\Menu_Back) Then
 				AchievementsMenu = 0
 				OptionsMenu = 0
 				QuitMSG = 0
@@ -7896,7 +7822,7 @@ Function DrawMenu()
 				
 				y = y+ 72*MenuScale
 				
-				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Resume", True, True) Then
+				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, I_Loc\Menu_Resume, True, True) Then
 					MenuOpen = False
 					UpdateMenuState()
 				EndIf
@@ -7904,7 +7830,7 @@ Function DrawMenu()
 				y = y + 75*MenuScale
 				If (Not SelectedDifficulty\permaDeath) Then
 					If GameSaved Then
-						If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Load Game") Then
+						If DrawButton(x, y, 390*MenuScale, 60*MenuScale, I_Loc\Menu_Load) Then
 							DrawLoading(0)
 							
 							MenuOpen = False
@@ -7948,19 +7874,19 @@ Function DrawMenu()
 						DrawFrame(x,y,390*MenuScale, 60*MenuScale)
 						Color (100, 100, 100)
 						SetFont Font2
-						Text(x + (390*MenuScale) / 2, y + (60*MenuScale) / 2, "Load Game", True, True)
+						Text(x + (390*MenuScale) / 2, y + (60*MenuScale) / 2, I_Loc\Menu_Load, True, True)
 					EndIf
 					y = y + 75*MenuScale
 			EndIf
 				
-				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Achievements") Then AchievementsMenu = 1
+				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, I_Loc\Menu_Achievements) Then AchievementsMenu = 1
 				y = y + 75*MenuScale
-				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Options") Then OptionsMenu = 1 : OnSliderID = 66
+				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, I_Loc\Menu_Options) Then OptionsMenu = 1 : OnSliderID = 66
 				y = y + 75*MenuScale
 			Else
 				y = y+104*MenuScale
 				If GameSaved And (Not SelectedDifficulty\permaDeath) Then
-					If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Load Game") Then
+					If DrawButton(x, y, 390*MenuScale, 60*MenuScale, I_Loc\Menu_Load) Then
 						DrawLoading(0)
 						
 						MenuOpen = False
@@ -8003,9 +7929,9 @@ Function DrawMenu()
 				Else
 					DrawButton(x, y, 390*MenuScale, 60*MenuScale, "")
 					Color 50,50,50
-					Text(x + 185*MenuScale, y + 30*MenuScale, "Load Game", True, True)
+					Text(x + 185*MenuScale, y + 30*MenuScale, I_Loc\Menu_Load, True, True)
 				EndIf
-				If DrawButton(x, y + 80*MenuScale, 390*MenuScale, 60*MenuScale, "Quit to Menu") Then
+				If DrawButton(x, y + 80*MenuScale, 390*MenuScale, 60*MenuScale, I_Loc\Menu_QuitMenu) Then
 					NullGame()
 					MenuOpen = False
 					MainMenuOpen = True
@@ -8019,7 +7945,7 @@ Function DrawMenu()
 			EndIf
 			
 			If KillTimer >= 0 And (Not MainMenuOpen)
-				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Quit") Then
+				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, I_Loc\Menu_Quit) Then
 					QuitMSG = 1
 				EndIf
 			EndIf
@@ -8039,9 +7965,9 @@ End Function
 
 Function GetSeedString$()
 	If HasNumericSeed Then
-		Return "Map seed (numeric): "+Str(RandomSeedNumeric)
+		Return I_Loc\Menu_SeedNumeric+" "+Str(RandomSeedNumeric)
 	Else
-		Return "Map seed: "+RandomSeed
+		Return I_Loc\Menu_Seed+" "+RandomSeed
 	EndIf
 End Function
 
@@ -8717,7 +8643,7 @@ Function InitNewGame()
 		If (r\RoomTemplate\Name = "start" And IntroEnabled = False) Then 
 			PositionEntity (Collider, EntityX(r\obj)+3584*RoomScale, 704*RoomScale, EntityZ(r\obj)+1024*RoomScale)
 			PlayerRoom = r
-			it = CreateItem("Class D Orientation Leaflet", "paper", 1, 1, 1)
+			it = CreateItem("docORI", 1, 1, 1)
 			it\Picked = True
 			it\Dropped = -1
 			it\itemtemplate\found=True
@@ -8726,7 +8652,7 @@ Function InitNewGame()
 			EntityType (it\collider, HIT_ITEM)
 			EntityParent(it\collider, 0)
 			ItemAmount = ItemAmount + 1
-			it = CreateItem("Document SCP-173", "paper", 1, 1, 1)
+			it = CreateItem("doc173", 1, 1, 1)
 			it\Picked = True
 			it\Dropped = -1
 			it\itemtemplate\found=True
@@ -9708,7 +9634,7 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 	
 	Local it2.Items
 	Select item\itemtemplate\name
-		Case "Gas Mask", "Heavy Gas Mask"
+		Case "gasmask", "supergasmask", "gasmask3"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
@@ -9718,20 +9644,20 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 				Case "fine", "very fine"
-					it2 = CreateItem("Gas Mask", "supergasmask", x, y, z)
+					it2 = CreateItem("supergasmask", x, y, z)
 					RemoveItem(item)
 			End Select
-		Case "SCP-1499"
+		Case "scp1499", "super1499"
 				Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
 					RemoveItem(item)
 				Case "1:1"
-					it2 = CreateItem("Gas Mask", "gasmask", x, y, z)
+					it2 = CreateItem("gasmask", x, y, z)
 					RemoveItem(item)
 				Case "fine"
-					it2 = CreateItem("SCP-1499", "super1499", x, y, z)
+					it2 = CreateItem("super1499", x, y, z)
 					RemoveItem(item)
 				Case "very fine"
 					n.NPCs = CreateNPC(NPCtype1499,x,y,z)
@@ -9741,7 +9667,7 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					n\State3 = 1
 					RemoveItem(item)
 			End Select
-		Case "Ballistic Vest"
+		Case "vest", "finevest", "veryfinevest"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
@@ -9751,13 +9677,13 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 				Case "fine"
-					it2 = CreateItem("Heavy Ballistic Vest", "finevest", x, y, z)
+					it2 = CreateItem("finevest", x, y, z)
 					RemoveItem(item)
 				Case "very fine"
-					it2 = CreateItem("Bulky Ballistic Vest", "veryfinevest", x, y, z)
+					it2 = CreateItem("veryfinevest", x, y, z)
 					RemoveItem(item)
 			End Select
-		Case "Clipboard"
+		Case "clipboard"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(7, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
@@ -9779,17 +9705,7 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 			End Select
-		Case "Cowbell"
-			Select setting
-				Case "rough","coarse"
-					d.Decals = CreateDecal(0, x, 8*RoomScale+0.010, z, 90, Rand(360), 0)
-					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
-					RemoveItem(item)
-				Case "1:1","fine","very fine"
-					PositionEntity(item\collider, x, y, z)
-					ResetEntity(item\collider)
-			End Select
-		Case "Night Vision Goggles"
+		Case "supernv", "supernv", "finenvgoggles"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
@@ -9799,17 +9715,17 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 				Case "fine"
-					it2 = CreateItem("Night Vision Goggles", "finenvgoggles", x, y, z)
+					it2 = CreateItem("finenvgoggles", x, y, z)
 					RemoveItem(item)
 				Case "very fine"
-					it2 = CreateItem("Night Vision Goggles", "supernv", x, y, z)
+					it2 = CreateItem("supernv", x, y, z)
 					it2\state = 1000
 					RemoveItem(item)
 			End Select
-		Case "Metal Panel", "SCP-148 Ingot"
+		Case "scp148", "scp148ingot"
 			Select setting
 				Case "rough", "coarse"
-					it2 = CreateItem("SCP-148 Ingot", "scp148ingot", x, y, z)
+					it2 = CreateItem("scp148ingot", x, y, z)
 					RemoveItem(item)
 				Case "1:1", "fine", "very fine"
 					it2 = Null
@@ -9826,24 +9742,24 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					Next
 					
 					If it2<>Null Then
-						Select it2\itemtemplate\tempname
+						Select it2\itemtemplate\name
 							Case "gasmask", "supergasmask"
 								RemoveItem (it2)
 								RemoveItem (item)
 								
-								it2 = CreateItem("Heavy Gas Mask", "gasmask3", x, y, z)
+								it2 = CreateItem("gasmask3", x, y, z)
 							Case "vest"
 								RemoveItem (it2)
 								RemoveItem(item)
-								it2 = CreateItem("Heavy Ballistic Vest", "finevest", x, y, z)
+								it2 = CreateItem("finevest", x, y, z)
 							Case "hazmatsuit","hazmatsuit2"
 								RemoveItem (it2)
 								RemoveItem(item)
-								it2 = CreateItem("Heavy Hazmat Suit", "hazmatsuit3", x, y, z)
+								it2 = CreateItem("hazmatsuit3", x, y, z)
 						End Select
 					Else 
-						If item\itemtemplate\name="SCP-148 Ingot" Then
-							it2 = CreateItem("Metal Panel", "scp148", x, y, z)
+						If item\itemtemplate\name="scp148ingot" Then
+							it2 = CreateItem("scp148", x, y, z)
 							RemoveItem(item)
 						Else
 							PositionEntity(item\collider, x, y, z)
@@ -9851,118 +9767,118 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 						EndIf
 					EndIf					
 			End Select
-		Case "Severed Hand", "Black Severed Hand"
+		Case "hand", "hand2"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(3, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1", "fine", "very fine"
-					If (item\itemtemplate\name = "Severed Hand")
-						it2 = CreateItem("Black Severed Hand", "hand2", x, y, z)
+					If (item\itemtemplate\name = "hand")
+						it2 = CreateItem("hand2", x, y, z)
 					Else
-						it2 = CreateItem("Severed Hand", "hand", x, y, z)
+						it2 = CreateItem("hand", x, y, z)
 					EndIf
 			End Select
 			RemoveItem(item)
-		Case "First Aid Kit", "Blue First Aid Kit"
+		Case "firstaidkit", "firstaid2" ; TODO Missing small and very fine
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
 				If Rand(2)=1 Then
-					it2 = CreateItem("Blue First Aid Kit", "firstaid2", x, y, z)
+					it2 = CreateItem("firstaid2", x, y, z)
 				Else
-				    it2 = CreateItem("First Aid Kit", "firstaid", x, y, z)
+				    it2 = CreateItem("firstaid", x, y, z)
 				EndIf
 				Case "fine"
-					it2 = CreateItem("Small First Aid Kit", "finefirstaid", x, y, z)
+					it2 = CreateItem("finefirstaid", x, y, z)
 				Case "very fine"
-					it2 = CreateItem("Strange Bottle", "veryfinefirstaid", x, y, z)
+					it2 = CreateItem("veryfinefirstaid", x, y, z)
 			End Select
 			RemoveItem(item)
-		Case "Level 1 Key Card", "Level 2 Key Card", "Level 3 Key Card", "Level 4 Key Card", "Level 5 Key Card", "Key Card"
+		Case "key1", "key2", "key3", "key4", "key5"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Playing Card", "misc", x, y, z)
+					it2 = CreateItem("playingcard", x, y, z)
 				Case "fine"
 					Select item\itemtemplate\name
-						Case "Level 1 Key Card"
+						Case "key1"
 							Select SelectedDifficulty\otherFactors
 								Case EASY
-									it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+									it2 = CreateItem("key2", x, y, z)
 								Case NORMAL
 									If Rand(5)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+										it2 = CreateItem("key2", x, y, z)
 									EndIf
 								Case HARD
 									If Rand(4)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+										it2 = CreateItem("key2", x, y, z)
 									EndIf
 							End Select
-						Case "Level 2 Key Card"
+						Case "key2"
 							Select SelectedDifficulty\otherFactors
 								Case EASY
-									it2 = CreateItem("Level 3 Key Card", "key3", x, y, z)
+									it2 = CreateItem("key3", x, y, z)
 								Case NORMAL
 									If Rand(4)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 3 Key Card", "key3", x, y, z)
+										it2 = CreateItem("key3", x, y, z)
 									EndIf
 								Case HARD
 									If Rand(3)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 3 Key Card", "key3", x, y, z)
+										it2 = CreateItem("key3", x, y, z)
 									EndIf
 							End Select
-						Case "Level 3 Key Card"
+						Case "key3"
 							Select SelectedDifficulty\otherFactors
 								Case EASY
 									If Rand(10)=1 Then
-										it2 = CreateItem("Level 4 Key Card", "key4", x, y, z)
+										it2 = CreateItem("key4", x, y, z)
 									Else
-										it2 = CreateItem("Playing Card", "misc", x, y, z)	
+										it2 = CreateItem("playingcard", x, y, z)	
 									EndIf
 								Case NORMAL
 									If Rand(15)=1 Then
-										it2 = CreateItem("Level 4 Key Card", "key4", x, y, z)
+										it2 = CreateItem("key4", x, y, z)
 									Else
-										it2 = CreateItem("Playing Card", "misc", x, y, z)	
+										it2 = CreateItem("playingcard", x, y, z)	
 									EndIf
 								Case HARD
 									If Rand(20)=1 Then
-										it2 = CreateItem("Level 4 Key Card", "key4", x, y, z)
+										it2 = CreateItem("key4", x, y, z)
 									Else
-										it2 = CreateItem("Playing Card", "misc", x, y, z)	
+										it2 = CreateItem("playingcard", x, y, z)	
 									EndIf
 							End Select
-						Case "Level 4 Key Card"
+						Case "key4"
 							Select SelectedDifficulty\otherFactors
 								Case EASY
-									it2 = CreateItem("Level 5 Key Card", "key5", x, y, z)
+									it2 = CreateItem("key5", x, y, z)
 								Case NORMAL
 									If Rand(4)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 5 Key Card", "key5", x, y, z)
+										it2 = CreateItem("key5", x, y, z)
 									EndIf
 								Case HARD
 									If Rand(3)=1 Then
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									Else
-										it2 = CreateItem("Level 5 Key Card", "key5", x, y, z)
+										it2 = CreateItem("key5", x, y, z)
 									EndIf
 							End Select
-						Case "Level 5 Key Card"	
+						Case "key5"	
 							Local CurrAchvAmount%=0
 							For i = 0 To MAXACHIEVEMENTS-1
 								If Achievements(i)=True
@@ -9975,21 +9891,21 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 							Select SelectedDifficulty\otherFactors
 								Case EASY
 									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*3)-((CurrAchvAmount-1)*3))=0
-										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+										it2 = CreateItem("key6", x, y, z)
 									Else
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									EndIf
 								Case NORMAL
 									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*4)-((CurrAchvAmount-1)*3))=0
-										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+										it2 = CreateItem("key6", x, y, z)
 									Else
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									EndIf
 								Case HARD
 									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*5)-((CurrAchvAmount-1)*3))=0
-										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+										it2 = CreateItem("key6", x, y, z)
 									Else
-										it2 = CreateItem("Mastercard", "misc", x, y, z)
+										it2 = CreateItem("mastercard", x, y, z)
 									EndIf
 							End Select		
 					End Select
@@ -10006,106 +9922,106 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					Select SelectedDifficulty\otherFactors
 						Case EASY
 							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*3)-((CurrAchvAmount-1)*3))=0
-								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+								it2 = CreateItem("key6", x, y, z)
 							Else
-								it2 = CreateItem("Mastercard", "misc", x, y, z)
+								it2 = CreateItem("mastercard", x, y, z)
 							EndIf
 						Case NORMAL
 							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*4)-((CurrAchvAmount-1)*3))=0
-								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+								it2 = CreateItem("key6", x, y, z)
 							Else
-								it2 = CreateItem("Mastercard", "misc", x, y, z)
+								it2 = CreateItem("mastercard", x, y, z)
 							EndIf
 						Case HARD
 							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*5)-((CurrAchvAmount-1)*3))=0
-								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+								it2 = CreateItem("key6", x, y, z)
 							Else
-								it2 = CreateItem("Mastercard", "misc", x, y, z)
+								it2 = CreateItem("mastercard", x, y, z)
 							EndIf
 					End Select
 			End Select
 			
 			RemoveItem(item)
-		Case "Key Card Omni"
+		Case "key6"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
 					If Rand(2)=1 Then
-						it2 = CreateItem("Mastercard", "misc", x, y, z)
+						it2 = CreateItem("mastercard", x, y, z)
 					Else
-						it2 = CreateItem("Playing Card", "misc", x, y, z)			
+						it2 = CreateItem("playingcard", x, y, z)			
 					EndIf	
 				Case "fine", "very fine"
-					it2 = CreateItem("Key Card Omni", "key6", x, y, z)
+					it2 = CreateItem("key6", x, y, z)
 			End Select			
 			
 			RemoveItem(item)
-		Case "Playing Card", "Coin", "Quarter"
+		Case "playingcard", "coin", "25ct"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Level 1 Key Card", "key1", x, y, z)	
+					it2 = CreateItem("key1", x, y, z)	
 			    Case "fine", "very fine"
-					it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+					it2 = CreateItem("key2", x, y, z)
 			End Select
 			RemoveItem(item)
-		Case "Mastercard"
+		Case "mastercard"
 			Select setting
 				Case "rough"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "coarse"
-					it2 = CreateItem("Quarter", "25ct", x, y, z)
+					it2 = CreateItem("25ct", x, y, z)
 					Local it3.Items,it4.Items,it5.Items
-					it3 = CreateItem("Quarter", "25ct", x, y, z)
-					it4 = CreateItem("Quarter", "25ct", x, y, z)
-					it5 = CreateItem("Quarter", "25ct", x, y, z)
+					it3 = CreateItem("25ct", x, y, z)
+					it4 = CreateItem("25ct", x, y, z)
+					it5 = CreateItem("25ct", x, y, z)
 					EntityType (it3\collider, HIT_ITEM)
 					EntityType (it4\collider, HIT_ITEM)
 					EntityType (it5\collider, HIT_ITEM)
 				Case "1:1"
-					it2 = CreateItem("Level 1 Key Card", "key1", x, y, z)	
+					it2 = CreateItem("key1", x, y, z)	
 			    Case "fine", "very fine"
-					it2 = CreateItem("Level 2 Key Card", "key2", x, y, z)
+					it2 = CreateItem("key2", x, y, z)
 			End Select
 			RemoveItem(item)
-		Case "S-NAV 300 Navigator", "S-NAV 310 Navigator", "S-NAV Navigator", "S-NAV Navigator Ultimate"
+		Case "snav300", "snav310", "snav", "snavulti"
 			Select setting
 				Case "rough", "coarse"
-					it2 = CreateItem("Electronical components", "misc", x, y, z)
+					it2 = CreateItem("electronics", x, y, z)
 				Case "1:1"
-					it2 = CreateItem("S-NAV Navigator", "nav", x, y, z)
+					it2 = CreateItem("snav", x, y, z)
 					it2\state = 100
 				Case "fine"
-					it2 = CreateItem("S-NAV 310 Navigator", "nav", x, y, z)
+					it2 = CreateItem("snav310", x, y, z)
 					it2\state = 100
 				Case "very fine"
-					it2 = CreateItem("S-NAV Navigator Ultimate", "nav", x, y, z)
+					it2 = CreateItem("snavulti", x, y, z)
 					it2\state = 101
 			End Select
 			
 			RemoveItem(item)
-		Case "Radio Transceiver"
+		Case "radio", "fineradio", "veryfineradio", "18vradio"
 			Select setting
 				Case "rough", "coarse"
-					it2 = CreateItem("Electronical components", "misc", x, y, z)
+					it2 = CreateItem("electronics", x, y, z)
 				Case "1:1"
-					it2 = CreateItem("Radio Transceiver", "18vradio", x, y, z)
+					it2 = CreateItem("18vradio", x, y, z)
 					it2\state = 100
 				Case "fine"
-					it2 = CreateItem("Radio Transceiver", "fineradio", x, y, z)
+					it2 = CreateItem("fineradio", x, y, z)
 					it2\state = 101
 				Case "very fine"
-					it2 = CreateItem("Radio Transceiver", "veryfineradio", x, y, z)
+					it2 = CreateItem("veryfineradio", x, y, z)
 					it2\state = 101
 			End Select
 			
 			RemoveItem(item)
-		Case "SCP-513"
+		Case "scp513"
 			Select setting
 				Case "rough", "coarse"
 					PlaySound_Strict LoadTempSound("SFX\SCP\513\914Refine.ogg")
@@ -10115,190 +10031,184 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					d.Decals = CreateDecal(0, x, 8*RoomScale+0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1", "fine", "very fine"
-					it2 = CreateItem("SCP-513", "scp513", x, y, z)
+					it2 = CreateItem("scp513", x, y, z)
 					
 			End Select
 			
 			RemoveItem(item)
-		Case "Some SCP-420-J", "Cigarette"
+		Case "scp420j", "cigarette"
 			Select setting
 				Case "rough", "coarse"			
 					d.Decals = CreateDecal(0, x, 8*RoomScale+0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Cigarette", "cigarette", x, y, z)
+					it2 = CreateItem("cigarette", x, y, z)
 				Case "fine"
-					it2 = CreateItem("Joint", "420s", x, y, z)
+					it2 = CreateItem("join", x, y, z)
 				Case "very fine"
-					it2 = CreateItem("Smelly Joint", "420s", x, y, z)
+					it2 = CreateItem("smellyjoint", x, y, z)
 			End Select
 			
 			RemoveItem(item)
-		Case "9V Battery", "18V Battery", "Strange Battery"
+		Case "bat", "18vbat", "killbat"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("18V Battery", "18vbat", x, y, z)
+					it2 = CreateItem("18vbat", x, y, z)
 				Case "fine"
-					it2 = CreateItem("Strange Battery", "killbat", x, y, z)
+					it2 = CreateItem("killbat", x, y, z)
 				Case "very fine"
-					it2 = CreateItem("Strange Battery", "killbat", x, y, z)
+					it2 = CreateItem("killbat", x, y, z)
 			End Select
 			
 			RemoveItem(item)
-		Case "ReVision Eyedrops", "RedVision Eyedrops", "Eyedrops"
+		Case "eyedrops", "fineeyedrops", "supereyedrops", "redeyedrops"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("RedVision Eyedrops", "eyedrops", x,y,z)
+					it2 = CreateItem("redeyedrops", x,y,z)
 				Case "fine"
-					it2 = CreateItem("Eyedrops", "fineeyedrops", x,y,z)
+					it2 = CreateItem("fineeyedrops", x,y,z)
 				Case "very fine"
-					it2 = CreateItem("Eyedrops", "supereyedrops", x,y,z)
+					it2 = CreateItem("supereyedrops", x,y,z)
 			End Select
 			
 			RemoveItem(item)		
-		Case "Hazmat Suit"
+		Case "hazmatsuit", "hazmatsuit2"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Hazmat Suit", "hazmatsuit", x,y,z)
+					it2 = CreateItem("hazmatsuit", x,y,z)
 				Case "fine"
-					it2 = CreateItem("Hazmat Suit", "hazmatsuit2", x,y,z)
+					it2 = CreateItem("hazmatsuit2", x,y,z)
 				Case "very fine"
-					it2 = CreateItem("Hazmat Suit", "hazmatsuit2", x,y,z)
+					it2 = CreateItem("hazmatsuit2", x,y,z)
 			End Select
 			
 			RemoveItem(item)
 			
-		Case "Syringe"
-			Select item\itemtemplate\tempname
-				Case "syringe"
-					Select setting
-						Case "rough", "coarse"
-							d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
-							d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
-						Case "1:1"
-							it2 = CreateItem("Small First Aid Kit", "finefirstaid", x, y, z)	
-						Case "fine"
-							it2 = CreateItem("Syringe", "finesyringe", x, y, z)
-						Case "very fine"
-							it2 = CreateItem("Syringe", "veryfinesyringe", x, y, z)
-					End Select
-					
-				Case "finesyringe"
-					Select setting
-						Case "rough"
-							d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
-							d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
-						Case "coarse"
-							it2 = CreateItem("First Aid Kit", "firstaid", x, y, z)
-						Case "1:1"
-							it2 = CreateItem("Blue First Aid Kit", "firstaid2", x, y, z)	
-						Case "fine", "very fine"
-							it2 = CreateItem("Syringe", "veryfinesyringe", x, y, z)
-					End Select
-					
-				Case "veryfinesyringe"
-					Select setting
-						Case "rough", "coarse", "1:1", "fine"
-							it2 = CreateItem("Electronical components", "misc", x, y, z)	
-						Case "very fine"
-							n.NPCs = CreateNPC(NPCtype008,x,y,z)
-							n\State = 2
-					End Select
+		Case "syringe"
+			Select setting
+				Case "rough", "coarse"
+					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
+					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
+				Case "1:1"
+					it2 = CreateItem("finefirstaid", x, y, z)	
+				Case "fine"
+					it2 = CreateItem("finesyringe", x, y, z)
+				Case "very fine"
+					it2 = CreateItem("veryfinesyringe", x, y, z)
+			End Select
+
+			RemoveItem(item)
+		Case "finesyringe"
+			Select setting
+				Case "rough"
+					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
+					d\Size = 0.07 : ScaleSprite(d\obj, d\Size, d\Size)
+				Case "coarse"
+					it2 = CreateItem("firstaid", x, y, z)
+				Case "1:1"
+					it2 = CreateItem("firstaid2", x, y, z)	
+				Case "fine", "very fine"
+					it2 = CreateItem("veryfinesyringe", x, y, z)
+			End Select
+
+			RemoveItem(item)
+		Case "veryfinesyringe"
+			Select setting
+				Case "rough", "coarse", "1:1", "fine"
+					it2 = CreateItem("electronics", x, y, z)	
+				Case "very fine"
+					n.NPCs = CreateNPC(NPCtype008,x,y,z)
+					n\State = 2
 			End Select
 			
 			RemoveItem(item)
-			
-		Case "SCP-500-01", "Upgraded pill", "Pill"
+		Case "scp500", "scp500death", "pill"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Pill", "pill", x, y, z)
+					it2 = CreateItem("pill", x, y, z)
 					RemoveItem(item)
 				Case "fine"
 					Local no427Spawn% = False
 					For it3.Items = Each Items
-						If it3\itemtemplate\tempname = "scp427" Then
+						If it3\itemtemplate\name = "scp427" Then
 							no427Spawn = True
 							Exit
 						EndIf
 					Next
 					If (Not no427Spawn) Then
-						it2 = CreateItem("SCP-427", "scp427", x, y, z)
+						it2 = CreateItem("scp427", x, y, z)
 					Else
-						it2 = CreateItem("Upgraded pill", "scp500death", x, y, z)
+						it2 = CreateItem("scp500death", x, y, z)
 					EndIf
 					RemoveItem(item)
 				Case "very fine"
-					it2 = CreateItem("Upgraded pill", "scp500death", x, y, z)
+					it2 = CreateItem("scp500death", x, y, z)
 					RemoveItem(item)
 			End Select
 			
+		Case "cup"
+			Select setting
+				Case "rough", "coarse"
+					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
+					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
+				Case "1:1"
+					it2 = CreateCup(item\drinkName, x,y,z, 255-item\r,255-item\g,255-item\b,item\a)
+					it2\state = item\state
+				Case "fine"
+					it2 = CreateCup(item\drinkName, x,y,z, Min(item\r*Rnd(0.9,1.1),255),Min(item\g*Rnd(0.9,1.1),255),Min(item\b*Rnd(0.9,1.1),255),item\a)
+					it2\state = item\state+1.0
+				Case "very fine"
+					it2 = CreateCup(item\drinkName, x,y,z, Min(item\r*Rnd(0.5,1.5),255),Min(item\g*Rnd(0.5,1.5),255),Min(item\b*Rnd(0.5,1.5),255),item\a)
+					it2\state = item\state*2
+					If Rand(5)=1 Then
+						ExplosionTimer = 135
+					EndIf
+			End Select	
+			
+			RemoveItem(item)
 		Default
 			
-			Select item\itemtemplate\tempname
-				Case "cup"
-					Select setting
-						Case "rough", "coarse"
-							d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.010, z, 90, Rand(360), 0)
-							d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
-						Case "1:1"
-							it2 = CreateItem("cup", "cup", x,y,z, 255-item\r,255-item\g,255-item\b,item\a)
-							it2\name = item\name
-							it2\state = item\state
-						Case "fine"
-							it2 = CreateItem("cup", "cup", x,y,z, Min(item\r*Rnd(0.9,1.1),255),Min(item\g*Rnd(0.9,1.1),255),Min(item\b*Rnd(0.9,1.1),255),item\a)
-							it2\name = item\name
-							it2\state = item\state+1.0
-						Case "very fine"
-							it2 = CreateItem("cup", "cup", x,y,z, Min(item\r*Rnd(0.5,1.5),255),Min(item\g*Rnd(0.5,1.5),255),Min(item\b*Rnd(0.5,1.5),255),item\a)
-							it2\name = item\name
-							it2\state = item\state*2
-							If Rand(5)=1 Then
-								ExplosionTimer = 135
-							EndIf
-					End Select	
-					
-					RemoveItem(item)
-				Case "paper"
-					Select setting
-						Case "rough", "coarse"
-							d.Decals = CreateDecal(7, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
-							d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
-						Case "1:1"
-							Select Rand(6)
-								Case 1
-									it2 = CreateItem("Document SCP-106", "paper", x, y, z)
-								Case 2
-									it2 = CreateItem("Document SCP-079", "paper", x, y, z)
-								Case 3
-									it2 = CreateItem("Document SCP-173", "paper", x, y, z)
-								Case 4
-									it2 = CreateItem("Document SCP-895", "paper", x, y, z)
-								Case 5
-									it2 = CreateItem("Document SCP-682", "paper", x, y, z)
-								Case 6
-									it2 = CreateItem("Document SCP-860", "paper", x, y, z)
-							End Select
-						Case "fine", "very fine"
-							it2 = CreateItem("Origami", "misc", x, y, z)
-					End Select
-					
-					RemoveItem(item)
-				Default
-					PositionEntity(item\collider, x, y, z)
-					ResetEntity(item\collider)	
-			End Select
+			If item\itemtemplate\group = "paper" Then
+				Select setting
+					Case "rough", "coarse"
+						d.Decals = CreateDecal(7, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
+						d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
+					Case "1:1"
+						Select Rand(6)
+							Case 1
+								it2 = CreateItem("doc106", x, y, z)
+							Case 2
+								it2 = CreateItem("doc079", x, y, z)
+							Case 3
+								it2 = CreateItem("doc173", x, y, z)
+							Case 4
+								it2 = CreateItem("doc895", x, y, z)
+							Case 5
+								it2 = CreateItem("doc682", x, y, z)
+							Case 6
+								it2 = CreateItem("doc860", x, y, z)
+						End Select
+					Case "fine", "very fine"
+						it2 = CreateItem("origami", x, y, z)
+				End Select
+				
+				RemoveItem(item)
+			Else
+				PositionEntity(item\collider, x, y, z)
+				ResetEntity(item\collider)	
+			EndIf
 			
 	End Select
 	
@@ -10414,11 +10324,12 @@ Function Use294()
 			
 			If temp And Input294<>"" Then ;dispense
 				Input294 = Trim(Lower(Input294))
-				If Left(Input294, Min(7,Len(Input294))) = "cup of " Then
-					Input294 = Right(Input294, Len(Input294)-7)
-				ElseIf Left(Input294, Min(9,Len(Input294))) = "a cup of " 
-					Input294 = Right(Input294, Len(Input294)-9)
-				EndIf
+				For i = 1 To 2
+					Local prefix$ = I_Loc\Cup_OfPrefix[i] + " "
+					If Left(Input294, Min(Len(prefix),Len(Input294))) = prefix Then
+						Input294 = Right(Input294, Len(Input294)-Len(prefix))
+					EndIf
+				Next
 				
 				Local iniStr$ = "DATA\SCP-294.ini"
 				Local loc% = -1
@@ -10473,13 +10384,12 @@ Function Use294()
 					;If alpha = 0 Then alpha = 1.0
 					If glow Then alpha = -alpha
 					
-					it.items = CreateItem("Cup", "cup", EntityX(PlayerRoom\Objects[1],True),EntityY(PlayerRoom\Objects[1],True),EntityZ(PlayerRoom\Objects[1],True), r,g,b,alpha)
-					it\name = "Cup of "+Input294
+					it.items = CreateCup(Input294, EntityX(PlayerRoom\Objects[1],True),EntityY(PlayerRoom\Objects[1],True),EntityZ(PlayerRoom\Objects[1],True), r,g,b,alpha)
 					EntityType (it\collider, HIT_ITEM)
 					
 				Else
 					;out of range
-					Input294 = "OUT OF RANGE"
+					Input294 = I_Loc\HUD_294Range
 					PlayerRoom\SoundCHN = PlaySound_Strict (LoadTempSound("SFX\SCP\294\outofrange.ogg"))
 				EndIf
 				
@@ -10495,10 +10405,10 @@ Function Use294()
 		EndIf
 		
 	Else ;playing a dispensing sound
-		If Input294 <> "OUT OF RANGE" Then Input294 = "DISPENSING..."
+		If Input294 <> I_Loc\HUD_294Range Then Input294 = I_Loc\HUD_294Dispense
 		
 		If Not ChannelPlaying(PlayerRoom\SoundCHN) Then
-			If Input294 <> "OUT OF RANGE" Then
+			If Input294 <> I_Loc\HUD_294Range Then
 				HidePointer()
 				Using294 = False
 				MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
@@ -10553,10 +10463,10 @@ Function Use427()
 				EndIf
 			EndIf
 			If prevI427Timer < 70*60 And I_427\Timer => 70*60 Then
-				Msg = "You feel refreshed and energetic."
+				Msg = I_Loc\Message_427_1
 				MsgTimer = 70*5
 			ElseIf prevI427Timer < 70*180 And I_427\Timer => 70*180 Then
-				Msg = "You feel gentle muscle spasms all over your body."
+				Msg = I_Loc\Message_427_2
 				MsgTimer = 70*5
 			EndIf
 		Else
@@ -10570,10 +10480,10 @@ Function Use427()
 		EndIf
 	Else
 		If prevI427Timer-FPSfactor < 70*360 And I_427\Timer => 70*360 Then
-			Msg = "Your muscles are swelling. You feel more powerful than ever."
+			Msg = I_Loc\Message_427_3
 			MsgTimer = 70*5
 		ElseIf prevI427Timer-FPSfactor < 70*390 And I_427\Timer => 70*390 Then
-			Msg = "You can't feel your legs. But you don't need legs anymore."
+			Msg = I_Loc\Message_427_4
 			MsgTimer = 70*5
 		EndIf
 		I_427\Timer = I_427\Timer + FPSfactor
@@ -10603,7 +10513,7 @@ Function Use427()
 		EndIf
 		If I_427\Timer >= 70*420 Then
 			Kill()
-			DeathMSG = Chr(34)+"Requesting support from MTF Nu-7. We need more firepower to take this thing down."+Chr(34)
+			DeathMSG = I_Loc\DeathMessage_427
 		ElseIf I_427\Timer >= 70*390 Then
 			Crouch = True
 		EndIf
@@ -10673,7 +10583,7 @@ Function UpdateMTF%()
 				;If the player has an SCP in their inventory play special voice line.
 				For i = 0 To MaxItemAmount-1
 					If Inventory(i) <> Null Then
-						If (Left(Inventory(i)\itemtemplate\name, 4) = "SCP-") And (Left(Inventory(i)\itemtemplate\name, 7) <> "SCP-035") And (Left(Inventory(i)\itemtemplate\name, 7) <> "SCP-093")
+						If Instr(Inventory(i)\itemtemplate\name, "scp") = 1 Then
 							PlayAnnouncement("SFX\Character\MTF\ThreatAnnouncPossession.ogg")
 							MTFtimer = 25000
 							Return
@@ -10743,16 +10653,16 @@ Function UpdateInfect()
 			Next
 			
 			If Infect > 20 And temp =< 20.0 Then
-				Msg = "You feel kinda feverish."
+				Msg = I_Loc\Message_008_1
 				MsgTimer = 70*6
 			ElseIf Infect > 40 And temp =< 40.0
-				Msg = "You feel nauseated."
+				Msg = I_Loc\Message_008_2
 				MsgTimer = 70*6
 			ElseIf Infect > 60 And temp =< 60.0
-				Msg = "The nausea's getting worse."
+				Msg = I_Loc\Message_008_3
 				MsgTimer = 70*6
 			ElseIf Infect > 80 And temp =< 80.0
-				Msg = "You feel very faint."
+				Msg = I_Loc\Message_008_4
 				MsgTimer = 70*6
 			ElseIf Infect =>91.5
 				BlinkTimer = Max(Min(-10*(Infect-91.5),BlinkTimer),-10)
@@ -10812,8 +10722,7 @@ Function UpdateInfect()
 						PlayerRoom\NPC[0]\Sound = LoadSound_Strict("SFX\SCP\008\KillScientist2.ogg")
 						PlayerRoom\NPC[0]\SoundChn = PlaySound_Strict(PlayerRoom\NPC[0]\Sound)
 						
-						DeathMSG = "Subject D-9341 found ingesting Dr. [REDACTED] at Sector [REDACTED]. Subject was immediately terminated by Nine-Tailed Fox and sent for autopsy. "
-						DeathMSG = DeathMSG + "SCP-008 infection was confirmed, after which the body was incinerated."
+						DeathMSG = I_Loc\DeathMessage_008
 						
 						Kill()
 						de.Decals = CreateDecal(3, EntityX(PlayerRoom\NPC[0]\Collider), 544*RoomScale + 0.01, EntityZ(PlayerRoom\NPC[0]\Collider),90,Rnd(360),0)
@@ -10853,16 +10762,15 @@ Function UpdateInfect()
 				Kill()
 				BlinkTimer = Max(Min(-10*(Infect-96),BlinkTimer),-10)
 				If PlayerRoom\RoomTemplate\Name = "dimension1499" Then
-					DeathMSG = "The whereabouts of SCP-1499 are still unknown, but a recon team has been dispatched to investigate reports of a violent attack to a church in the Russian town of [REDACTED]."
+					DeathMSG = I_Loc\DeathMessage_1499
 				ElseIf PlayerRoom\RoomTemplate\Name = "gatea" Or PlayerRoom\RoomTemplate\Name = "exit1" Then
-					DeathMSG = "Subject D-9341 found wandering around Gate "
+					Local deathGate$
 					If PlayerRoom\RoomTemplate\Name = "gatea" Then
-						DeathMSG = DeathMSG + "A"
+						deathGate = I_Loc\DeathMessage_008Gatea
 					Else
-						DeathMSG = DeathMSG + "B"
+						deathGate = I_Loc\DeathMessage_008Gateb
 					EndIf
-					DeathMSG = DeathMSG + ". Subject was immediately terminated by Nine-Tailed Fox and sent for autopsy. "
-					DeathMSG = DeathMSG + "SCP-008 infection was confirmed, after which the body was incinerated."
+					DeathMSG = Format(I_Loc\DeathMessage_008Gate, deathGate)
 				Else
 					DeathMSG = ""
 				EndIf
@@ -11507,12 +11415,12 @@ Function RenderWorld2()
 	If (WearingNightVision=1) Or (WearingNightVision=2)
 		For i% = 0 To MaxItemAmount - 1
 			If (Inventory(i)<>Null) Then
-				If (WearingNightVision = 1 And Inventory(i)\itemtemplate\tempname = "nvgoggles") Or (WearingNightVision = 2 And Inventory(i)\itemtemplate\tempname = "supernv") Then
+				If (WearingNightVision = 1 And Inventory(i)\itemtemplate\name = "nvgoggles") Or (WearingNightVision = 2 And Inventory(i)\itemtemplate\name = "supernv") Then
 					Inventory(i)\state = Inventory(i)\state - (FPSfactor * (0.02 * WearingNightVision))
 					power%=Int(Inventory(i)\state)
 					If Inventory(i)\state<=0.0 Then ;this nvg can't be used
 						hasBattery = 0
-						Msg = "The batteries in these night vision goggles died."
+						Msg = I_Loc\MessageItem_NvgBatDead
 						BlinkTimer = -1.0
 						MsgTimer = 350
 						Exit
@@ -11561,10 +11469,10 @@ Function RenderWorld2()
 			Local plusY% = 0
 			If hasBattery=1 Then plusY% = 40
 			
-			Text GraphicWidth/2,HUDStartY+(20+plusY)*MenuScale,"REFRESHING DATA IN",True,False
+			Text GraphicWidth/2,HUDStartY+(20+plusY)*MenuScale,I_Loc\HUD_NvgRefresh,True,False
 			
 			Text GraphicWidth/2,HUDStartY+(60+plusY)*MenuScale,Max(f2s(NVTimer/60.0,1),0.0),True,False
-			Text GraphicWidth/2,HUDStartY+(100+plusY)*MenuScale,"SECONDS",True,False
+			Text GraphicWidth/2,HUDStartY+(100+plusY)*MenuScale,I_Loc\HUD_NvgRefreshSeconds,True,False
 			
 			temp% = CreatePivot() : temp2% = CreatePivot()
 			PositionEntity temp, EntityX(Collider), EntityY(Collider), EntityZ(Collider)
@@ -11598,7 +11506,7 @@ Function RenderWorld2()
 						
 						If (Not IsNVGBlinking%)
 						Text GraphicWidth / 2 + xvalue * (GraphicWidth / 2),GraphicHeight / 2 - yvalue * (GraphicHeight / 2),np\NVName,True,True
-						Text GraphicWidth / 2 + xvalue * (GraphicWidth / 2),GraphicHeight / 2 - yvalue * (GraphicHeight / 2) + 30.0 * MenuScale,f2s(dist,1)+" m",True,True
+						Text GraphicWidth / 2 + xvalue * (GraphicWidth / 2),GraphicHeight / 2 - yvalue * (GraphicHeight / 2) + 30.0 * MenuScale,Format(I_Loc\HUD_NvgMeters, f2s(dist,1)),True,True
 					EndIf
 				EndIf
 				EndIf
@@ -11643,7 +11551,7 @@ Function RenderWorld2()
 			Color 255,0,0
 			SetFont Font3
 			
-			Text GraphicWidth/2,20*MenuScale,"WARNING: LOW BATTERY",True,False
+			Text GraphicWidth/2,20*MenuScale,I_Loc\HUD_NvgBatlow,True,False
 			Color 255,255,255
 			SetFont Font1
 		EndIf
@@ -11750,7 +11658,7 @@ Function UpdateLeave1499()
 				Next
 				For it.Items = Each Items
 					it\disttimer = 0
-					If it\itemtemplate\tempname = "scp1499" Or it\itemtemplate\tempname = "super1499"
+					If it\itemtemplate\name = "scp1499" Or it\itemtemplate\name = "super1499"
 						If EntityY(it\collider) >= EntityY(r1499\obj)-5
 							PositionEntity it\collider,NTF_1499PrevX#,NTF_1499PrevY#+(EntityY(it\collider)-EntityY(r1499\obj)),NTF_1499PrevZ#
 							ResetEntity it\collider
@@ -11791,34 +11699,28 @@ Function CheckForPlayerInFacility()
 End Function
 
 Function IsItemGoodFor1162(itt.ItemTemplates)
-	Local IN$ = itt\tempname$
-	
-	Select itt\tempname
+	If itt\group = "paper" Then
+		;if the item is a paper, only allow spawning it if the name contains the word "note" or "log"
+		;(because those are items created recently, which D-9341 has most likely never seen)
+		Return ((Not Instr(itt\name, "note")) And (Not Instr(itt\name, "log"))) And (Not Instr(itt\name, "docL")) And itt\name <> "docDan" And itt\name <> "docStrange" And itt\name <> "doc106_2" And itt\name <> "leaflet"
+	EndIf
+	Select itt\name
 		Case "key1", "key2", "key3"
 			Return True
-		Case "misc", "420", "cigarette"
+		Case "misc", "scp420j", "cigarette"
 			Return True
 		Case "vest", "finevest","gasmask"
 			Return True
 		Case "radio","18vradio"
 			Return True
-		Case "clipboard","eyedrops","nvgoggles"
+		Case "clipboard","eyedrops","redeyedrops","nvgoggles"
 			Return True
 		Case "drawing"
 			If itt\img<>0 Then FreeImage itt\img	
 			itt\img = LoadImage_Strict("GFX\items\1048\1048_"+Rand(1,20)+".jpg") ;Gives a random drawing.
 			Return True
-		Default
-			If itt\tempname <> "paper" Then
-				Return False
-			Else If Instr(itt\name, "Leaflet")
-				Return False
-			Else
-				;if the item is a paper, only allow spawning it if the name contains the word "note" or "log"
-				;(because those are items created recently, which D-9341 has most likely never seen)
-				Return ((Not Instr(itt\name, "Note")) And (Not Instr(itt\name, "Log")))
-			EndIf
 	End Select
+	Return False
 End Function
 
 Function ControlSoundVolume()
@@ -12029,15 +11931,15 @@ End Function
 
 Function CanUseItem(canUseWithHazmat%, canUseWithGasMask%, canUseWithEyewear%)
 	If (canUseWithHazmat = False And WearingHazmat) Then
-		Msg = "You can't use that item while wearing a hazmat suit."
+		Msg = I_Loc\MessageItem_HazmatNouse
 		MsgTimer = 70*5
 		Return False
 	ElseIf (canUseWithGasMask = False And (WearingGasMask Or Wearing1499))
-		Msg = "You can't use that item while wearing a gas mask."
+		Msg = I_Loc\MessageItem_GasmaskNouse
 		MsgTimer = 70*5
 		Return False
 	ElseIf (canUseWithEyewear = False And (WearingNightVision))
-		Msg = "You can't use that item while wearing headgear."
+		Msg = I_Loc\MessageItem_NvgNouse
 		MsgTimer = 70*5
 		Return False
 	EndIf

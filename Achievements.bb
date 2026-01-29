@@ -11,6 +11,46 @@ Const AchvMaynard%=30, AchvHarp%=31, AchvSNAV%=32, AchvOmni%=33, AchvTesla%=34, 
 
 Const AchvConsole%=36, AchvKeter%=37
 
+Global AchvNames$[MAXACHIEVEMENTS]
+AchvNames[Achv008] = "008"
+AchvNames[Achv012] = "012"
+AchvNames[Achv035] = "035"
+AchvNames[Achv049] = "049"
+AchvNames[Achv055] = "055"
+AchvNames[Achv066] = "066"
+AchvNames[Achv079] = "079"
+AchvNames[Achv096] = "096"
+AchvNames[Achv106] = "106"
+AchvNames[Achv148] = "148"
+AchvNames[Achv205] = "205"
+AchvNames[Achv294] = "294"
+AchvNames[Achv372] = "372"
+AchvNames[Achv420] = "420J"
+AchvNames[Achv427] = "427"
+AchvNames[Achv500] = "500"
+AchvNames[Achv513] = "513"
+AchvNames[Achv714] = "714"
+AchvNames[Achv789] = "789J"
+AchvNames[Achv860] = "860"
+AchvNames[Achv895] = "895"
+AchvNames[Achv914] = "914"
+AchvNames[Achv939] = "939"
+AchvNames[Achv966] = "966"
+AchvNames[Achv970] = "970"
+AchvNames[Achv1025] = "1025"
+AchvNames[Achv1048] = "1048"
+AchvNames[Achv1123] = "1123"
+AchvNames[Achv1162] = "1162"
+AchvNames[Achv1499] = "1499"
+AchvNames[AchvMaynard] = "Maynard"
+AchvNames[AchvHarp] = "Harp"
+AchvNames[AchvSNAV] = "SNAV"
+AchvNames[AchvOmni] = "Omni"
+AchvNames[AchvTesla] = "Tesla"
+AchvNames[AchvPD] = "PD"
+AchvNames[AchvConsole] = "Console"
+AchvNames[AchvKeter] = "Keter"
+
 Global UsedConsole
 
 Global AchievementsMenu%
@@ -19,13 +59,10 @@ Dim AchievementStrings$(MAXACHIEVEMENTS)
 Dim AchievementDescs$(MAXACHIEVEMENTS)
 Dim AchvIMG%(MAXACHIEVEMENTS)
 For i = 0 To MAXACHIEVEMENTS-1
-	Local loc2% = GetINISectionLocation("Data\achievementstrings.ini", "s"+Str(i))
-	AchievementStrings(i) = GetINIString2("Data\achievementstrings.ini", loc2, "string1")
-	AchievementDescs(i) = GetINIString2("Data\achievementstrings.ini", loc2, "AchvDesc")
+	AchievementStrings(i) = GetModdedINIString(StringsFile, "Achievement", AchvNames[i])
+	AchievementDescs(i) = GetModdedINIString(StringsFile, "Achievement Desc", AchvNames[i])
 	
-	Local image$ = GetINIString2("Data\achievementstrings.ini", loc2, "image") 
-	
-	AchvIMG(i) = LoadImage_Strict("GFX\menu\achievements\"+image+".jpg")
+	AchvIMG(i) = LoadImage_Strict("GFX\menu\achievements\Achv"+AchvNames[i]+".jpg")
 	AchvIMG(i) = ResizeImage2(AchvIMG(i),ImageWidth(AchvIMG(i))*GraphicHeight/768.0,ImageHeight(AchvIMG(i))*GraphicHeight/768.0)
 Next
 
@@ -37,17 +74,11 @@ Function GiveAchievement(achvname%, showMessage%=True)
 		Achievements(achvname)=True
 		Local loc2% = -1
 		If AchvMSGenabled And showMessage Then
-			loc2% = GetINISectionLocation("Data\achievementstrings.ini", "s"+achvname)
-			Local AchievementName$ = GetINIString2("Data\achievementstrings.ini", loc2, "string1")
-			;Msg = "Achievement Unlocked - "+AchievementName
-			;MsgTimer=70*7
-			CreateAchievementMsg(achvname,AchievementName)
+			CreateAchievementMsg(achvname,AchievementStrings(achvname))
 		EndIf
 		; The "Fair Play" achievement cannot be found on Steam because every achievement there requires the console to not be used.
 		If SteamActive And (Not UsedConsole) And achvname<>AchvConsole Then
-			If loc2 = -1 Then loc2 = GetINISectionLocation("Data\achievementstrings.ini", "s"+achvname)
-			Local AchievementKey$ = GetINIString2("Data\achievementstrings.ini", loc2, "image")
-			Steam_Achieve(AchievementKey)
+			Steam_Achieve("Achv" + AchvNames[achvname])
 		End If
 	EndIf
 End Function
@@ -156,7 +187,7 @@ Function UpdateAchievementMsg()
 			Rect(x+10*scale,y+10*scale,64*scale,64*scale,False)
 			Color 255,255,255
 			SetFont Font1
-			RowText("Achievement Unlocked - "+amsg\txt,x+84*scale,y+10*scale,width-94*scale,y-20*scale)
+			RowText(Format(I_Loc\HUD_AchvUnlocked, amsg\txt),x+84*scale,y+10*scale,width-94*scale,y-20*scale)
 			If amsg\msgtime > 0.0 And amsg\msgtime < 70*7
 				amsg\msgtime = amsg\msgtime + FPSfactor2
 				If amsg\msgx > -width%

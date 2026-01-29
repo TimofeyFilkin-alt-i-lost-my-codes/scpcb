@@ -130,8 +130,16 @@ Function SerializeMods()
     CloseFile(f)
 End Function
 
+Const LOCALIZATIONS_DIR$ = "Localization\"
+
 Function UpdateActiveMods()
     Delete Each ActiveMods
+    Local mm.ActiveMods
+    Local locale$ = GetOptionString("general", "locale")
+    If locale <> "" And FileType(LOCALIZATIONS_DIR + locale) = 2 Then
+        mm = New ActiveMods
+        mm\Path = LOCALIZATIONS_DIR + locale + "\"
+    EndIf
     For m.Mods = Each Mods
         If m\IsActive Then
             mm.ActiveMods = New ActiveMods
@@ -266,4 +274,16 @@ End Function
 
 Function GetModdedINIFloat#(file$, section$, key$)
     Return Float(GetModdedINIString(file, section, key))
+End Function
+
+Function Format$(txt$, arg1$)
+    Return Replace(txt, "{0}", arg1)
+End Function
+
+Function Format$(txt$, arg1$, arg2$)
+    Return Replace(Format(txt, arg1), "{1}", arg2)
+End Function
+
+Function Format$(txt$, arg1$, arg2$, arg3$)
+    Return Replace(Format(txt, arg1, arg2), "{2}", arg3)
 End Function

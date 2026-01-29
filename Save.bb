@@ -70,7 +70,7 @@ Function SaveGame(file$)
 	WriteFloat f, Infect
 	
 	For i = 0 To CUSTOM
-		If (SelectedDifficulty = difficulties(i)) Then
+		If (SelectedDifficulty = Difficulties[i]) Then
 			WriteByte f, i
 			
 			If (i = CUSTOM) Then
@@ -381,19 +381,20 @@ Function SaveGame(file$)
 	WriteInt f, temp
 	For it.items = Each Items
 		WriteString f, it\itemtemplate\name
-		WriteString f, it\itemtemplate\tempName
-		
-		WriteString f, it\name
 		
 		WriteFloat f, EntityX(it\collider, True)
 		WriteFloat f, EntityY(it\collider, True)
 		WriteFloat f, EntityZ(it\collider, True)
+
+		If it\itemtemplate\name = "cup" Then
+			WriteString f, it\drinkName
 		
-		WriteByte f, it\r
-		WriteByte f, it\g
-		WriteByte f, it\b
-		WriteFloat f, it\a
-		
+			WriteByte f, it\r
+			WriteByte f, it\g
+			WriteByte f, it\b
+			WriteFloat f, it\a
+		EndIf
+
 		WriteFloat f, EntityPitch(it\collider)
 		WriteFloat f, EntityYaw(it\collider)
 		
@@ -462,9 +463,8 @@ Function SaveGame(file$)
 			PlaySound_Strict(LoadTempSound("SFX\General\Save1.ogg"))
 		EndIf
 		
-		Msg = "Game progress saved."
+		Msg = I_Loc\MessageSave_Saved
 		MsgTimer = 70 * 4
-		;SetSaveMSG("Game progress saved.")
 	EndIf
 	
 	CatchErrors("SaveGame")
@@ -553,7 +553,7 @@ Function LoadGame(file$)
 	Infect = ReadFloat(f)
 	
 	Local difficultyIndex = ReadByte(f)
-	SelectedDifficulty = difficulties(difficultyIndex)
+	SelectedDifficulty = Difficulties[difficultyIndex]
 	If (difficultyIndex = CUSTOM) Then
 		SelectedDifficulty\aggressiveNPCs = ReadByte(f)
 		SelectedDifficulty\permaDeath = ReadByte(f)
@@ -1086,25 +1086,23 @@ Function LoadGame(file$)
 	temp = ReadInt(f)
 	For i = 1 To temp
 		Local ittName$ = ReadString(f)
-		Local tempName$ = ReadString(f)
-		Local Name$ = ReadString(f)
-		
-		If tempName = "50ct" Then
-			ittName = "Quarter"
-			tempName = "25ct"
-		EndIf
 		
 		x = ReadFloat(f)
 		y = ReadFloat(f)
 		z = ReadFloat(f)
 		
-		red = ReadByte(f)
-		green = ReadByte(f)
-		blue = ReadByte(f)		
-		a = ReadFloat(f)
-		
-		it.Items = CreateItem(ittName, tempName, x, y, z, red,green,blue,a)
-		it\name = Name
+		If ittName = "cup" Then
+			Local drinkName$ = ReadString(f)
+
+			red = ReadByte(f)
+			green = ReadByte(f)
+			blue = ReadByte(f)
+			a# = ReadFloat(f)
+
+			it = CreateCup(drinkName, x, y, z, red, green, blue, a)
+		Else
+			it = CreateItem(ittName, x, y, z)
+		EndIf
 		
 		EntityType it\collider, HIT_ITEM
 		
@@ -1126,7 +1124,7 @@ Function LoadGame(file$)
 		EndIf
 		
 		If it\itemtemplate\isAnim<>0 Then SetAnimTime it\model,ReadFloat(f)
-
+		
 		it\invSlots = ReadByte(f)
 		it\ID = ReadInt(f)
 		
@@ -1389,7 +1387,7 @@ Function LoadGameQuick(file$)
 	Infect = ReadFloat(f)
 	
 	Local difficultyIndex = ReadByte(f)
-	SelectedDifficulty = difficulties(difficultyIndex)
+	SelectedDifficulty = Difficulties[difficultyIndex]
 	If (difficultyIndex = CUSTOM) Then
 		SelectedDifficulty\aggressiveNPCs = ReadByte(f)
 		SelectedDifficulty\permaDeath = ReadByte(f)
@@ -1801,25 +1799,23 @@ Function LoadGameQuick(file$)
 	temp = ReadInt(f)
 	For i = 1 To temp
 		Local ittName$ = ReadString(f)
-		Local tempName$ = ReadString(f)
-		Local Name$ = ReadString(f)
-		
-		If tempName = "50ct" Then
-			ittName = "Quarter"
-			tempName = "25ct"
-		EndIf
 		
 		x = ReadFloat(f)
 		y = ReadFloat(f)
 		z = ReadFloat(f)
 		
-		red = ReadByte(f)
-		green = ReadByte(f)
-		blue = ReadByte(f)		
-		a = ReadFloat(f)
-		
-		it.Items = CreateItem(ittName, tempName, x, y, z, red,green,blue,a)
-		it\name = Name
+		If ittName = "cup" Then
+			Local drinkName$ = ReadString(f)
+
+			red = ReadByte(f)
+			green = ReadByte(f)
+			blue = ReadByte(f)
+			a# = ReadFloat(f)
+
+			it = CreateCup(drinkName, x, y, z, red, green, blue, a)
+		Else
+			it = CreateItem(ittName, x, y, z)
+		EndIf
 		
 		EntityType it\collider, HIT_ITEM
 		
@@ -1841,7 +1837,7 @@ Function LoadGameQuick(file$)
 		EndIf
 		
 		If it\itemtemplate\isAnim<>0 Then SetAnimTime it\model,ReadFloat(f)
-
+		
 		it\invSlots = ReadByte(f)
 		it\ID = ReadInt(f)
 		

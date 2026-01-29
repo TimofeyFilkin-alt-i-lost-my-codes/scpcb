@@ -10,8 +10,9 @@ Global ClosestItem.Items
 Global LastItemID%
 
 Type ItemTemplates
+	Field displayname$
 	Field name$
-	Field tempname$
+	Field group$
 	
 	Field sound%
 	
@@ -28,7 +29,7 @@ Type ItemTemplates
 	Field tex%, texpath$
 End Type 
 
-Function CreateItemTemplate.ItemTemplates(name$, tempname$, objpath$, invimgpath$, imgpath$, scale#, texturepath$ = "",invimgpath2$="",Anim%=0, texflags%=9)
+Function CreateItemTemplate.ItemTemplates(name$, group$, displayname$, objpath$, invimgpath$, imgpath$, scale#, texturepath$ = "",invimgpath2$="",Anim%=0, texflags%=9)
 	Local it.ItemTemplates = New ItemTemplates, n
 	
 	
@@ -103,8 +104,19 @@ Function CreateItemTemplate.ItemTemplates(name$, tempname$, objpath$, invimgpath
 	;	If it\img<>0 Then ResizeImage(it\img, ImageWidth(it\img) * MenuScale, ImageHeight(it\img) * MenuScale)
 	;EndIf
 	
-	it\tempname = tempname
+	it\group = group
 	it\name = name
+	it\displayname = GetModdedINIString(StringsFile, "Item", name)
+	If it\displayname = "" Then
+		it\displayname = displayname
+		If it\displayname = "" Then
+			If DebugResourcePacks Then
+				RuntimeErrorExt("Item " + Chr(34) + name + Chr(34) + " is missing a localized string!")
+			Else
+				it\displayname = name
+			EndIf
+		EndIf
+	EndIf
 	
 	it\sound = 1
 
@@ -117,7 +129,7 @@ End Function
 Function InitItemTemplatesFromFile(file$)
 	If FileType(file) <> 1 Then Return
 
-	Local name$, tempname$
+	Local name$, group$, displayname$
 	Local model$, textureoverride$, textureflags%, anim%
 	Local invicon$, invicon2$
 	Local document$
@@ -131,7 +143,7 @@ Function InitItemTemplatesFromFile(file$)
 			Local splitterPos = Instr(l, "=")
 			If splitterPos = 0 And Instr(l, "[") = 1 Then
 				If name <> "" Then
-					Local itt.ItemTemplates = CreateItemTemplate(name, tempname, model, invicon, document, scale, textureoverride, invicon2, anim, textureflags)
+					Local itt.ItemTemplates = CreateItemTemplate(name, group, displayname, model, invicon, document, scale, textureoverride, invicon2, anim, textureflags)
 					If hasCustomColor Then
 						EntityColor(itt\obj, r, g, b)
 					EndIf
@@ -142,7 +154,8 @@ Function InitItemTemplatesFromFile(file$)
 				If name = "" then
 					RuntimeErrorExt("Empty item name.")
 				EndIf
-				tempname = ""
+				group = ""
+				displayname = ""
 				model = ""
 				textureoverride = ""
 				textureflags = 9
@@ -157,8 +170,10 @@ Function InitItemTemplatesFromFile(file$)
 				Local key$ = Trim(Left(l, splitterPos - 1))
 				Local value$ = Trim(Right(l, Len(l) - splitterPos))
 				Select key
-					Case "temp"
-						tempname = value
+					Case "group"
+						group = value
+					Case "display name"
+						displayname = value
 					Case "model"
 						model = value
 					Case "invicon"
@@ -191,7 +206,7 @@ Function InitItemTemplatesFromFile(file$)
 	CloseFile(f)
 	
 	If name <> "" Then
-		itt.ItemTemplates = CreateItemTemplate(name, tempname, model, invicon, document, scale, textureoverride, invicon2, anim, textureflags)
+		itt.ItemTemplates = CreateItemTemplate(name, group, displayname, model, invicon, document, scale, textureoverride, invicon2, anim, textureflags)
 		If hasCustomColor Then
 			EntityColor(itt\obj, r, g, b)
 		EndIf
@@ -234,7 +249,7 @@ End Function
 Function FindItemTemplate.ItemTemplates(name$)
 	name$ = Lower(name$)
 	For itt.Itemtemplates = Each ItemTemplates
-		If (Lower(itt\name) = name) Or Lower(itt\tempname = name) Then
+		If (Lower(itt\name) = name) Or Lower(itt\displayname = name) Then
 			Return itt
 		End If
 	Next
@@ -243,7 +258,7 @@ End Function
 
 
 Type Items
-	Field name$
+	Field displayname$
 	Field collider%,model%
 	Field itemtemplate.ItemTemplates
 	Field DropSpeed#
@@ -266,36 +281,35 @@ Type Items
 	Field SecondInv.Items[20]
 	Field ID%
 	Field invSlots%
+
+	Field drinkName$
 End Type 
 
-Function CreateItem.Items(name$, tempname$, x#, y#, z#, r%=0,g%=0,b%=0,a#=1.0,invSlots%=0)
+Function CreateItem.Items(name$, x#, y#, z#, invSlots%=0)
 	CatchErrors("Uncaught (CreateItem)")
 	
 	Local i.Items = New Items
 	Local it.ItemTemplates
 	
 	name = Lower(name)
-	tempname = Lower (tempname)
 	
 	For it.ItemTemplates = Each ItemTemplates
 		If Lower(it\name) = name Then
-			If Lower(it\tempname) = tempname Then
-				i\itemtemplate = it
-				i\collider = CreatePivot()			
-				EntityRadius i\collider, 0.01
-				EntityPickMode i\collider, 1, False
-				i\model = CopyEntity(it\obj,i\collider)
-				i\name = it\name
-				ShowEntity i\collider
-				ShowEntity i\model
-				Exit
-			EndIf
+			i\itemtemplate = it
+			i\collider = CreatePivot()			
+			EntityRadius i\collider, 0.01
+			EntityPickMode i\collider, 1, False
+			i\model = CopyEntity(it\obj,i\collider)
+			i\displayname = it\displayname
+			ShowEntity i\collider
+			ShowEntity i\model
+			Exit
 		EndIf
 	Next 
 	
 	i\WontColl = False
 	
-	If i\itemtemplate = Null Then RuntimeErrorExt("Item template not found ("+name+", "+tempname+")")
+	If i\itemtemplate = Null Then RuntimeErrorExt("Item template not found ("+name+")")
 	
 	ResetEntity i\collider		
 	PositionEntity(i\collider, x, y, z, True)
@@ -303,37 +317,12 @@ Function CreateItem.Items(name$, tempname$, x#, y#, z#, r%=0,g%=0,b%=0,a#=1.0,in
 	i\dist = EntityDistance(Collider, i\collider)
 	i\DropSpeed = 0.0
 	
-	If tempname = "cup" Then
-		i\state = 1.0
-		
-		i\r=r
-		i\g=g
-		i\b=b
-		i\a=a
-		
-		Local liquid = CopyEntity(LiquidObj)
-		ScaleEntity liquid, i\itemtemplate\scale,i\itemtemplate\scale,i\itemtemplate\scale,True
-		PositionEntity liquid, EntityX(i\collider,True),EntityY(i\collider,True),EntityZ(i\collider,True)
-		EntityParent liquid, i\model
-		EntityColor liquid, r,g,b
-		
-		If a < 0 Then 
-			EntityFX liquid, 1
-			EntityAlpha liquid, Abs(a)
-		Else
-			EntityAlpha liquid, Abs(a)
-		EndIf
-		
-		
-		EntityShininess liquid, 1.0
-	EndIf
-	
 	i\invimg = i\itemtemplate\invimg
-	If (tempname="clipboard") And (invSlots=0) Then
+	If (name="clipboard") And (invSlots=0) Then
 		invSlots = 10
 		SetAnimTime i\model,17.0
 		i\invimg = i\itemtemplate\invimg2
-	ElseIf (tempname="wallet") And (invSlots=0) Then
+	ElseIf (name="wallet") And (invSlots=0) Then
 		invSlots = 10
 		SetAnimTime i\model,0.0
 	EndIf
@@ -344,6 +333,42 @@ Function CreateItem.Items(name$, tempname$, x#, y#, z#, r%=0,g%=0,b%=0,a#=1.0,in
 	LastItemID=i\ID
 	
 	CatchErrors("CreateItem")
+	Return i
+End Function
+
+Function CreateCup.Items(drinkName$, x#, y#, z#, r%, g%, b%, a#=1.0)
+	CatchErrors("Uncaught (CreateCup)")
+
+	Local i.Items = CreateItem("cup", x, y, z)
+
+	i\drinkName = drinkName
+	i\displayname = Format(I_Loc\Cup_Of, drinkName)
+
+	i\state = 1.0
+		
+	i\r=r
+	i\g=g
+	i\b=b
+	i\a=a
+	
+	Local liquid = CopyEntity(LiquidObj)
+	ScaleEntity liquid, i\itemtemplate\scale,i\itemtemplate\scale,i\itemtemplate\scale,True
+	PositionEntity liquid, EntityX(i\collider,True),EntityY(i\collider,True),EntityZ(i\collider,True)
+	EntityParent liquid, i\model
+	EntityColor liquid, r,g,b
+	
+	If a < 0 Then 
+		EntityFX liquid, 1
+		EntityAlpha liquid, Abs(a)
+		DebugLog "DOING DAAAA " + Abs(a)
+	Else
+		EntityAlpha liquid, Abs(a)
+		DebugLog "DOING DAAAA " + Abs(a)
+	EndIf
+	
+	EntityShininess liquid, 1.0
+	
+	CatchErrors("CreateCup")
 	Return i
 End Function
 
@@ -361,8 +386,8 @@ Function RemoveItem(i.Items)
 		EndIf
 	Next
 	If SelectedItem = i Then
-		Select SelectedItem\itemtemplate\tempname 
-			Case "nvgoggles", "supernv"
+		Select SelectedItem\itemtemplate\name 
+			Case "nvgoggles", "finenvgoggles", "supernv"
 				WearingNightVision = False
 			Case "gasmask", "supergasmask", "gasmask2", "gasmask3"
 				WearingGasMask = False
@@ -518,7 +543,7 @@ Function PickItem(item.Items)
 	Next
 	
 	If WearingHazmat > 0 Then
-		Msg = "You cannot pick up any items while wearing a hazmat suit."
+		Msg = I_Loc\MessageItem_HazmatNopickup
 		MsgTimer = 70*5
 		Return
 	EndIf
@@ -527,17 +552,14 @@ Function PickItem(item.Items)
 	If (Not fullINV) Then
 		For n% = 0 To MaxItemAmount - 1
 			If Inventory(n) = Null Then
-				Select item\itemtemplate\tempname
-					Case "1123"
+				Select item\itemtemplate\name
+					Case "scp1123"
 						If Not (Wearing714 = 1) Then
 							If PlayerRoom\RoomTemplate\Name <> "room1123" Then
 								ShowEntity Light
 								LightFlash = 7
 								PlaySound_Strict(LoadTempSound("SFX\SCP\1123\Touch.ogg"))		
-								DeathMSG = "Subject D-9341 was shot dead after attempting to attack a member of Nine-Tailed Fox. Surveillance tapes show that the subject had been "
-								DeathMSG = DeathMSG + "wandering around the site approximately 9 minutes prior, shouting the phrase " + Chr(34) + "get rid of the four pests" + Chr(34)
-								DeathMSG = DeathMSG + " in chinese. SCP-1123 was found in [REDACTED] nearby, suggesting the subject had come into physical contact with it. How "
-								DeathMSG = DeathMSG + "exactly SCP-1123 was removed from its containment chamber is still unknown."
+								DeathMSG = I_Loc\DeathMessage_1123
 								Kill()
 							EndIf
 							For e.Events = Each Events
@@ -559,8 +581,7 @@ Function PickItem(item.Items)
 						ShowEntity Light
 						LightFlash = 1.0
 						PlaySound_Strict(IntroSFX(11))
-						DeathMSG = "Subject D-9341 found dead inside SCP-914's output booth next to what appears to be an ordinary nine-volt battery. The subject is covered in severe "
-						DeathMSG = DeathMSG + "electrical burns, and assumed to be killed via an electrical shock caused by the battery. The battery has been stored for further study."
+						DeathMSG = I_Loc\DeathMessage_Killbat
 						Kill()
 					Case "scp148"
 						GiveAchievement(Achv148)	
@@ -571,21 +592,21 @@ Function PickItem(item.Items)
 					Case "key6"
 						GiveAchievement(AchvOmni)
 					Case "veryfinevest"
-						Msg = "The vest is too heavy to pick up."
+						Msg = I_Loc\MessageItem_VestHeavy
 						MsgTimer = 70*6
 						Exit
 					Case "firstaid", "finefirstaid", "veryfinefirstaid", "firstaid2"
 						item\state = 0
-					Case "navigator", "nav"
-						If item\itemtemplate\name = "S-NAV Navigator Ultimate" Then GiveAchievement(AchvSNAV)
+					Case "snavulti"
+						GiveAchievement(AchvSNAV)
 					Case "hazmatsuit", "hazmatsuit2", "hazmatsuit3"
 						canpickitem = True
 						For z% = 0 To MaxItemAmount - 1
 							If Inventory(z) <> Null Then
-								If Inventory(z)\itemtemplate\tempname="hazmatsuit" Or Inventory(z)\itemtemplate\tempname="hazmatsuit2" Or Inventory(z)\itemtemplate\tempname="hazmatsuit3" Then
+								If Inventory(z)\itemtemplate\group="hazmat" Then
 									canpickitem% = False
 									Exit
-								ElseIf Inventory(z)\itemtemplate\tempname="vest" Or Inventory(z)\itemtemplate\tempname="finevest" Then
+								ElseIf Inventory(z)\itemtemplate\group="vest" Then
 									canpickitem% = 2
 									Exit
 								EndIf
@@ -593,11 +614,11 @@ Function PickItem(item.Items)
 						Next
 						
 						If canpickitem=False Then
-							Msg = "You are not able to wear two hazmat suits at the same time."
+							Msg = I_Loc\MessageItem_HazmatConflictHazmat
 							MsgTimer = 70 * 5
 							Return
 						ElseIf canpickitem=2 Then
-							Msg = "You are not able to wear a vest and a hazmat suit at the same time."
+							Msg = I_Loc\MessageItem_VestConflictHazmat
 							MsgTimer = 70 * 5
 							Return
 						Else
@@ -608,10 +629,10 @@ Function PickItem(item.Items)
 						canpickitem = True
 						For z% = 0 To MaxItemAmount - 1
 							If Inventory(z) <> Null Then
-								If Inventory(z)\itemtemplate\tempname="vest" Or Inventory(z)\itemtemplate\tempname="finevest" Then
+								If Inventory(z)\itemtemplate\group="vest" Then
 									canpickitem% = False
 									Exit
-								ElseIf Inventory(z)\itemtemplate\tempname="hazmatsuit" Or Inventory(z)\itemtemplate\tempname="hazmatsuit2" Or Inventory(z)\itemtemplate\tempname="hazmatsuit3" Then
+								ElseIf Inventory(z)\itemtemplate\group="hazmat" Then
 									canpickitem% = 2
 									Exit
 								EndIf
@@ -619,11 +640,11 @@ Function PickItem(item.Items)
 						Next
 						
 						If canpickitem=False Then
-							Msg = "You are not able to wear two vests at the same time."
+							Msg = I_Loc\MessageItem_VestConflictVest
 							MsgTimer = 70 * 5
 							Return
 						ElseIf canpickitem=2 Then
-							Msg = "You are not able to wear a vest and a hazmat suit at the same time."
+							Msg = I_Loc\MessageItem_VestConflictHazmat
 							MsgTimer = 70 * 5
 							Return
 						Else
@@ -645,7 +666,7 @@ Function PickItem(item.Items)
 			EndIf
 		Next
 	Else
-		Msg = "You cannot carry any more items."
+		Msg = I_Loc\MessageItem_Full
 		MsgTimer = 70 * 5
 	EndIf
 	CatchErrors("PickItem")
@@ -653,7 +674,7 @@ End Function
 
 Function DropItem(item.Items,playdropsound%=True)
 	If WearingHazmat > 0 Then
-		Msg = "You cannot drop any items while wearing a hazmat suit."
+		Msg = I_Loc\MessageItem_HazmatNodrop
 		MsgTimer = 70*5
 		Return
 	EndIf
@@ -680,7 +701,7 @@ Function DropItem(item.Items,playdropsound%=True)
 			Exit
 		EndIf
 	Next
-	Select item\itemtemplate\tempname
+	Select item\itemtemplate\name
 		Case "gasmask", "supergasmask", "gasmask3"
 			WearingGasMask = False
 		Case "hazmatsuit",  "hazmatsuit2", "hazmatsuit3"
