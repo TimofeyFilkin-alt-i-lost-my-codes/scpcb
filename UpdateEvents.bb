@@ -2545,17 +2545,19 @@ Function UpdateEvents()
 											EndIf
 										EndIf
 									EndIf
-									If e\EventState2 = 2 Then
-										Using294=temp
-										If Using294 Then MouseHit1=False
-									ElseIf e\EventState2 = 1 And (Not inserted) Then
-										Using294=False
-										Msg = I_Loc\Message_294One
-										MsgTimer = 70*5
-									ElseIf (Not inserted) Then
-										Using294=False
-										Msg = I_Loc\Message_294Two
-										MsgTimer = 70*5
+									If temp Then
+										If e\EventState2 = 2 Then
+											Using294=True
+											MouseHit1=False
+										Else If e\EventState2 = 1 And (Not inserted) Then
+											Using294=False
+											Msg = I_Loc\Message_294One
+											MsgTimer = 70*5
+										ElseIf (Not inserted) Then
+											Using294=False
+											Msg = I_Loc\Message_294Two
+											MsgTimer = 70*5
+										EndIf
 									EndIf
 								EndIf
 							EndIf
