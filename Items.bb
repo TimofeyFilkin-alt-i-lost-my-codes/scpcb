@@ -360,10 +360,8 @@ Function CreateCup.Items(drinkName$, x#, y#, z#, r%, g%, b%, a#=1.0)
 	If a < 0 Then 
 		EntityFX liquid, 1
 		EntityAlpha liquid, Abs(a)
-		DebugLog "DOING DAAAA " + Abs(a)
 	Else
 		EntityAlpha liquid, Abs(a)
-		DebugLog "DOING DAAAA " + Abs(a)
 	EndIf
 	
 	EntityShininess liquid, 1.0
