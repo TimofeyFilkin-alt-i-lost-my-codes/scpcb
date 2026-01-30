@@ -3812,7 +3812,7 @@ Function FillRoom(r.Rooms)
 			it = CreateItem("doc1048a",r\x + 736.0 * RoomScale, r\y + 224.0 * RoomScale, r\z -720.0 * RoomScale)
 			it\Picked = True
 			it\Dropped = -1
-			clipboard\SecondInv[0] = it
+			clipboard\Inventory\Items[0] = it
 			SetAnimTime clipboard\model, 0.0
 			clipboard\invimg = clipboard\itemtemplate\invimg
 			HideEntity(it\collider)

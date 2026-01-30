@@ -4034,7 +4034,7 @@ Function UpdateMenuState()
 End Function
 
 Function IsAnyMenuOpen()
-	Return MenuOpen Lor ConsoleOpen Lor InvOpen Lor OtherOpen<>Null Lor (SelectedItem <> Null And SelectedItem\invSlots>0) Lor Using294
+	Return MenuOpen Lor ConsoleOpen Lor InvOpen Lor OtherOpen<>Null Lor (SelectedItem <> Null And SelectedItem\Inventory <> Null) Lor Using294
 End Function
 
 Function IsPaused()
@@ -5169,10 +5169,10 @@ Function DrawGUI()
 	If OtherOpen<>Null Then
 		;[Block]
 		PrevOtherOpen = OtherOpen
-		OtherSize=OtherOpen\invSlots;Int(OtherOpen\state2)
+		OtherSize=OtherOpen\Inventory\Size;Int(OtherOpen\state2)
 		
 		For i%=0 To OtherSize-1
-			If OtherOpen\SecondInv[i] <> Null Then
+			If OtherOpen\Inventory\Items[i] <> Null Then
 				OtherAmount = OtherAmount+1
 			EndIf
 		Next
@@ -5212,24 +5212,24 @@ Function DrawGUI()
 			
 			If OtherOpen = Null Then Exit
 			
-			If OtherOpen\SecondInv[n] <> Null Then
-				If (SelectedItem <> OtherOpen\SecondInv[n] Or isMouseOn) Then DrawImage(OtherOpen\SecondInv[n]\invimg, x + width / 2 - 32 * HUDScale, y + height / 2 - 32 * HUDScale)
+			If OtherOpen\Inventory\Items[n] <> Null Then
+				If (SelectedItem <> OtherOpen\Inventory\Items[n] Or isMouseOn) Then DrawImage(OtherOpen\Inventory\Items[n]\invimg, x + width / 2 - 32 * HUDScale, y + height / 2 - 32 * HUDScale)
 			EndIf
-			If OtherOpen\SecondInv[n] <> Null And SelectedItem <> OtherOpen\SecondInv[n] Then
-			;drawimage(OtherOpen\SecondInv[n].InvIMG, x + width / 2 - 32 * HUDScale, y + height / 2 - 32 * HUDScale)
+			If OtherOpen\Inventory\Items[n] <> Null And SelectedItem <> OtherOpen\Inventory\Items[n] Then
+			;drawimage(OtherOpen\Inventory\Items[n].InvIMG, x + width / 2 - 32 * HUDScale, y + height / 2 - 32 * HUDScale)
 				If isMouseOn Then
 					SetFont Font1
 					Color 0,0,0
-					Text(x + width / 2 + 1, y + height + spacing - 15 + 1, OtherOpen\SecondInv[n]\itemtemplate\displayname, True)
+					Text(x + width / 2 + 1, y + height + spacing - 15 + 1, OtherOpen\Inventory\Items[n]\itemtemplate\displayname, True)
 					Color 255, 255, 255	
-					Text(x + width / 2, y + height + spacing - 15, OtherOpen\SecondInv[n]\itemtemplate\displayname, True)
+					Text(x + width / 2, y + height + spacing - 15, OtherOpen\Inventory\Items[n]\itemtemplate\displayname, True)
 					If SelectedItem = Null Then
 						If MouseHit1 Then
-							SelectedItem = OtherOpen\SecondInv[n]
+							SelectedItem = OtherOpen\Inventory\Items[n]
 							MouseHit1 = False
 							
 							If DoubleClick Then
-								If OtherOpen\SecondInv[n]\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(OtherOpen\SecondInv[n]\itemtemplate\sound))
+								If OtherOpen\Inventory\Items[n]\itemtemplate\sound <> 66 Then PlaySound_Strict(PickSFX(OtherOpen\Inventory\Items[n]\itemtemplate\sound))
 								OtherOpen = Null
 								closedInv=True
 								InvOpen = False
@@ -5246,12 +5246,12 @@ Function DrawGUI()
 			Else
 				If isMouseOn And MouseHit1 Then
 					For z% = 0 To OtherSize - 1
-						If OtherOpen\SecondInv[z] = SelectedItem Then
-							OtherOpen\SecondInv[z] = Null
+						If OtherOpen\Inventory\Items[z] = SelectedItem Then
+							OtherOpen\Inventory\Items[z] = Null
 							Exit
 						EndIf
 					Next
-					OtherOpen\SecondInv[n] = SelectedItem
+					OtherOpen\Inventory\Items[n] = SelectedItem
 				EndIf
 				
 			EndIf					
@@ -5269,7 +5269,7 @@ Function DrawGUI()
 			If MouseDown1 Then
 				If MouseSlot = 66 Then
 					DrawImage(SelectedItem\invimg, ScaledMouseX() - ImageWidth(SelectedItem\itemtemplate\invimg) / 2, ScaledMouseY() - ImageHeight(SelectedItem\itemtemplate\invimg) / 2)
-				ElseIf SelectedItem <> PrevOtherOpen\SecondInv[MouseSlot]
+				ElseIf SelectedItem <> PrevOtherOpen\Inventory\Items[MouseSlot]
 					DrawImage(SelectedItem\invimg, ScaledMouseX() - ImageWidth(SelectedItem\itemtemplate\invimg) / 2, ScaledMouseY() - ImageHeight(SelectedItem\itemtemplate\invimg) / 2)
 				EndIf
 			Else
@@ -5303,8 +5303,8 @@ Function DrawGUI()
 					
 					SelectedItem\Picked = False
 					For z% = 0 To OtherSize - 1
-						If OtherOpen\SecondInv[z] = SelectedItem Then
-							OtherOpen\SecondInv[z] = Null
+						If OtherOpen\Inventory\Items[z] = SelectedItem Then
+							OtherOpen\Inventory\Items[z] = Null
 							Exit
 						EndIf
 					Next
@@ -5313,8 +5313,8 @@ Function DrawGUI()
 					If OtherOpen\itemtemplate\name = "wallet" Then
 						If (Not isEmpty) Then
 							For z% = 0 To OtherSize - 1
-								If OtherOpen\SecondInv[z]<>Null
-									Local name$=OtherOpen\SecondInv[z]\itemtemplate\name
+								If OtherOpen\Inventory\Items[z]<>Null
+									Local name$=OtherOpen\Inventory\Items[z]\itemtemplate\name
 									If name$<>"25ct" And name$<>"coin" And name$<>"key" And name$<>"scp860" And name$<>"scp714" Then
 										isEmpty=False
 										Exit
@@ -5324,7 +5324,7 @@ Function DrawGUI()
 						EndIf
 					Else
 						For z% = 0 To OtherSize - 1
-							If OtherOpen\SecondInv[z]<>Null
+							If OtherOpen\Inventory\Items[z]<>Null
 								isEmpty = False
 								Exit
 							EndIf
@@ -5348,16 +5348,16 @@ Function DrawGUI()
 					MoveMouse viewport_center_x, viewport_center_y
 				Else
 					
-					If PrevOtherOpen\SecondInv[MouseSlot] = Null Then
+					If PrevOtherOpen\Inventory\Items[MouseSlot] = Null Then
 						For z% = 0 To OtherSize - 1
-							If PrevOtherOpen\SecondInv[z] = SelectedItem Then
-								PrevOtherOpen\SecondInv[z] = Null
+							If PrevOtherOpen\Inventory\Items[z] = SelectedItem Then
+								PrevOtherOpen\Inventory\Items[z] = Null
 								Exit
 							EndIf
 						Next
-						PrevOtherOpen\SecondInv[MouseSlot] = SelectedItem
+						PrevOtherOpen\Inventory\Items[MouseSlot] = SelectedItem
 						SelectedItem = Null
-					ElseIf PrevOtherOpen\SecondInv[MouseSlot] <> SelectedItem
+					ElseIf PrevOtherOpen\Inventory\Items[MouseSlot] <> SelectedItem
 						Msg = I_Loc\MessageItem_Cantcombine
 						MsgTimer = 70 * 5
 					EndIf
@@ -5554,10 +5554,10 @@ Function DrawGUI()
 									Local b$ = SelectedItem\itemtemplate\group
 									Local b2$ = SelectedItem\itemtemplate\name
 									If (b<>"misc" And b2<>"25ct" And b2<>"coin" And b2<>"key" And b2<>"scp860" And b2<>"scp714") Or (b2="playingcard" Or b2="mastercard") Then
-										For c% = 0 To Inventory(MouseSlot)\invSlots-1
-											If (Inventory(MouseSlot)\SecondInv[c] = Null)
+										For c% = 0 To Inventory(MouseSlot)\Inventory\Size-1
+											If (Inventory(MouseSlot)\Inventory\Items[c] = Null)
 												If SelectedItem <> Null Then
-													Inventory(MouseSlot)\SecondInv[c] = SelectedItem
+													Inventory(MouseSlot)\Inventory\Items[c] = SelectedItem
 													Inventory(MouseSlot)\state = 1.0
 													SetAnimTime Inventory(MouseSlot)\model,0.0
 													Inventory(MouseSlot)\invimg = Inventory(MouseSlot)\itemtemplate\invimg
@@ -5597,10 +5597,10 @@ Function DrawGUI()
 									b$ = SelectedItem\itemtemplate\group
 									b2$ = SelectedItem\itemtemplate\name
 									If (b<>"misc" And b<>"paper" And b2<>"oldpaper") Or (b2="playingcard" Or b2="mastercard") Then
-										For c% = 0 To Inventory(MouseSlot)\invSlots-1
-											If (Inventory(MouseSlot)\SecondInv[c] = Null)
+										For c% = 0 To Inventory(MouseSlot)\Inventory\Size-1
+											If (Inventory(MouseSlot)\Inventory\Items[c] = Null)
 												If SelectedItem <> Null Then
-													Inventory(MouseSlot)\SecondInv[c] = SelectedItem
+													Inventory(MouseSlot)\Inventory\Items[c] = SelectedItem
 													Inventory(MouseSlot)\state = 1.0
 													If b2<>"25ct" And b2<>"coin" And b2<>"key" And b2<>"scp860"
 														SetAnimTime Inventory(MouseSlot)\model,3.0
@@ -7119,7 +7119,7 @@ Function DrawGUI()
 						MouseHit1 = 0
 						MouseDown1 = 0
 						LastMouseHit1 = 0
-						If SelectedItem\invSlots>0 Then OtherOpen = SelectedItem
+						If SelectedItem\Inventory <> Null Then OtherOpen = SelectedItem
 						SelectedItem = Null
 						;[End Block]
 					EndIf
@@ -8973,47 +8973,21 @@ Function NullGame(playbuttonsfx%=True)
 	
 	ClosestButton = 0
 	
-	For d.Doors = Each Doors
-		Delete d
-	Next
+	Delete Each Doors
 	
 	;ClearWorld
 	
-	For lt.LightTemplates = Each LightTemplates
-		Delete lt
-	Next 
-	
-	For m.Materials = Each Materials
-		Delete m
-	Next
-	
-	For wp.WayPoints = Each WayPoints
-		Delete wp
-	Next
-	
-	For r.Rooms = Each Rooms
-		Delete r
-	Next
-	
-	For itt.ItemTemplates = Each ItemTemplates
-		Delete itt
-	Next 
-	
-	For it.Items = Each Items
-		Delete it
-	Next
-	
-	For pr.Props = Each Props
-		Delete pr
-	Next
-	
-	For de.decals = Each Decals
-		Delete de
-	Next
-	
-	For n.NPCS = Each NPCs
-		Delete n
-	Next
+	Delete Each LightTemplates
+	Delete Each Materials
+	Delete Each WayPoints
+	Delete Each Rooms	
+	Delete Each Inventories
+	Delete Each Items
+	Delete Each ItemTemplates
+	Delete Each Props
+	Delete Each Decals
+	Delete Each NPCs
+
 	Curr173 = Null
 	Curr106 = Null
 	Curr096 = Null
@@ -9689,19 +9663,19 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					d.Decals = CreateDecal(7, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
 					d\Size = 0.12 : ScaleSprite(d\obj, d\Size, d\Size)
 					For i% = 0 To 19
-						If item\SecondInv[i]<>Null Then RemoveItem(item\SecondInv[i])
-						item\SecondInv[i]=Null
+						If item\Inventory\Items[i]<>Null Then RemoveItem(item\Inventory\Items[i])
+						item\Inventory\Items[i]=Null
 					Next
 					RemoveItem(item)
 				Case "1:1"
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 				Case "fine"
-					item\invSlots = Max(item\state2,15)
+					item\Inventory\Size = Max(item\state2,15)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 				Case "very fine"
-					item\invSlots = Max(item\state2,20)
+					item\Inventory\Size = Max(item\state2,20)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 			End Select

@@ -255,7 +255,10 @@ Function FindItemTemplate.ItemTemplates(name$)
 	Next
 End Function
 
-
+Type Inventories
+	Field Items.Items[20]
+	Field Size%
+End Type
 
 Type Items
 	Field displayname$
@@ -278,14 +281,13 @@ Type Items
 	Field invimg%
 	Field WontColl% = False
 	Field xspeed#,zspeed#
-	Field SecondInv.Items[20]
+	Field Inventory.Inventories
 	Field ID%
-	Field invSlots%
 
 	Field drinkName$
 End Type 
 
-Function CreateItem.Items(name$, x#, y#, z#, invSlots%=0)
+Function CreateItem.Items(name$, x#, y#, z#)
 	CatchErrors("Uncaught (CreateItem)")
 	
 	Local i.Items = New Items
@@ -318,16 +320,16 @@ Function CreateItem.Items(name$, x#, y#, z#, invSlots%=0)
 	i\DropSpeed = 0.0
 	
 	i\invimg = i\itemtemplate\invimg
-	If (name="clipboard") And (invSlots=0) Then
-		invSlots = 10
+	If name="clipboard" Then
+		i\Inventory = New Inventories
+		i\Inventory\Size = 10
 		SetAnimTime i\model,17.0
 		i\invimg = i\itemtemplate\invimg2
-	ElseIf (name="wallet") And (invSlots=0) Then
-		invSlots = 10
+	ElseIf name="wallet" Then
+		i\Inventory = New Inventories
+		i\Inventory\Size = 10
 		SetAnimTime i\model,0.0
 	EndIf
-	
-	i\invSlots=invSlots
 	
 	i\ID=LastItemID+1
 	LastItemID=i\ID
@@ -407,6 +409,7 @@ Function RemoveItem(i.Items)
 		FreeImage i\itemtemplate\img
 		i\itemtemplate\img = 0
 	EndIf
+	If i\Inventory <> Null Then Delete i\Inventory
 	Delete i
 	
 	CatchErrors("RemoveItem")

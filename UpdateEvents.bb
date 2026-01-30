@@ -2657,7 +2657,7 @@ Function UpdateEvents()
 									it2\Picked = True
 									it2\Dropped = -1
 									it2\itemtemplate\found=True
-									it\SecondInv[i] = it2
+									it\Inventory\Items[i] = it2
 									HideEntity(it2\collider)
 									EntityType(it2\collider, HIT_ITEM)
 								Next
