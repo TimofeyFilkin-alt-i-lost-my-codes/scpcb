@@ -4891,122 +4891,6 @@ Function DrawGUI()
 	
 	If Using294 Then Use294()
 	
-	If HUDenabled Then
-		If SpeedRunMode Then DrawTimer()
-
-		Local width% = 204 * HUDScale
-		x% = HUDStartX + 80 * HUDScale
-		y% = HUDEndY - 95 * HUDScale
-
-		DrawBar(BlinkMeterIMG, x, y, width, BlinkTimer / BLINKFREQ)
-		Color 0, 0, 0
-		Rect(x - 50 * HUDScale, y, 30 * HUDScale, 30 * HUDScale)
-		
-		If EyeIrritation > 0 Then
-			Color 200, 0, 0
-			Rect(x - 50 * HUDScale - 3, y - 3, 30 * HUDScale + 6, 30 * HUDScale + 6)
-		End If
-		
-		Color 255, 255, 255
-		Rect(x - 50 * HUDScale - 1, y - 1, 30 * HUDScale + 2, 30 * HUDScale + 2, False)
-		
-		DrawImage BlinkIcon, x - 50 * HUDScale, y
-		
-		y = HUDEndY - 55 * HUDScale
-		DrawBar(StaminaMeterIMG, x, y, width, Stamina / 100.0)
-		
-		Color 0, 0, 0
-		Rect(x - 50 * HUDScale, y, 30 * HUDScale, 30 * HUDScale)
-		
-		Color 255, 255, 255
-		Rect(x - 50 * HUDScale - 1, y - 1, 30 * HUDScale + 2, 30 * HUDScale + 2, False)
-		If Crouch Then
-			DrawImage CrouchIcon, x - 50 * HUDScale, y
-		Else
-			DrawImage SprintIcon, x - 50 * HUDScale, y
-		EndIf
-
-		If DebugHUD Then
-			Color 255, 255, 255
-			SetFont ConsoleFont
-			
-			;Text x + 250, 50, "Zone: " + (EntityZ(Collider)/8.0)
-			Text x - 50, 50, "Player Position: (" + f2s(EntityX(Collider), 3) + ", " + f2s(EntityY(Collider), 3) + ", " + f2s(EntityZ(Collider), 3) + ")"
-			Text x - 50, 70, "Camera Position: (" + f2s(EntityX(Camera), 3)+ ", " + f2s(EntityY(Camera), 3) +", " + f2s(EntityZ(Camera), 3) + ")"
-			Text x - 50, 100, "Player Rotation: (" + f2s(EntityPitch(Collider), 3) + ", " + f2s(EntityYaw(Collider), 3) + ", " + f2s(EntityRoll(Collider), 3) + ")"
-			Text x - 50, 120, "Camera Rotation: (" + f2s(EntityPitch(Camera), 3)+ ", " + f2s(EntityYaw(Camera), 3) +", " + f2s(EntityRoll(Camera), 3) + ")"
-			Text x - 50, 150, "Room: " + PlayerRoom\RoomTemplate\Name
-			For ev.Events = Each Events
-				If ev\room = PlayerRoom Then
-					Text x - 50, 170, "Room event: " + ev\EventName   
-					Text x - 50, 190, "state: " + ev\EventState
-					Text x - 50, 210, "state2: " + ev\EventState2   
-					Text x - 50, 230, "state3: " + ev\EventState3
-					Text x - 50, 250, "str: "+ ev\EventStr
-					Exit
-				EndIf
-			Next
-			Text x - 50, 280, "Room coordinates: (" + Floor(EntityX(PlayerRoom\obj) / 8.0 + 0.5) + ", " + Floor(EntityZ(PlayerRoom\obj) / 8.0 + 0.5) + ", angle: "+PlayerRoom\angle + ")"
-			Text x - 50, 300, "Stamina: " + f2s(Stamina, 3)
-			Text x - 50, 320, "Death timer: " + f2s(KillTimer, 3)               
-			Text x - 50, 340, "Blink timer: " + f2s(BlinkTimer, 3)
-			Text x - 50, 360, "Injuries: " + Injuries
-			Text x - 50, 380, "Bloodloss: " + Bloodloss
-			If Curr173 <> Null
-				Text x - 50, 410, "SCP - 173 Position (collider): (" + f2s(EntityX(Curr173\Collider), 3) + ", " + f2s(EntityY(Curr173\Collider), 3) + ", " + f2s(EntityZ(Curr173\Collider), 3) + ")"
-				Text x - 50, 430, "SCP - 173 Position (obj): (" + f2s(EntityX(Curr173\obj), 3) + ", " + f2s(EntityY(Curr173\obj), 3) + ", " + f2s(EntityZ(Curr173\obj), 3) + ")"
-				;Text x - 50, 410, "SCP - 173 Idle: " + Curr173\Idle
-				Text x - 50, 450, "SCP - 173 State: " + Curr173\State
-			EndIf
-			If Curr106 <> Null
-				Text x - 50, 470, "SCP - 106 Position: (" + f2s(EntityX(Curr106\obj), 3) + ", " + f2s(EntityY(Curr106\obj), 3) + ", " + f2s(EntityZ(Curr106\obj), 3) + ")"
-				Text x - 50, 490, "SCP - 106 Idle: " + Curr106\Idle
-				Text x - 50, 510, "SCP - 106 State: " + Curr106\State
-			EndIf
-			offset% = 0
-			For npc.NPCs = Each NPCs
-				If npc\NPCtype = NPCtype096 Then
-					Text x - 50, 530, "SCP - 096 Position: (" + f2s(EntityX(npc\obj), 3) + ", " + f2s(EntityY(npc\obj), 3) + ", " + f2s(EntityZ(npc\obj), 3) + ")"
-					Text x - 50, 550, "SCP - 096 Idle: " + npc\Idle
-					Text x - 50, 570, "SCP - 096 State: " + npc\State
-					Text x - 50, 590, "SCP - 096 Speed: " + f2s(npc\currspeed, 5)
-				EndIf
-				If npc\NPCtype = NPCtypeMTF Then
-					Text x - 50, 620 + 60 * offset, "MTF " + offset + " Position: (" + f2s(EntityX(npc\obj), 3) + ", " + f2s(EntityY(npc\obj), 3) + ", " + f2s(EntityZ(npc\obj), 3) + ")"
-					Text x - 50, 640 + 60 * offset, "MTF " + offset + " State: " + npc\State
-					Text x - 50, 660 + 60 * offset, "MTF " + offset + " LastSeen: " + npc\lastseen					
-					offset = offset + 1
-				EndIf
-			Next
-			x = x + 500 * MenuScale
-			If PlayerRoom\RoomTemplate\Name$ = "dimension1499"
-				Text x, 50, "Current Chunk X/Z: ("+(Int((EntityX(Collider)+20)/40))+", "+(Int((EntityZ(Collider)+20)/40))+")"
-				Local CH_Amount% = 0
-				For ch.Chunk = Each Chunk
-					CH_Amount = CH_Amount + 1
-				Next
-				Text x, 70, "Current Chunk Amount: "+CH_Amount
-			Else
-				Text x, 50, "Current Room Position: ("+PlayerRoom\x+", "+PlayerRoom\y+", "+PlayerRoom\z+")"
-			EndIf
-			Text x, 90, "Triangles rendered: "+CurrTrisAmount
-			Text x, 110, "Active textures: "+ActiveTextures()
-			Text x, 130, "SCP-427 state (secs): "+Int(I_427\Timer/70.0)
-			Text x, 150, "SCP-008 infection: "+Infect
-			For i = 0 To 5
-				Text x, 170+(20*i), "SCP-1025 State "+i+": "+SCP1025state[i]
-			Next
-			If SelectedMonitor <> Null Then
-				Text x, 310, "Current monitor: "+SelectedMonitor\ScrObj
-			Else
-				Text x, 310, "Current monitor: NULL"
-			EndIf
-			
-			SetFont Font1
-		EndIf
-		
-	EndIf
-	
 	If SelectedScreen <> Null Then
 		DrawImage SelectedScreen\img, GraphicWidth/2-ImageWidth(SelectedScreen\img)/2,GraphicHeight/2-ImageHeight(SelectedScreen\img)/2
 		
@@ -7199,6 +7083,8 @@ Function DrawGUI()
 	Next
 	
 	If PrevInvOpen And (Not InvOpen) Then MoveMouse viewport_center_x, viewport_center_y
+
+	DrawHUD()
 	
 	CatchErrors("DrawGUI")
 End Function
@@ -7213,6 +7099,123 @@ Function ResetDiseases()
 	If StaminaEffect > 1.0 Then
 		StaminaEffect = 1.0
 		StaminaEffectTimer = 0.0
+	EndIf
+End Function
+
+Function DrawHUD()
+	If Not HUDenabled Then Return
+
+	If SpeedRunMode Then DrawTimer()
+
+	Local width% = 204 * HUDScale
+	x% = HUDStartX + 80 * HUDScale
+	y% = HUDEndY - 95 * HUDScale
+
+	DrawBar(BlinkMeterIMG, x, y, width, BlinkTimer / BLINKFREQ)
+	Color 0, 0, 0
+	Rect(x - 50 * HUDScale, y, 30 * HUDScale, 30 * HUDScale)
+	
+	If EyeIrritation > 0 Then
+		Color 200, 0, 0
+		Rect(x - 50 * HUDScale - 3, y - 3, 30 * HUDScale + 6, 30 * HUDScale + 6)
+	End If
+	
+	Color 255, 255, 255
+	Rect(x - 50 * HUDScale - 1, y - 1, 30 * HUDScale + 2, 30 * HUDScale + 2, False)
+	
+	DrawImage BlinkIcon, x - 50 * HUDScale, y
+	
+	y = HUDEndY - 55 * HUDScale
+	DrawBar(StaminaMeterIMG, x, y, width, Stamina / 100.0)
+	
+	Color 0, 0, 0
+	Rect(x - 50 * HUDScale, y, 30 * HUDScale, 30 * HUDScale)
+	
+	Color 255, 255, 255
+	Rect(x - 50 * HUDScale - 1, y - 1, 30 * HUDScale + 2, 30 * HUDScale + 2, False)
+	If Crouch Then
+		DrawImage CrouchIcon, x - 50 * HUDScale, y
+	Else
+		DrawImage SprintIcon, x - 50 * HUDScale, y
+	EndIf
+
+	If DebugHUD Then
+		Color 255, 255, 255
+		SetFont ConsoleFont
+		
+		;Text x + 250, 50, "Zone: " + (EntityZ(Collider)/8.0)
+		Text x - 50, 50, "Player Position: (" + f2s(EntityX(Collider), 3) + ", " + f2s(EntityY(Collider), 3) + ", " + f2s(EntityZ(Collider), 3) + ")"
+		Text x - 50, 70, "Camera Position: (" + f2s(EntityX(Camera), 3)+ ", " + f2s(EntityY(Camera), 3) +", " + f2s(EntityZ(Camera), 3) + ")"
+		Text x - 50, 100, "Player Rotation: (" + f2s(EntityPitch(Collider), 3) + ", " + f2s(EntityYaw(Collider), 3) + ", " + f2s(EntityRoll(Collider), 3) + ")"
+		Text x - 50, 120, "Camera Rotation: (" + f2s(EntityPitch(Camera), 3)+ ", " + f2s(EntityYaw(Camera), 3) +", " + f2s(EntityRoll(Camera), 3) + ")"
+		Text x - 50, 150, "Room: " + PlayerRoom\RoomTemplate\Name
+		For ev.Events = Each Events
+			If ev\room = PlayerRoom Then
+				Text x - 50, 170, "Room event: " + ev\EventName   
+				Text x - 50, 190, "state: " + ev\EventState
+				Text x - 50, 210, "state2: " + ev\EventState2   
+				Text x - 50, 230, "state3: " + ev\EventState3
+				Text x - 50, 250, "str: "+ ev\EventStr
+				Exit
+			EndIf
+		Next
+		Text x - 50, 280, "Room coordinates: (" + Floor(EntityX(PlayerRoom\obj) / 8.0 + 0.5) + ", " + Floor(EntityZ(PlayerRoom\obj) / 8.0 + 0.5) + ", angle: "+PlayerRoom\angle + ")"
+		Text x - 50, 300, "Stamina: " + f2s(Stamina, 3)
+		Text x - 50, 320, "Death timer: " + f2s(KillTimer, 3)               
+		Text x - 50, 340, "Blink timer: " + f2s(BlinkTimer, 3)
+		Text x - 50, 360, "Injuries: " + Injuries
+		Text x - 50, 380, "Bloodloss: " + Bloodloss
+		If Curr173 <> Null
+			Text x - 50, 410, "SCP - 173 Position (collider): (" + f2s(EntityX(Curr173\Collider), 3) + ", " + f2s(EntityY(Curr173\Collider), 3) + ", " + f2s(EntityZ(Curr173\Collider), 3) + ")"
+			Text x - 50, 430, "SCP - 173 Position (obj): (" + f2s(EntityX(Curr173\obj), 3) + ", " + f2s(EntityY(Curr173\obj), 3) + ", " + f2s(EntityZ(Curr173\obj), 3) + ")"
+			;Text x - 50, 410, "SCP - 173 Idle: " + Curr173\Idle
+			Text x - 50, 450, "SCP - 173 State: " + Curr173\State
+		EndIf
+		If Curr106 <> Null
+			Text x - 50, 470, "SCP - 106 Position: (" + f2s(EntityX(Curr106\obj), 3) + ", " + f2s(EntityY(Curr106\obj), 3) + ", " + f2s(EntityZ(Curr106\obj), 3) + ")"
+			Text x - 50, 490, "SCP - 106 Idle: " + Curr106\Idle
+			Text x - 50, 510, "SCP - 106 State: " + Curr106\State
+		EndIf
+		offset% = 0
+		For npc.NPCs = Each NPCs
+			If npc\NPCtype = NPCtype096 Then
+				Text x - 50, 530, "SCP - 096 Position: (" + f2s(EntityX(npc\obj), 3) + ", " + f2s(EntityY(npc\obj), 3) + ", " + f2s(EntityZ(npc\obj), 3) + ")"
+				Text x - 50, 550, "SCP - 096 Idle: " + npc\Idle
+				Text x - 50, 570, "SCP - 096 State: " + npc\State
+				Text x - 50, 590, "SCP - 096 Speed: " + f2s(npc\currspeed, 5)
+			EndIf
+			If npc\NPCtype = NPCtypeMTF Then
+				Text x - 50, 620 + 60 * offset, "MTF " + offset + " Position: (" + f2s(EntityX(npc\obj), 3) + ", " + f2s(EntityY(npc\obj), 3) + ", " + f2s(EntityZ(npc\obj), 3) + ")"
+				Text x - 50, 640 + 60 * offset, "MTF " + offset + " State: " + npc\State
+				Text x - 50, 660 + 60 * offset, "MTF " + offset + " LastSeen: " + npc\lastseen					
+				offset = offset + 1
+			EndIf
+		Next
+		x = x + 500 * MenuScale
+		If PlayerRoom\RoomTemplate\Name$ = "dimension1499"
+			Text x, 50, "Current Chunk X/Z: ("+(Int((EntityX(Collider)+20)/40))+", "+(Int((EntityZ(Collider)+20)/40))+")"
+			Local CH_Amount% = 0
+			For ch.Chunk = Each Chunk
+				CH_Amount = CH_Amount + 1
+			Next
+			Text x, 70, "Current Chunk Amount: "+CH_Amount
+		Else
+			Text x, 50, "Current Room Position: ("+PlayerRoom\x+", "+PlayerRoom\y+", "+PlayerRoom\z+")"
+		EndIf
+		Text x, 90, "Triangles rendered: "+CurrTrisAmount
+		Text x, 110, "Active textures: "+ActiveTextures()
+		Text x, 130, "SCP-427 state (secs): "+Int(I_427\Timer/70.0)
+		Text x, 150, "SCP-008 infection: "+Infect
+		For i = 0 To 5
+			Text x, 170+(20*i), "SCP-1025 State "+i+": "+SCP1025state[i]
+		Next
+		If SelectedMonitor <> Null Then
+			Text x, 310, "Current monitor: "+SelectedMonitor\ScrObj
+		Else
+			Text x, 310, "Current monitor: NULL"
+		EndIf
+		
+		SetFont Font1
 	EndIf
 End Function
 
