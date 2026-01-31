@@ -8977,6 +8977,10 @@ Function NullGame(playbuttonsfx%=True)
 	
 	ClosestButton = 0
 	
+	room2gw_brokendoor = False
+	room2gw_x = 0.0
+	room2gw_z = 0.0
+
 	Delete Each Doors
 	
 	;ClearWorld
