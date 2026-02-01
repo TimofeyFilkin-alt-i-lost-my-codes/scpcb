@@ -7524,7 +7524,7 @@ Function CreateMap(loadingstart,loadingcount#)
 			Next
 		Next
 		For r.Rooms = Each Rooms
-			MapName(r\x/8,r\z/8) = r\RoomTemplate\Name
+			If r\RoomTemplate\SetRoom => 0 Then MapName(r\x/8,r\z/8) = r\RoomTemplate\Name
 		Next
 		
 		Repeat

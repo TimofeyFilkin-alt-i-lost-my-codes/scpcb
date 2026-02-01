@@ -45,13 +45,16 @@ Function MoveRoom(r.Rooms)
 	CalculateRoomExtents(r)
 End Function
 
+Function ShouldSkipOverlapCandidate(r.Rooms)
+	Local rt.RoomTemplates = r\RoomTemplate
+	Return rt\DisableOverlapCheck Lor rt\Name = "checkpoint1" Lor rt\Name = "checkpoint2" Lor rt\Name = "start"
+End Function
+
 Function PreventRoomOverlap(r.Rooms)
 	If r\RoomTemplate\DisableOverlapCheck Then Return
 	
 	; Just skip it when it would try to check for the checkpoints
-	If r\RoomTemplate\Name = "checkpoint1" Then Return
-	If r\RoomTemplate\Name = "checkpoint2" Then Return
-	If r\RoomTemplate\Name = "start" Then Return
+	If ShouldSkipOverlapCandidate(r) Then Return
 	
 	Local r2.Rooms,r3.Rooms
 	Local overlapAreaBefore1#,overlapAreaAfter1#
@@ -92,86 +95,77 @@ Function PreventRoomOverlap(r.Rooms)
 	EndIf
 	
 	;Room is either not a ROOM2 or the ROOM2 is still intersecting, now trying to swap the room with another of the same type
-	Local oldX1%,oldZ1%,oldAngle1%
-	Local oldX2%,oldZ2%,oldAngle2%
+	Local oldX1#,oldZ1#,oldAngle1%
+	Local oldX2#,oldZ2#,oldAngle2%
 	
 	For r2 = Each Rooms
-		If r2 <> r Then
-			If Not r2\RoomTemplate\DisableOverlapCheck Then
-				If r\RoomTemplate\Shape = r2\RoomTemplate\Shape Then
-					If r\zone = r2\zone Then
-						If r2\RoomTemplate\Name <> "start" Then
-							If r2\RoomTemplate\Name <> "checkpoint1" Then
-								If r2\RoomTemplate\Name <> "checkpoint2" Then
-									overlapAreaBefore2 = CalcAllRoomOverlaps(r2)
-									DebugLog "Swap overlap area: " + overlapAreaBefore2
-	
-									; remember original position before swap
-									oldX1 = r\x
-									oldZ1 = r\z
-									oldAngle1 = r\angle
-		
-									oldX2 = r2\x
-									oldZ2 = r2\z
-									oldAngle2 = r2\angle
-	
-									; swap itself
-									r\x = oldX2
-									r\z = oldZ2
-									r\angle = oldAngle2
-									MoveRoom(r)
+		If r\RoomTemplate\Shape = r2\RoomTemplate\Shape And r\zone = r2\zone And r <> r2 And (Not ShouldSkipOverlapCandidate(r2)) Then
+			overlapAreaBefore2 = CalcAllRoomOverlaps(r2)
+			Local candidatesOverlapAreaBefore# = CalcOverlapArea(r, r2)
+			DebugLog "Swap overlap area: " + overlapAreaBefore2
 
-									r2\x = oldX1
-									r2\z = oldZ1
-									r2\angle = oldAngle1
-									MoveRoom(r2)
-				
-									;make sure neither room overlaps with anything after the swap
-									overlapAreaAfter1 = 0;
-									overlapAreaAfter2 = 0;
-									For r3 = Each Rooms
-										If Not r3\RoomTemplate\DisableOverlapCheck Then
-											If r3 <> r Then 
-												overlapAreaAfter1 = overlapAreaAfter1 + CalcOverlapArea(r, r3);
-											EndIf
-											If r3 <> r2 Then 
-												overlapAreaAfter2 = overlapAreaAfter2 + CalcOverlapArea(r2, r3);
-											EndIf
-										EndIf
-									Next
-									DebugLog "Overlaps after swap: MAIN " + overlapAreaBefore1 + " -> " + overlapAreaAfter1 + ", SWAP " + overlapAreaBefore2 + " -> " + overlapAreaAfter2
-				
-									; Check if no overlaps after swap - then problem solved, return
-									If overlapAreaAfter1 = 0 And overlapAreaAfter2 = 0 Then
-										DebugLog "Successful rooms swap: " + r\RoomTemplate\Name + " / " + r2\RoomTemplate\Name
-										Return
-									EndIf
-		
-									; If we still have overlap - check if overlapping area is smaller than before and continue search
-									If (overlapAreaAfter1 + overlapAreaAfter2) < (overlapAreaBefore1 + overlapAreaBefore2) Then
-										DebugLog "Partial overlap fix, rooms swap: " + r\RoomTemplate\Name + " / " + r2\RoomTemplate\Name
-										overlapAreaBefore1 = overlapAreaAfter1
-									Else
-										; overlap area is bigger than before - then rollback this change and continue search
-										DebugLog "Cancel this swap"
-										r\x = oldX1
-										r\z = oldZ1
-										r\angle = oldAngle1
-										MoveRoom(r)
+			; remember original position before swap
+			oldX1 = r\x
+			oldZ1 = r\z
+			oldAngle1 = r\angle
 
-										r2\x = oldX2
-										r2\z = oldZ2
-										r2\angle = oldAngle2
-										MoveRoom(r2)
-									EndIf
-								EndIf
-							EndIf
-						EndIf
+			oldX2 = r2\x
+			oldZ2 = r2\z
+			oldAngle2 = r2\angle
+
+			; swap itself
+			r\x = oldX2
+			r\z = oldZ2
+			r\angle = oldAngle2
+			MoveRoom(r)
+
+			r2\x = oldX1
+			r2\z = oldZ1
+			r2\angle = oldAngle1
+			MoveRoom(r2)
+
+			;make sure neither room overlaps with anything after the swap
+			overlapAreaAfter1 = 0
+			overlapAreaAfter2 = 0
+			Local candidatesOverlapAreaAfter# = CalcOverlapArea(r, r2)
+			For r3 = Each Rooms
+				If Not r3\RoomTemplate\DisableOverlapCheck Then
+					If r3 <> r Then 
+						overlapAreaAfter1 = overlapAreaAfter1 + CalcOverlapArea(r, r3);
+					EndIf
+					If r3 <> r2 Then 
+						overlapAreaAfter2 = overlapAreaAfter2 + CalcOverlapArea(r2, r3);
 					EndIf
 				EndIf
+			Next
+			DebugLog "Overlaps after swap: MAIN " + overlapAreaBefore1 + " -> " + overlapAreaAfter1 + ", SWAP " + overlapAreaBefore2 + " -> " + overlapAreaAfter2
+
+			; Check if no overlaps after swap - then problem solved, return
+			If overlapAreaAfter1 = 0 And overlapAreaAfter2 = 0 Then
+				DebugLog "Successful rooms swap: " + r\RoomTemplate\Name + " / " + r2\RoomTemplate\Name
+				Return
+			EndIf
+
+			; If we still have overlap - check if overlapping area is smaller than before and continue search
+			; We subtract the overlap area between the candidates as it is otherwise counted twice, once as part of each sum.
+			If (overlapAreaAfter1 + overlapAreaAfter2 - candidatesOverlapAreaAfter) < (overlapAreaBefore1 + overlapAreaBefore2 - candidatesOverlapAreaBefore) Then
+				DebugLog "Partial overlap fix, rooms swap: " + r\RoomTemplate\Name + " / " + r2\RoomTemplate\Name
+				overlapAreaBefore1 = overlapAreaAfter1
+			Else
+				; overlap area is bigger than before - then rollback this change and continue search
+				DebugLog "Cancel this swap"
+				r\x = oldX1
+				r\z = oldZ1
+				r\angle = oldAngle1
+				MoveRoom(r)
+
+				r2\x = oldX2
+				r2\z = oldZ2
+				r2\angle = oldAngle2
+				MoveRoom(r2)
 			EndIf
 		EndIf
 	Next
 	
-	DebugLog "Unable to resolve overlap problem for room " + r\RoomTemplate\Name
+	DebugLog "Couldn't fix overlap issue for room " + r\RoomTemplate\Name
 End Function
