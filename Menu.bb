@@ -1757,12 +1757,16 @@ Type LoadingScreens
 	Field alignx%, aligny%
 	Field disablebackground%
 	Field txt$[5], txtamount%
+	; Inclusive prefix sum
+	Field txtDelay%[5], totalTxtDelay%
 End Type
 
 Const LOADING_SCREENS_DATA_PATH$ = "Loadingscreens\loadingscreens.ini"
+Global LoadingScreenTimePerCharacter%, LoadingScreenStartTime%
 
 Function InitLoadingScreens()
 	Delete Each LoadingScreens
+	LoadingScreenTimePerCharacter% = GetOptionInt("general", "loading screen cycle per char ms")
 	Local hasOverride%
 	For m.ActiveMods = Each ActiveMods
 		Local modPath$ = m\Path + LOADING_SCREENS_DATA_PATH
@@ -1795,8 +1799,11 @@ Function LoadLoadingScreens(file$)
 			ls\title = TemporaryString
 			ls\imgpath = GetINIString(file, TemporaryString, "image path")
 			
+			ls\totalTxtDelay = 0
 			For i = 0 To 4
 				ls\txt[i] = GetINIString(file, TemporaryString, "text"+(i+1))
+				ls\totalTxtDelay = ls\totalTxtDelay + Len(ls\txt[i]) * LoadingScreenTimePerCharacter
+				ls\txtDelay[i] = ls\totalTxtDelay
 				If ls\txt[i]<> "" Then ls\txtamount=ls\txtamount+1
 			Next
 			
@@ -1833,7 +1840,7 @@ Function DrawLoading(percent%, shortloading=False)
 	Local x%, y%
 	
 	If percent = 0 Then
-		LoadingScreenText=0
+		LoadingScreenStartTime = MilliSecs()
 		
 		temp = Rand(1,LoadingScreenAmount)
 		For ls.loadingscreens = Each LoadingScreens
@@ -1863,11 +1870,13 @@ Function DrawLoading(percent%, shortloading=False)
 		If percent > 20 Then
 			UpdateMusic()
 		EndIf
-		
-		If shortloading = False Then
-			If percent > (100.0 / SelectedLoadingScreen\txtamount)*(LoadingScreenText+1) Then
-				LoadingScreenText=LoadingScreenText+1
-			EndIf
+
+		Local LoadingScreenText = 0
+		If SelectedLoadingScreen\totalTxtDelay <> 0 Then
+			Local elapsedTime = (MilliSecs() - LoadingScreenStartTime) Mod SelectedLoadingScreen\totalTxtDelay
+			While elapsedTime >= SelectedLoadingScreen\txtDelay[LoadingScreenText]
+				LoadingScreenText = LoadingScreenText + 1
+			Wend
 		EndIf
 		
 		If (Not SelectedLoadingScreen\disablebackground) Then
