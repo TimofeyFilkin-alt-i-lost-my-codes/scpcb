@@ -191,14 +191,14 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 		EndIf
 	Next
 	If f=0 Then RuntimeErrorExt "Error reading file "+Chr(34)+file+Chr(34)
+	Local version% = 0
 	Local isRMesh$ = ReadString(f)
-	If isRMesh$="RoomMesh"
-		;Continue
-	ElseIf isRMesh$="RoomMesh.HasTriggerBox"
-		hasTriggerBox% = True
-	Else
-		RuntimeErrorExt Chr(34)+file+Chr(34)+" is Not RMESH ("+isRMesh+")"
-	EndIf
+	Select isRMesh
+		Case "RoomMesh" ;Continue
+		Case "RoomMesh.HasTriggerBox" hasTriggerBox% = True
+		Case "RM" version = ReadByte(f) : hasTriggerBox = True
+		Default RuntimeErrorExt Chr(34)+file+Chr(34)+" is Not RMESH ("+isRMesh+")"
+	End Select
 	
 	file=StripFilename(file)
 	; Modded rooms must try loading textures starting from the vanilla root.
@@ -514,7 +514,7 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 			Case "model"
 				file = ReadString(f)
 				If file<>""
-					Local model = CreatePropObj("GFX\Map\Props\"+file)
+					Local model = CreatePropObj(file)
 					
 					temp1=ReadFloat(f) : temp2=ReadFloat(f) : temp3=ReadFloat(f)
 					PositionEntity model,temp1,temp2,temp3
@@ -543,8 +543,10 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 				it\Z = ReadFloat(f) * RoomScale
 
 				it\Name = ReadString(f)
-				If it\Name = "" Then
+				If version < 1 Then
+					Local tempName$ = ReadString(f)
 					itt.ItemTemplates = FindItemTemplate(it\Name)
+					If itt = Null Then itt = FindItemTemplate(tempName)
 					If itt = Null Then
 						RuntimeErrorExt("Item template for "+Chr(34)+it\Name+Chr(34)+" not found.")
 					Else
@@ -6977,7 +6979,9 @@ Function CreatePropObj(file$)
 	
 	p.Props = New Props
 	p\file = file
-	p\obj = LoadMesh_Strict(file)
+	p\obj = LoadModdedMeshNonStrict("GFX\Map\Props\"+file)
+	If p\obj = 0 Then p\obj = LoadModdedMeshNonStrict("GFX\Map\"+file)
+	If p\obj = 0 Then RuntimeErrorExt("Failed to load prop " + file + ".")
 	Return p\obj
 End Function
 

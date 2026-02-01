@@ -249,7 +249,7 @@ End Function
 Function FindItemTemplate.ItemTemplates(name$)
 	name$ = Lower(name$)
 	For itt.Itemtemplates = Each ItemTemplates
-		If (Lower(itt\name) = name) Or Lower(itt\displayname = name) Then
+		If Lower(itt\name) = name Lor Lower(itt\displayname) = name Then
 			Return itt
 		End If
 	Next
