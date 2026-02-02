@@ -3969,7 +3969,7 @@ Function DrawEnding()
 					x = x+width/2
 					y = y+height-100*MenuScale
 					
-					If DrawButton(x-145*MenuScale,y-200*MenuScale,390*MenuScale,60*MenuScale,"ACHIEVEMENTS", True) Then
+					If DrawButton(x-145*MenuScale,y-200*MenuScale,390*MenuScale,60*MenuScale,I_Loc\Menu_AchievementsUpper, True) Then
 						AchievementsMenu = 1
 					EndIf
 					
@@ -3985,7 +3985,7 @@ Function DrawEnding()
 ;						FlushKeys()
 ;					EndIf
 					
-					If DrawButton(x-145*MenuScale,y-100*MenuScale,390*MenuScale,60*MenuScale,"MAIN MENU", True)
+					If DrawButton(x-145*MenuScale,y-100*MenuScale,390*MenuScale,60*MenuScale,I_Loc\Menu_MainMenuUpper, True)
 						ShouldPlay = 24
 						NowPlaying = ShouldPlay
 						For i=0 To 9

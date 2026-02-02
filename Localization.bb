@@ -37,6 +37,8 @@ Type LocalizationTable
     Field Menu_Quit$
     Field Menu_QuitUpper$
     Field Menu_QuitMenu$
+    Field Menu_Mainmenu$
+    Field Menu_MainmenuUpper$
     Field Menu_Random$[14]
     Field Menu_Pause$
     Field Menu_Dead$
@@ -468,6 +470,8 @@ Function LoadLocalization(loc.LocalizationTable, file$)
                             Case "quit" If loc\Menu_Quit = "" Then loc\Menu_Quit = value
                             Case "quit.upper" If loc\Menu_QuitUpper = "" Then loc\Menu_QuitUpper = value
                             Case "quit.menu" If loc\Menu_QuitMenu = "" Then loc\Menu_QuitMenu = value
+                            Case "mainmenu" If loc\Menu_Mainmenu = "" Then loc\Menu_Mainmenu = value
+                            Case "mainmenu.upper" If loc\Menu_MainmenuUpper = "" Then loc\Menu_MainmenuUpper = value
                             Case "random_1" If loc\Menu_Random[1] = "" Then loc\Menu_Random[1] = value
                             Case "random_2" If loc\Menu_Random[2] = "" Then loc\Menu_Random[2] = value
                             Case "random_3" If loc\Menu_Random[3] = "" Then loc\Menu_Random[3] = value
