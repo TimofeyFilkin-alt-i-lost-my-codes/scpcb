@@ -7493,6 +7493,7 @@ Function DrawMenu()
 					Text(x, y, I_Loc\OptionName_fov)
 					Color 255,255,0
 					Text(x + 5 * MenuScale, y + 25 * MenuScale, FOV+"°")
+					Color 255,255,255
 					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=4
 						DrawOptionsTooltip(tx,ty,tw,th,"fov")
 					EndIf
