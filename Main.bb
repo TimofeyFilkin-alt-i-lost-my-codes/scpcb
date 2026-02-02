@@ -9708,7 +9708,7 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					PositionEntity(item\collider, x, y, z)
 					ResetEntity(item\collider)
 			End Select
-		Case "supernv", "supernv", "finenvgoggles"
+		Case "nvgoggles", "supernv", "finenvgoggles"
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
