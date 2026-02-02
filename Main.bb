@@ -9756,7 +9756,7 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					EndIf
 			End Select
 			RemoveItem(item)
-		Case "firstaidkit", "firstaid2" ; TODO Missing small and very fine
+		Case "firstaid", "firstaid2" ; TODO Missing small and very fine
 			Select setting
 				Case "rough", "coarse"
 					d.Decals = CreateDecal(0, x, 8 * RoomScale + 0.005, z, 90, Rand(360), 0)
