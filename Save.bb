@@ -2139,10 +2139,65 @@ Function LoadMap(file$, loadingstart, loadingcount#)
 	
 	f% = ReadFile(file)
 	DebugLog file
+
+	Local facilityWidth% = 0, facilityHeight% = 0
+	Local forestWidth% = 0, forestHeight% = 0
+	Local mtWidth% = 0, mtHeight% = 0
+
+	If Right(file,6)="cbmap2" Then
+		ReadLine(f)
+		ReadLine(f)
+		ReadByte(f)
+		ReadByte(f)
+		roomamount = ReadInt(f)
+		forestpieceamount = ReadInt(f)
+		mtpieceamount = ReadInt(f)
+		
+		;Facility rooms
+		For i = 0 To roomamount-1
+			facilityWidth = Max(facilityWidth, ReadByte(f))
+			facilityHeight = Max(facilityHeight, ReadByte(f))
+			ReadString(f)
+			ReadByte(f)
+			ReadString(f)
+			ReadFloat(f)
+		Next
+
+		;Forest rooms
+		For i = 0 To forestpieceamount-1
+			forestWidth = Max(forestWidth, ReadByte(f))
+			forestHeight = Max(forestHeight, ReadByte(f))
+			ReadString(f)
+			ReadByte(f)
+		Next
+		
+		;Maintenance tunnels rooms
+		For i = 0 To mtpieceamount-1
+			mtWidth = Max(mtWidth, ReadByte(f))
+			mtHeight = Max(mtHeight, ReadByte(f))
+			ReadString(f)			
+			ReadByte(f)
+		Next
+		
+		;If MTRoom<>Null Then
+		;	PlaceGrid_MapCreator(MTRoom)
+		;EndIf
+	Else
+		While Not Eof(f)
+			facilityWidth = Max(facilityWidth, ReadByte(f))
+			facilityHeight = Max(facilityHeight, ReadByte(f))
+			ReadString(f)
+			ReadByte(f)
+			ReadString(f)
+			ReadFloat(f)
+		Wend
+	EndIf
+	CloseFile(f)
 	
-	; TODO: Size should be included in the map itself, why this is not done is a mystery to me.
-	MapWidth% = GetModdedINIInt(MapOptions, "facility", "width")
-	MapHeight% = GetModdedINIInt(MapOptions, "facility", "height")
+	f = ReadFile(file)
+
+	MapWidth% = facilityWidth
+	MapHeight% = facilityHeight
 
 	Dim MapTemp%(MapWidth+1, MapHeight+1)
 	Dim MapFound%(MapWidth+1, MapHeight+1)
