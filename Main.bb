@@ -8573,10 +8573,10 @@ Function InitNewGame()
 	Next
 	If AccessCode = HARPCODE Then AccessCode = AccessCode + 1
 	
-	If SelectedMap = "" Then
+	If SelectedMap = -1 Then
 		CreateMap(50, 19)
 	Else
-		LoadMap("Map Creator\Maps\"+SelectedMap, 50, 19)
+		LoadMap(SavedMapsPath(SelectedMap), 50, 19)
 	EndIf
 	DrawLoading(70)
 	InitWayPoints(71, 9)
@@ -8672,7 +8672,7 @@ Function InitNewGame()
 	
 	ResetEntity Collider
 	
-	If SelectedMap = "" Then InitEvents()
+	If SelectedMap = -1 Then InitEvents()
 	
 	For e.Events = Each Events
 		If e\EventName = "room2nuke"
@@ -8838,7 +8838,7 @@ Function NullGame(playbuttonsfx%=True)
 	
 	DeathMSG$=""
 	
-	SelectedMap = ""
+	SelectedMap = -1
 	
 	UsedConsole = False
 	

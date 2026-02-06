@@ -49,9 +49,10 @@ Dim SaveGamePlayTime$(SaveGameAmount + 1)
 
 Global SavedMapsAmount% = 0
 Dim SavedMaps$(SavedMapsAmount+1)
+Dim SavedMapsPath$(SavedMapsAmount+1)
 Dim SavedMapsAuthor$(SavedMapsAmount+1)
 
-Global SelectedMap$
+Global SelectedMap% = -1
 
 LoadSaveGames()
 
@@ -315,7 +316,7 @@ Function UpdateMainMenu()
 				CurrSave = Replace(CurrSave,"*","")
 				
 				Color 255,255,255
-				If SelectedMap = "" Then
+				If SelectedMap = -1 Then
 					Text (x + 20 * MenuScale, y + 60 * MenuScale, I_Loc\Menu_Seed)
 					If HasNumericSeed Then
 						Local inputBoxSeed$ = InputBox(x+150*MenuScale, y+55*MenuScale, 200*MenuScale, 30*MenuScale, Str(RandomSeedNumeric), 3)
@@ -335,14 +336,15 @@ Function UpdateMainMenu()
 					Rect(x+150*MenuScale+2, y+55*MenuScale+2, 200*MenuScale-4, 30*MenuScale-4)
 					
 					Color (255, 0,0)
-					If Len(SelectedMap)>15 Then
-						Text(x+150*MenuScale + 100*MenuScale, y+55*MenuScale + 15*MenuScale, Left(SelectedMap,14)+"...", True, True)
+					Local mapName$ = SavedMaps(SelectedMap)
+					If Len(mapName)>15 Then
+						Text(x+150*MenuScale + 100*MenuScale, y+55*MenuScale + 15*MenuScale, Left(mapName,14)+"...", True, True)
 					Else
-						Text(x+150*MenuScale + 100*MenuScale, y+55*MenuScale + 15*MenuScale, SelectedMap, True, True)
+						Text(x+150*MenuScale + 100*MenuScale, y+55*MenuScale + 15*MenuScale, mapName, True, True)
 					EndIf
 					
 					If DrawButton(x+370*MenuScale, y+55*MenuScale, 120*MenuScale, 30*MenuScale, I_Loc\NewGame_Deselect, False) Then
-						SelectedMap=""
+						SelectedMap=-1
 					EndIf
 				EndIf	
 				
@@ -1119,11 +1121,11 @@ Function UpdateMainMenu()
 							Text(x + 20 * MenuScale, y + (10+27) * MenuScale, SavedMapsAuthor(i - 1))
 							
 							If DrawButton(x + 400 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, I_Loc\LoadGame_Load, False) Then
-								SelectedMap=SavedMaps(i - 1)
+								SelectedMap=i - 1
 								MainMenuTab = 1
 							EndIf
 							If MouseOn(x + 400 * MenuScale, y + 20 * MenuScale, 100*MenuScale,30*MenuScale)
-								DrawMapCreatorTooltip(tx,ty,tw,th,SavedMaps(i-1))
+								DrawMapCreatorTooltip(tx,ty,tw,th,SavedMapsPath(i-1))
 							EndIf
 							
 							y = y + 80 * MenuScale
@@ -2475,9 +2477,9 @@ Function DrawMapCreatorTooltip(x%,y%,width%,height%,mapname$)
 	Color 255,255,255
 	
 	Local txt$[6]
+	txt[0] = mapname
 	If Right(mapname,6)="cbmap2" Then
-		txt[0] = Left(mapname$,Len(mapname$)-7)
-		Local f% = OpenFile("Map Creator\Maps\"+mapname$)
+		Local f% = OpenFile(mapname$)
 		
 		Local author$ = ReadLine(f)
 		Local descr$ = ReadLine(f)
@@ -2497,7 +2499,6 @@ Function DrawMapCreatorTooltip(x%,y%,width%,height%,mapname$)
 		
 		CloseFile f%
 	Else
-		txt[0] = Left(mapname$,Len(mapname$)-6)
 		author$ = I_Loc\LoadMap_Unknown
 		descr$ = I_Loc\LoadMap_Nodesc
 		ramount% = 0

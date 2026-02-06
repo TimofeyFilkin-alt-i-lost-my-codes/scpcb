@@ -868,9 +868,9 @@ Function LoadGame(file$)
 	Local zone%,shouldSpawnDoor%
 	For y = MapHeight To 0 Step -1
 		
-		If y<I_Zone\Transition[1]-(SelectedMap="") Then
+		If y<I_Zone\Transition[1]-(SelectedMap=-1) Then
 			zone=3
-		ElseIf y>=I_Zone\Transition[1]-(SelectedMap="") And y<I_Zone\Transition[0]-(SelectedMap="") Then
+		ElseIf y>=I_Zone\Transition[1]-(SelectedMap=-1) And y<I_Zone\Transition[0]-(SelectedMap=-1) Then
 			zone=2
 		Else
 			zone=1
@@ -2071,63 +2071,75 @@ Function LoadSaveGames()
 End Function
 
 
+Function CountSavedMapsFrom%(folder$)
+	Local count% = 0
+	Local dir%=ReadDir(folder)
+	Local file$ = NextFile(dir)
+	While file <> ""
+		DebugLog (folder+file$)
+		If file <> "." And file <> ".." And FileType(folder+file$) = 1 And (Right(file,6)="cbmap2" Lor Right(file,5)="cbmap") Then 
+			count = count + 1
+		EndIf
+
+		file$=NextFile$(dir)
+	Wend
+	CloseDir dir
+	Return count
+End Function
+
+Function LoadSavedMapsFrom%(folder$, i%)
+	Local dir%=ReadDir(folder) 
+	Repeat
+		file$=NextFile$(dir)
+		
+		DebugLog file
+		
+		If file$="" Then Exit
+		If file <> "." And file <> ".." And FileType(folder+file$) = 1 And (Right(file,6)="cbmap2" Lor Right(file,5)="cbmap") Then
+			Local off%
+			If Right(file,6)="cbmap2" Then off = 7  Else off = 6
+			SavedMaps(i) = Left(file$, Len(file)-off)
+			SavedMapsPath(i) = folder+file$
+			If Right(file,6)="cbmap2" Then
+				Local f = ReadFile(folder+file$)
+				SavedMapsAuthor$(i) = ReadLine(f)
+				CloseFile f
+			Else
+				SavedMapsAuthor$(i) = "[Unknown]"
+			EndIf
+			i=i+1
+		EndIf
+	Forever
+	CloseDir dir
+	Return i
+End Function
+
 Function LoadSavedMaps()
 	CatchErrors("Uncaught (LoadSavedMaps)")
-	Local i%, Dir, file$
+	Local i%, mapDir$
 	
 	For i = 0 To SavedMapsAmount
 		SavedMaps(i)=""
+		SavedMapsPath(i)=""
 		SavedMapsAuthor(i)=""
 	Next
-	SavedMapsAmount = 0
-	
-	Dir=ReadDir("Map Creator\Maps")
-	Repeat
-		file$=NextFile$(Dir)
-		
-		DebugLog file
-		
-		If file$="" Then Exit
-		DebugLog (CurrentDir()+"Map Creator\Maps\"+file$)
-		If FileType(CurrentDir()+"Map Creator\Maps\"+file$) = 1 Then 
-			If file <> "." And file <> ".." Then
-				If Right(file,6)="cbmap2" Or Right(file,5)="cbmap" Then
-					SavedMapsAmount = SavedMapsAmount + 1
-				EndIf
-			EndIf
-		EndIf 
-	Forever 
-	CloseDir Dir
+
+	SavedMapsAmount = CountSavedMapsFrom("Map Creator\Maps\")
+	For m.ActiveMods = Each ActiveMods
+		mapDir = m\Path + "Maps\"
+		If FileType(mapDir) = 2 Then SavedMapsAmount = SavedMapsAmount + CountSavedMapsFrom(mapDir)
+	Next
 	
 	Dim SavedMaps(SavedMapsAmount+1)
+	Dim SavedMapsPath(SavedMapsAmount+1)
 	Dim SavedMapsAuthor$(SavedMapsAmount+1)
 	
-	i = 0
-	Dir=ReadDir("Map Creator\Maps") 
-	Repeat
-		file$=NextFile$(Dir)
-		
-		DebugLog file
-		
-		If file$="" Then Exit
-		DebugLog (CurrentDir()+"Map Creator\Maps\"+file$)
-		If FileType(CurrentDir()+"Map Creator\Maps\"+file$) = 1 Then 
-			If file <> "." And file <> ".." Then
-				If Right(file,6)="cbmap2" Or Right(file,5)="cbmap" Then
-					SavedMaps(i) = file
-					If Right(file,6)="cbmap2" Then
-						Local f = ReadFile("Map Creator\Maps\"+file)
-						SavedMapsAuthor$(i) = ReadLine(f)
-						CloseFile f
-					Else
-						SavedMapsAuthor$(i) = "[Unknown]"
-					EndIf
-					i=i+1
-				EndIf
-			EndIf
-		EndIf 
-	Forever 
-	CloseDir Dir 
+	i = LoadSavedMapsFrom("Map Creator\Maps\", 0)
+	For m.ActiveMods = Each ActiveMods
+		mapDir = m\Path + "Maps\"
+		If FileType(mapDir) = 2 Then i = LoadSavedMapsFrom(mapDir, i)
+	Next
+
 	CatchErrors("LoadSavedMaps")
 End Function
 
