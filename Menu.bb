@@ -1391,7 +1391,7 @@ Function UpdateMainMenu()
 	If SpeedRunMode And (Not TimerStopped) Then
 		DrawTimer()
 		If MainMenuOpen Then
-			If DrawButton(GraphicWidth - 150 * MenuScale - 24, 60 * MenuScale + 24, 150 * MenuScale, 30 * MenuScale, "Stop timer", False) Then
+			If DrawButton(GraphicWidth - 150 * MenuScale - 24, 60 * MenuScale + 24, 150 * MenuScale, 30 * MenuScale, I_Loc\HUD_SpeedrunStoptimer, False) Then
 				TimerStopped = True
 			EndIf
 		EndIf
