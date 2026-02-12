@@ -1457,7 +1457,7 @@ Function SetSteamTags()
 End Function
 
 Function DrawTagSelection(x%, y%, width%)
-	Text x + 10 * MenuScale, y, "Tags:"
+	Text x + 10 * MenuScale, y, I_Loc\Mods_Tags
 	y = y + 25 * MenuScale
 
 	Local xStep% = (width - 20 * MenuScale) / 3
