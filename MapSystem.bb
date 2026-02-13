@@ -5022,10 +5022,11 @@ Function FillRoom(r.Rooms)
 				r\Objects[2] = CreatePivot(r\obj)
 				PositionEntity (r\Objects[2], r\x - 156.825*RoomScale, -37.3458*RoomScale, r\z+121.364*RoomScale, True)
 				
-				de.Decals = CreateDecal(3,  r\x - 156.825*RoomScale, 0.02, r\z+121.364*RoomScale,90,Rnd(360),0)
-				de\Size = 0.5
-				ScaleSprite(de\obj, de\Size,de\Size)
-				EntityParent de\obj, r\obj
+				; This decal renders incorrectly with the glass in this room.
+				;de.Decals = CreateDecal(3,  r\x - 156.825*RoomScale, 0.02, r\z+121.364*RoomScale,90,Rnd(360),0)
+				;de\Size = 0.5
+				;ScaleSprite(de\obj, de\Size,de\Size)
+				;EntityParent de\obj, r\obj
 				
 				;260 300 -350
 				;WIP
