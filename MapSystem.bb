@@ -469,7 +469,25 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 				d\Code = ReadString(f)
 				d\Angle = ReadFloat(f)
 				d\SpawnOpen = ReadByte(f)
+				If version >= 0 Then
+					d\Locked = ReadByte(f)
+					d\DeleteHalf = ReadByte(f)
+				EndIf
 				d\AllowRemoteControl = ReadByte(f)
+				If version >= 0 Then
+					d\Button1PosX = ReadFloat(f) * RoomScale
+					d\Button1PosY = ReadFloat(f) * RoomScale
+					d\Button1PosZ = ReadFloat(f) * RoomScale
+					d\Button1RotX = ReadFloat(f)
+					d\Button1RotY = ReadFloat(f)
+					d\Button1RotZ = ReadFloat(f)
+					d\Button2PosX = ReadFloat(f) * RoomScale
+					d\Button2PosY = ReadFloat(f) * RoomScale
+					d\Button2PosZ = ReadFloat(f) * RoomScale
+					d\Button2RotX = ReadFloat(f)
+					d\Button2RotY = ReadFloat(f)
+					d\Button2RotZ = ReadFloat(f)
+				EndIf
 
 				If lastDoor = Null Then
 					rt\FirstTempDoor = d
@@ -1576,7 +1594,13 @@ Type TempDoors
 	Field X#, Y#, Z#
 	Field Angle#
 	Field SpawnOpen%
+	Field Locked%
+	Field DeleteHalf%
 	Field AllowRemoteControl%
+	Field Button1PosX#, Button1PosY#, Button1PosZ#
+	Field Button1RotX#, Button1RotY#, Button1RotZ#
+	Field Button2PosX#, Button2PosY#, Button2PosZ#
+	Field Button2RotX#, Button2RotY#, Button2RotZ#
 	Field Successor.TempDoors
 End Type
 
@@ -5505,8 +5529,11 @@ Function FillRoom(r.Rooms)
 		If Not dt\AllowRemoteControl Then
 			door\AutoClose = False
 		EndIf
-		SnapForward(door\buttons[0], 10)
-		SnapForward(door\buttons[1], 10)
+		If dt\DeleteHalf Then FreeEntity door\obj2 : door\obj2 = 0
+		If dt\Button1PosX <> 0 Lor dt\Button1PosY <> 0 Lor dt\Button1PosZ Then PositionEntity(door\buttons[0], r\x + dt\Button1PosX, r\y + dt\Button1PosY, r\z + dt\Button1PosZ, True)
+		If dt\Button1RotX <> 0 Lor dt\Button1RotY <> 0 Lor dt\Button1RotZ Then RotateEntity(door\buttons[0], dt\Button1RotX, r\angle + dt\Button1RotY, r\z + dt\Button1RotZ, True)
+		If dt\Button2PosX <> 0 Lor dt\Button2PosY <> 0 Lor dt\Button2PosZ Then PositionEntity(door\buttons[1], r\x + dt\Button2PosX, r\y + dt\Button2PosY, r\z + dt\Button2PosZ, True)
+		If dt\Button2RotX <> 0 Lor dt\Button2RotY <> 0 Lor dt\Button2RotZ Then RotateEntity(door\buttons[1], dt\Button2RotX, r\angle + dt\Button2RotY, r\z + dt\Button2RotZ, True)
 		dt = dt\Successor
 	Wend
 	
