@@ -1090,7 +1090,7 @@ Function LoadGame(file$)
 	
 	Local it.Items
 	For it.Items = Each Items
-		RemoveItem(it)
+		RemoveItem(it, False)
 	Next
 	
 	temp = ReadInt(f)
@@ -1807,7 +1807,7 @@ Function LoadGameQuick(file$)
 	
 	Local it.Items
 	For it.Items = Each Items
-		RemoveItem(it)
+		RemoveItem(it, False)
 	Next
 	
 	temp = ReadInt(f)

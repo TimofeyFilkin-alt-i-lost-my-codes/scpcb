@@ -372,12 +372,12 @@ Function CreateCup.Items(drinkName$, x#, y#, z#, r%, g%, b%, a#=1.0)
 	Return i
 End Function
 
-Function RemoveItem(i.Items)
+Function RemoveItem(i.Items, inGame%=True)
 	CatchErrors("Uncaught (RemoveItem)")
 	Local n
 	FreeEntity(i\model) : FreeEntity(i\collider) : i\collider = 0
 	
-	If i\Picked Then
+	If i\Picked And inGame Then
 		For n% = 0 To MaxItemAmount - 1
 			If Inventory(n) = i
 				DebugLog "Removed "+i\itemtemplate\name+" from slot "+n
