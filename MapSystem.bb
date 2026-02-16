@@ -160,7 +160,7 @@ End Function
 Function LoadRMesh(file$,rt.RoomTemplates)
 	file = DetermineModdedPath(file)
 
-	CatchErrors("Uncaught (LoadRMesh)")
+	CatchErrors("Uncaught (LoadRMesh " + Chr(34) + file + Chr(34) + ")")
 	;generate a texture made of white
 	Local blankTexture%
 	blankTexture=CreateTexture(4,4,1,1)
