@@ -6053,7 +6053,7 @@ Function DrawGUI()
 							EndIf
 						EndIf
 						
-						Injuries = Max(Injuries + GetINIInt2(iniStr, loc, "damage"), 0);*temp
+						Injuries = Max(Injuries + GetINIInt2(iniStr, loc, "damage") + GetINIInt2(iniStr, loc, "injuries"), 0);*temp
 						Bloodloss = Max(Bloodloss + GetINIInt2(iniStr, loc, "blood loss"), 0);*temp
 						
 						If GetINIInt2(iniStr, loc, "stomachache") Then SCP1025state[3]=1
