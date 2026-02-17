@@ -33,7 +33,7 @@ Function InstantiateMod.Mods(id$, path$)
             Local splitterPos = Instr(l, "=")
             Local key$ = Trim(Left(l, splitterPos - 1))
             Local value$ = Trim(Right(l, Len(l) - splitterPos))
-            Select Key
+            Select key
                 Case "name"
                     m\Name = value
                 Case "desc"

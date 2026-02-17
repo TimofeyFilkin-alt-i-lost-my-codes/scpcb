@@ -8101,7 +8101,9 @@ Function LoadEntities()
 
 	Panel294 = LoadImage_Strict("GFX\294panel.jpg")
 	ScaleImage(Panel294, HUDScale, HUDScale)
-	
+
+	Load294()
+
 	
 	Brightness% = GetModdedINIFloat(MapOptions, "facility", "brightness")
 	CameraFogNear# = GetModdedINIFloat(MapOptions, "facility", "camera fog near")
@@ -10263,6 +10265,77 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 	If it2 <> Null Then EntityType (it2\collider, HIT_ITEM)
 End Function
 
+Global Keyboard294Layers%, Keyboard294X%, Keyboard294Y%, Keyboard294Width%, Keyboard294Height%, Keyboard294TileWidth#, Keyboard294TileHeight#
+Global Keyboard294ActiveLayer%
+Dim Keyboard294$(0,0,0)
+
+Function Load294()
+	Local f% = ReadFile(DetermineModdedPath("Data\SCP-294Keyboard.ini"))
+	Local row% = -1
+	Local layer% = -1
+	While Not Eof(f)
+		Local l$ = Trim(ReadLine(f))
+		If l <> "" And Instr(l, "#") <> 1 And Instr(l, ";") <> 1 Then
+			Local splitterPos = Instr(l, "=")
+			If splitterPos = 0 And Instr(l, "[") = 1 Then
+				If row = -1 Then Dim Keyboard294(Keyboard294Layers, Keyboard294Width, Keyboard294Height)
+				Local section$ = Trim(Mid(l, 2, Len(l) - 2))
+				Local layerSplitterPos% = Instr(section, "_")
+				If layerSplitterPos = 0 Then
+					row = Int(section)
+					layer = -1
+				Else
+					row = Int(Trim(Left(section, layerSplitterPos - 1)))
+					layer = Int(Trim(Right(section, Len(section) - layerSplitterPos)))
+				EndIf
+				If row >= Keyboard294Height then
+					RuntimeErrorExt("Row " + Str(row) + " out of range.")
+				EndIf
+				If layer >= Keyboard294Layers then
+					RuntimeErrorExt("Layer " + Str(layer) + " out of range.")
+				EndIf
+			Else
+				Local key$ = Trim(Left(l, splitterPos - 1))
+				Local value$ = Trim(Right(l, Len(l) - splitterPos))
+				If row = -1 Then
+					Select key
+						Case "layers"
+							Keyboard294Layers = Int(value)
+						Case "x"
+							Keyboard294X = Int(value)
+						Case "y"
+							Keyboard294Y = Int(value)
+						Case "width"
+							Keyboard294Width = Int(value)
+						Case "height"
+							Keyboard294Height = Int(value)
+						Case "tile.width"
+							Keyboard294TileWidth = Float(value)
+						Case "tile.height"
+							Keyboard294TileHeight = Float(value)
+						Default
+							RuntimeErrorExt("Unknown key "+Chr(34)+key+Chr(34)+" in SCP-294 keyboard.")
+					End Select
+				Else
+					Local column = Int(key)
+					If column >= Keyboard294Width then
+						RuntimeErrorExt("Column " + Str(column) + " out of range.")
+					EndIf
+					If layer = -1 Then
+						For i = 0 To Keyboard294Layers-1
+							Keyboard294(i, column, row) = value
+						Next
+					Else
+						Keyboard294(layer, column, row) = value
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+	Wend
+	CloseFile(f)
+	Keyboard294ActiveLayer = 0
+End Function
+
 Function Use294()
 	Local x#,y#, xtemp%,ytemp%, strtemp$, temp%
 	
@@ -10279,91 +10352,30 @@ Function Use294()
 	
 	If temp Then
 		If MouseHit1 Then
-			xtemp = Floor((ScaledMouseX()-x-228*HUDScale) / 35.5 / HUDScale)
-			ytemp = Floor((ScaledMouseY()-y-342*HUDScale) / 36.5 / HUDScale)
+			xtemp = Floor((ScaledMouseX()-x-Keyboard294X*HUDScale) / Keyboard294TileWidth / HUDScale)
+			ytemp = Floor((ScaledMouseY()-y-Keyboard294Y*HUDScale) / Keyboard294TileHeight / HUDScale)
 			
 			temp = False
 			
-			If ytemp => 0 And ytemp < 5 Then
-				If xtemp => 0 And xtemp < 10 Then
+			If ytemp => 0 And ytemp < Keyboard294Height Then
+				If xtemp => 0 And xtemp < Keyboard294Width Then
 					PlaySound_Strict ButtonSFX
-					
+
 					strtemp = ""
-					
-					Select ytemp
-						Case 0
-							strtemp = (xtemp + 1) Mod 10
-						Case 1
-							Select xtemp
-								Case 0
-									strtemp = "Q"
-								Case 1
-									strtemp = "W"
-								Case 2
-									strtemp = "E"
-								Case 3
-									strtemp = "R"
-								Case 4
-									strtemp = "T"
-								Case 5
-									strtemp = "Y"
-								Case 6
-									strtemp = "U"
-								Case 7
-									strtemp = "I"
-								Case 8
-									strtemp = "O"
-								Case 9
-									strtemp = "P"
-							End Select
-						Case 2
-							Select xtemp
-								Case 0
-									strtemp = "A"
-								Case 1
-									strtemp = "S"
-								Case 2
-									strtemp = "D"
-								Case 3
-									strtemp = "F"
-								Case 4
-									strtemp = "G"
-								Case 5
-									strtemp = "H"
-								Case 6
-									strtemp = "J"
-								Case 7
-									strtemp = "K"
-								Case 8
-									strtemp = "L"
-								Case 9 ;dispense
-									temp = True
-							End Select
-						Case 3
-							Select xtemp
-								Case 0
-									strtemp = "Z"
-								Case 1
-									strtemp = "X"
-								Case 2
-									strtemp = "C"
-								Case 3
-									strtemp = "V"
-								Case 4
-									strtemp = "B"
-								Case 5
-									strtemp = "N"
-								Case 6
-									strtemp = "M"
-								Case 7
-									strtemp = "-"
-								Case 8
-									strtemp = " "
-								Case 9
-									Input294 = Left(Input294, Max(Len(Input294)-1,0))
-							End Select
-						Case 4
+					Local pressedKey$ = Keyboard294(Keyboard294ActiveLayer, xtemp, ytemp)
+					Select pressedKey
+						Case "SPACE"
 							strtemp = " "
+						Case "BACK"
+							Input294 = Left(Input294, Max(Len(Input294)-1,0))
+						Case "ENTER"
+							temp = True
+						Case "LAYER_UP"
+							Keyboard294ActiveLayer = (Keyboard294ActiveLayer + 1) Mod Keyboard294Layers
+						Case "LAYER_DOWN"
+							Keyboard294ActiveLayer = (Keyboard294ActiveLayer - 1 + Keyboard294Layers) Mod Keyboard294Layers
+						Default
+							strtemp = pressedKey
 					End Select
 				EndIf
 			EndIf
