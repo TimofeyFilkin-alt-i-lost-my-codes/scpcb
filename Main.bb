@@ -3153,12 +3153,14 @@ While IsRunning
 		
 		If InfiniteStamina% Then Stamina = Min(100, Stamina + (100.0-Stamina)*0.01*FPSfactor)
 		
+		CatchErrors("Uncaught (UpdateWorld)")
 		If FPSfactor=0
 			UpdateWorld(0)
 		Else
 			UpdateWorld()
 			ManipulateNPCBones()
 		EndIf
+		CatchErrors("UpdateWorld")
 		RenderWorld2()
 		
 		BlurVolume = Min(CurveValue(0.0, BlurVolume, 20.0),0.95)
@@ -11450,6 +11452,8 @@ End Function
 
 
 Function RenderWorld2()
+	CatchErrors("Uncaught (RenderWorld2)")
+
 	CameraProjMode ark_blur_cam,0
 	CameraProjMode Camera,1
 	
@@ -11614,6 +11618,8 @@ Function RenderWorld2()
 			SetFont Font1
 		EndIf
 	EndIf
+
+	CatchErrors("RenderWorld2")
 End Function
 
 
