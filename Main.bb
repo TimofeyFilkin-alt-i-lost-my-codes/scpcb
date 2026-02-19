@@ -208,7 +208,7 @@ Next
 LoadLocalization(I_Loc, StringsFile)
 
 ; Exclusive fullscreen ONLY supports the reported resolutions
-If LauncherEnabled And (Not IsRestart) And (Not HasCLIFlag("nolauncher")) Lor Fullscreen And (Not GfxMode3DExists(GraphicWidth, GraphicHeight, 32-16*Bit16Mode)) Then
+If (LauncherEnabled Lor HasCLIFlag("launcher")) And (Not IsRestart) And (Not HasCLIFlag("nolauncher")) Lor Fullscreen And (Not GfxMode3DExists(GraphicWidth, GraphicHeight, 32-16*Bit16Mode)) Then
 	UpdateLauncher()
 EndIf
 
