@@ -956,7 +956,7 @@ Function UpdateMainMenu()
 					;[End Block]
 				ElseIf MainMenuTab = 7 ;Advanced
 					;[Block]
-					height = 355 * MenuScale
+					height = (355 + (CurrFrameLimit > 0.0) * 30) * MenuScale
 					DrawFrame(x, y, width, height)	
 					
 					y = y + 20*MenuScale
