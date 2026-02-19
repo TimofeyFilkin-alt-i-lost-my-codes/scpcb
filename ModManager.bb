@@ -136,6 +136,7 @@ Function UpdateActiveMods()
     Delete Each ActiveMods
     Local mm.ActiveMods
     Local locale$ = GetCLIString("locale", GetOptionString("general", "locale"))
+    If locale = "" And SteamActive Then locale = Steam_GetGameLanguage()
     If locale <> "" And FileType(LOCALIZATIONS_DIR + locale) = 2 Then
         mm = New ActiveMods
         mm\Path = LOCALIZATIONS_DIR + locale + "\"
