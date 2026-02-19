@@ -446,7 +446,7 @@ Function UpdateMainMenu()
 
 					SeedRnd GetRandomSeed()
 
-					SetErrorMsg(7, GetSeedString())
+					SetErrorMsg(7, GetSeedString(False))
 
 					LoadEntities()
 					LoadAllSounds()
