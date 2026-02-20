@@ -133,6 +133,7 @@ End Function
 Const LOCALIZATIONS_DIR$ = "Localization\"
 
 Function UpdateActiveMods()
+    Local txt$
     Delete Each ActiveMods
     Local mm.ActiveMods
     Local locale$ = GetCLIString("locale", GetOptionString("general", "locale"))
@@ -140,13 +141,17 @@ Function UpdateActiveMods()
     If locale <> "" And FileType(LOCALIZATIONS_DIR + locale) = 2 Then
         mm = New ActiveMods
         mm\Path = LOCALIZATIONS_DIR + locale + "\"
+        txt = "locale " + locale
     EndIf
     For m.Mods = Each Mods
         If m\IsActive Then
             mm.ActiveMods = New ActiveMods
             mm\Path = m\Path
+            If txt <> "" Then txt = txt + ", "
+            txt = txt + m\Id
         EndIf
     Next
+    SetErrorMsg(10, "Active mods: " + txt)
 End Function
 
 Function LoadModdedTextureNonStrict%(file$, flags%)
