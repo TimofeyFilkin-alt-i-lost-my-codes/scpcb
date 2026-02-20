@@ -7377,7 +7377,7 @@ Function DrawMenu()
 				EndIf	
 			ElseIf StopHidingTimer < 40
 				If KillTimer >= 0 Then 
-					StopHidingTimer = StopHidingTimer+FPSfactor
+					StopHidingTimer = StopHidingTimer+FPSfactor2
 					
 					If StopHidingTimer => 40 Then
 						PlaySound_Strict(HorrorSFX(15))
