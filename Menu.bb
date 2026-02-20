@@ -56,7 +56,7 @@ Global SelectedMap% = -1
 
 LoadSaveGames()
 
-Global CurrLoadGamePage% = 0
+Global CurrLoadGamePage%
 Global EntriesPerPage%
 Global PagingFrameHeight%
 
