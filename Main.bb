@@ -4970,6 +4970,7 @@ Function DrawGUI()
 			FreeImage SelectedScreen\img : SelectedScreen\img = 0
 			SelectedScreen = Null
 			MouseUp1 = False
+			MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
 		EndIf
 	EndIf
 	
