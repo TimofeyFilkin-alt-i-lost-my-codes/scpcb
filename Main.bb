@@ -10268,14 +10268,16 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 	If it2 <> Null Then EntityType (it2\collider, HIT_ITEM)
 End Function
 
-Global Keyboard294Layers%, Keyboard294X%, Keyboard294Y%, Keyboard294Width%, Keyboard294Height%, Keyboard294TileWidth#, Keyboard294TileHeight#
+Global Keyboard294Layers%, Keyboard294X%, Keyboard294Y%, Keyboard294Width%, Keyboard294Height%, Keyboard294TileWidth#, Keyboard294TileHeight#, Keyboard294ResetLayerOnInput%
 Global Keyboard294ActiveLayer%
 Dim Keyboard294$(0,0,0)
 
 Function Load294()
+	Dim Keyboard294(0, 0, 0)
 	Local f% = ReadFile(DetermineModdedPath("Data\SCP-294Keyboard.ini"))
 	Local row% = -1
 	Local layer% = -1
+	Keyboard294ResetLayerOnInput = False
 	While Not Eof(f)
 		Local l$ = Trim(ReadLine(f))
 		If l <> "" And Instr(l, "#") <> 1 And Instr(l, ";") <> 1 Then
@@ -10316,6 +10318,8 @@ Function Load294()
 							Keyboard294TileWidth = Float(value)
 						Case "tile.height"
 							Keyboard294TileHeight = Float(value)
+						Case "reset layer on input"
+							Keyboard294ResetLayerOnInput = ParseINIInt(value)
 						Default
 							RuntimeErrorExt("Unknown key "+Chr(34)+key+Chr(34)+" in SCP-294 keyboard.")
 					End Select
@@ -10364,6 +10368,8 @@ Function Use294()
 				If xtemp => 0 And xtemp < Keyboard294Width Then
 					PlaySound_Strict ButtonSFX
 
+					Local oldLayer = Keyboard294ActiveLayer
+
 					strtemp = ""
 					Local pressedKey$ = Keyboard294(Keyboard294ActiveLayer, xtemp, ytemp)
 					Select pressedKey
@@ -10378,8 +10384,14 @@ Function Use294()
 						Case "LAYER_DOWN"
 							Keyboard294ActiveLayer = (Keyboard294ActiveLayer - 1 + Keyboard294Layers) Mod Keyboard294Layers
 						Default
-							strtemp = pressedKey
+							If Left(pressedKey, 10) = "LAYER_SET_" Then
+								Keyboard294ActiveLayer = Int(Right(pressedKey, Len(pressedKey) - 10))
+							Else
+								strtemp = pressedKey
+							EndIf
 					End Select
+
+					If Keyboard294ResetLayerOnInput And oldLayer = Keyboard294ActiveLayer Then Keyboard294ActiveLayer = 0
 				EndIf
 			EndIf
 			
